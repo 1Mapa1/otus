@@ -21,7 +21,7 @@
 ## Ссылки
 
 🐳 Dockerfile:
-[DockerFile](https://github.com/1Mapa1/otus/blob/main/ДЗ%202/Health/Dockerfile)
+[DockerFile](https://github.com/1Mapa1/otus/blob/master/%D0%94%D0%97%202/Health/Dockerfile)
 
 🐳 Docker Hub образ:
 [DockerHub](https://hub.docker.com/repository/docker/maslovdeveloper/otus-hw2)
