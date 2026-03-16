@@ -1,4 +1,3 @@
-
 namespace Health
 {
     public class Program
@@ -17,7 +16,7 @@ namespace Health
                 });
             });
 
-            app.Run();
+            app.Run("http://0.0.0.0:8000");
         }
     }
 }
