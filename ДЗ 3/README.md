@@ -4,8 +4,6 @@
 
 В этом ДЗ вы научитесь создавать минимальный сервис.
 
----
-
 ## Реализация
 
 ### Приложение:
@@ -99,7 +97,5 @@ newman run Postman/otus-hw3.postman_collection.json
 
 Приложение доступно по:
 
-http://arch.homework/health
-http://arch.homework/otusapp/maslov/health
-
----
+- http://arch.homework/health
+- http://arch.homework/otusapp/maslov/health
