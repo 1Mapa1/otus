@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: health
+  template:
+    metadata:
+      labels:
+        app: health
+    spec:
+      containers:
+      - name: health-app
+        image: maslovdeveloper/otus-hw2:1.0
+        ports:
+        - containerPort: 8000
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
