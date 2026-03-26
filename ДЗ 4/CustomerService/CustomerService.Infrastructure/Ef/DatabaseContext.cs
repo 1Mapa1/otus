@@ -3,7 +3,7 @@ using CustomerService.Domain.Entities;
 
 namespace CustomerService.Infrastructure.Ef
 {
-    public class DatabaseContext : DbContext
+    internal class DatabaseContext : DbContext
     {
         public const string CONNECTION_NAME = "Npgsql";
 

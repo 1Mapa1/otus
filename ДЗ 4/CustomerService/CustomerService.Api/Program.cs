@@ -1,5 +1,6 @@
 using CustomerService.Api.Mapping;
 using CustomerService.Infrastructure;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 namespace CustomerService
 {
@@ -14,6 +15,7 @@ namespace CustomerService
             builder.Services.AddSwaggerGen();
             builder.Services.AddAutoMapper(_ => { }, typeof(MappingProfile));
             builder.Services.AddInfrastructure(builder.Configuration);
+            builder.Services.AddInfrastructureHealthChecks();
 
             var app = builder.Build();
 
@@ -23,9 +25,22 @@ namespace CustomerService
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
-
             app.MapControllers();
+
+            app.MapHealthChecks("/health/live", new HealthCheckOptions
+            {
+                Predicate = _ => false
+            });
+
+            app.MapHealthChecks("/health/ready", new HealthCheckOptions
+            {
+                Predicate = check => check.Tags.Contains("ready")
+            });
+
+            app.MapHealthChecks("/health/startup", new HealthCheckOptions
+            {
+                Predicate = check => check.Tags.Contains("startup")
+            });
 
             app.Run();
         }

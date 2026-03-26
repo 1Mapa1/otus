@@ -8,11 +8,11 @@ spec:
   - host: arch.homework
     http:
       paths:
-      - path: /health
+      - path: api/customers
         pathType: Exact
         backend:
           service:
-            name: health-service
+            name: customer-service-svc
             port: 
               number: 80
 ---

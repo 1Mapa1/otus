@@ -16,8 +16,8 @@ namespace CustomerService.Infrastructure.Ef
                 .AddJsonFile("appsettings.json", optional: true)
                 .AddEnvironmentVariables()
                 .Build();
-            
-            var connectionString = configuration.GetConnectionString(DatabaseContext.CONNECTION_NAME);
+
+            var connectionString = configuration.GetConnectionStringLocal();
 
             optionsBuilder.UseNpgsql(connectionString);
 
