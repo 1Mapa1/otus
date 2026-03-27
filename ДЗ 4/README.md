@@ -43,9 +43,3 @@ Postman/ # Postman коллекция
 - Secret для доступов к БД
 - Ingress с host `arch.homework`
 - Helm chart (шаблонизация)
-
-## Проверка
-
-Postman коллекция:
-
-Postman/otus-hw4.postman_collection.json

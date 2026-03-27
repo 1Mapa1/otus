@@ -19,22 +19,23 @@ http://arch.homework
 
 ### Создать пользователя
 
-POST /api/customers
+**POST** `/api/customers`
 
 ### Получить пользователя
 
-GET /api/customers/{id}
+**GET** `/api/customers/{id}`
 
 ### Обновить пользователя
 
-PUT /api/customers/{id}
+**PUT** `/api/customers/{id}`
 
 ### Удалить пользователя
 
-DELETE /api/customers/{id}
+**DELETE** `/api/customers/{id}`
 
 ### Swagger:
-http://arch.homework/swagger
+
+**GET** `/swagger`
 
 ## Сборка Docker-образа
 
