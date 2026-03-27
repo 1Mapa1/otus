@@ -1,4 +1,4 @@
-#HELM
+# HELM
 
 Helm chart для развёртывания сервиса CustomerService в Kubernetes.
 
