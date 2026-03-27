@@ -6,9 +6,6 @@
 
 otus-hw4.postman_collection.json
 
-
-:contentReference[oaicite:0]{index=0}
-
 ## Покрытие
 
 Коллекция содержит:

@@ -4,8 +4,6 @@
 
 Реализовать REST CRUD сервис с базой данных и развернуть его в Kubernetes.
 
-:contentReference[oaicite:1]{index=1}
-
 ## Структура проекта
 
 CustomerService/ # .NET сервис + миграции
@@ -16,7 +14,7 @@ Postman/ # Postman коллекция
 
 👉 Customer-service:
 
-CustomerService/README.md
+- [CustomerService](./CustomerService/)
 
 ## Быстрый старт
 
@@ -24,15 +22,15 @@ CustomerService/README.md
 
 👉 Kubernetes и Helm:
 
-K8s/README.md
+- [K8s](./K8s/)
 
 👉 Helm chart:
 
-K8s/Helm/customer-service/README.md
+- [Helm] (./K8s/Helm/customer-service/)
 
 👉 Postman тесты:
 
-Postman/README.md
+- [Postman](./Postman/)
 
 ## Что реализовано
 
@@ -49,5 +47,3 @@ Postman/README.md
 Postman коллекция:
 
 Postman/otus-hw4.postman_collection.json
-
-:contentReference[oaicite:2]{index=2}
