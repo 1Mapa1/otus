@@ -7,7 +7,9 @@
 ## Структура проекта
 
 CustomerService/ # .NET сервис + миграции
+
 K8s/ # Kubernetes манифесты и Helm chart
+
 Postman/ # Postman коллекция
 
 ## Сервис
@@ -26,7 +28,7 @@ Postman/ # Postman коллекция
 
 👉 Helm chart:
 
-- [Helm] (./K8s/Helm/customer-service/)
+- [Helm](./K8s/Helm/customer-service/)
 
 👉 Postman тесты:
 
