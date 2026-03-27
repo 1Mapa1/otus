@@ -1,5 +1,5 @@
 auth:
-  existingSecret: customer-service-secret
+  postgres-password: postgres
   database: customers_db
 
 primary:

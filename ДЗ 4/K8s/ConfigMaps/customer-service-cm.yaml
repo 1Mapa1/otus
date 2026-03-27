@@ -6,3 +6,4 @@ data:
   DB_HOST: postgres-postgresql
   DB_PORT: "5432"
   DB_NAME: customers_db
+  ASPNETCORE_ENVIRONMENT: Development

@@ -53,6 +53,11 @@ spec:
               configMapKeyRef:
                 name: customer-service-cm
                 key: DB_NAME
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: customer-service-cm
+                key: ASPNETCORE_ENVIRONMENT
           - name: DB_USER
             valueFrom:
               secretKeyRef:
@@ -63,10 +68,11 @@ spec:
               secretKeyRef:
                 name: customer-service-secret
                 key: postgres-password
-          - name: ASPNETCORE_ENVIRONMENT
-            value: Development
+          - name: ASPNETCORE_URLS
+            value: "http://+:8000"
         ports:
         - containerPort: 8000
+          protocol: TCP
   strategy:
     type: RollingUpdate
     rollingUpdate:
