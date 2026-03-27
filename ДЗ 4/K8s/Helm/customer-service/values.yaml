@@ -1,0 +1,108 @@
+# Override chart name used in resource names.
+nameOverride: ""
+
+# Override full resource name completely.
+fullnameOverride: ""
+
+# Non-secret application configuration.
+config:
+  # PostgreSQL service name inside the cluster.
+  dbHost: postgres-postgresql
+
+  # PostgreSQL port.
+  dbPort: "5432"
+
+  # Application database name.
+  dbName: customers_db
+
+  # ASP.NET Core environment.
+  environment: Development
+
+# Secret values used to create Kubernetes Secret.
+secret:
+  # Database username.
+  dbUser: postgres
+
+  # Database password.
+  dbPassword: postgres
+
+  # Secret type.
+  type: Opaque
+
+# Database migration job settings.
+job:
+  # Time in seconds after finished Job should be automatically removed.
+  ttlSecondsAfterFinished: 100
+
+  # Number of retries before the Job is marked as failed.
+  backoffLimit: 3
+
+  # Migration container image repository.
+  imageRepository: maslovdeveloper/otus-hw3-migration
+
+  # Migration container image tag.
+  imageTag: "1.1"
+
+# Main application deployment settings.
+deployment:
+  # Application container image repository.
+  imageRepository: maslovdeveloper/otus-hw3-service
+
+  # Application container image tag.
+  imageTag: "1.4"
+
+  # Number of pod replicas.
+  replicaCount: 3
+
+  # Rolling update max surge pods.
+  maxSurge: 1
+
+  # Rolling update max unavailable pods.
+  maxUnavailable: 1
+
+  # Container port used by the application.
+  port: 8000
+
+  # Container port protocol.
+  protocol: TCP
+
+  # Startup probe settings.
+  startupProbe:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 12
+
+  # Readiness probe settings.
+  readinessProbe:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 3
+    successThreshold: 1
+
+  # Liveness probe settings.
+  livenessProbe:
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+# Kubernetes Service settings.
+service:
+  # Service type.
+  type: ClusterIP
+
+  # Service port exposed inside the cluster.
+  port: 80
+
+  # Service protocol.
+  protocol: TCP
+
+# Ingress settings for external access.
+ingress:
+  # Enable or disable ingress creation.
+  enabled: true
+
+  # Ingress class name.
+  className: nginx
+
+  # External host name.
+  host: arch.homework

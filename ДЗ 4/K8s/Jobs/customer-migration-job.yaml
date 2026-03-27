@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: customer-migration-job
+spec:
+  ttlSecondsAfterFinished: 100
+  completions: 1
+  backoffLimit: 3
+  template:
+    spec:
+      containers:
+      - name: customer-migration
+        image: maslovdeveloper/otus-hw3-migration:1.1
+        env:
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef: 
+                name: customer-service-cm
+                key: DB_HOST
+          - name: DB_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: customer-service-cm
+                key: DB_PORT
+          - name: DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: customer-service-cm
+                key: DB_NAME
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: customer-service-secret
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: customer-service-secret
+                key: postgres-password
+      restartPolicy: Never

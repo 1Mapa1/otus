@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-service-dp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: customer-service
+  template:
+    metadata:
+      labels:
+        app: customer-service
+    spec:
+      containers:
+      - name: customer-service-app
+        image: maslovdeveloper/otus-hw3-service:1.4
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8000
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 12
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+        env:
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef: 
+                name: customer-service-cm
+                key: DB_HOST
+          - name: DB_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: customer-service-cm
+                key: DB_PORT
+          - name: DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: customer-service-cm
+                key: DB_NAME
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: customer-service-cm
+                key: ASPNETCORE_ENVIRONMENT
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: customer-service-secret
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: customer-service-secret
+                key: postgres-password
+          - name: ASPNETCORE_URLS
+            value: "http://+:8000"
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
