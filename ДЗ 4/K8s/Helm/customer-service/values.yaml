@@ -49,7 +49,7 @@ deployment:
   imageRepository: maslovdeveloper/otus-hw3-service
 
   # Application container image tag.
-  imageTag: "1.4"
+  imageTag: "1.5"
 
   # Number of pod replicas.
   replicaCount: 3
@@ -95,6 +95,25 @@ service:
 
   # Service protocol.
   protocol: TCP
+
+  name: http
+
+  monitor:
+    # Service port for monitoring.
+    port: 8080
+
+    # Service protocol for monitoring.
+    protocol: TCP
+
+    # Service name for monitoring port.
+    name: monitor
+
+service_monitor:
+  # Scrape timeout for Prometheus.
+  scrapeTimeout: 30s
+
+  # Honor labels from scraped targets.
+  honorLabels: true
 
 # Ingress settings for external access.
 ingress:
