@@ -1,0 +1,24 @@
+auth:
+  postgres-password: postgres
+  database: customers_db
+
+primary:
+  persistence:
+    enabled: true
+    size: 1Gi
+
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+
+  service:
+    type: ClusterIP
+
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001

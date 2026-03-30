@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: customer-service-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: arch.homework
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/api/customers"
+        backend:
+          service:
+            name: customer-service-svc
+            port: 
+              number: 80
+      - pathType: Prefix
+        path: "/swagger"
+        backend:
+          service:
+            name: customer-service-svc
+            port: 
+              number: 80

@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "customer-service.fullname" . }}
+  labels:
+    {{- include "customer-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "customer-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "customer-service.labels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.deployment.imageRepository }}:{{ .Values.deployment.imageTag }}
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: {{ .Values.deployment.port }}
+          periodSeconds: {{ .Values.deployment.startupProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.deployment.startupProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.deployment.startupProbe.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: {{ .Values.deployment.port }}
+          periodSeconds: {{ .Values.deployment.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.deployment.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.deployment.readinessProbe.failureThreshold }}
+          successThreshold: {{ .Values.deployment.readinessProbe.successThreshold }}
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: {{ .Values.deployment.port }}
+          periodSeconds: {{ .Values.deployment.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.deployment.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.deployment.livenessProbe.failureThreshold }}
+        env:
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef: 
+                name: {{ include "customer-service.fullname" . }}
+                key: DB_HOST
+          - name: DB_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "customer-service.fullname" . }}
+                key: DB_PORT
+          - name: DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "customer-service.fullname" . }}
+                key: DB_NAME
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ include "customer-service.fullname" . }}
+                key: ASPNETCORE_ENVIRONMENT
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "customer-service.fullname" . }}
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "customer-service.fullname" . }}
+                key: DB_PASSWORD
+          - name: ASPNETCORE_URLS
+            value: "http://+:{{ .Values.deployment.port }}"
+        ports:
+        - containerPort: {{ .Values.deployment.port }}
+          protocol: {{ .Values.service.protocol }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.deployment.maxSurge }}
+      maxUnavailable: {{ .Values.deployment.maxUnavailable }}
