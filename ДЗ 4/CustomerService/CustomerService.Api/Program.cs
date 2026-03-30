@@ -23,6 +23,20 @@ namespace CustomerService
 
             var app = builder.Build();
 
+            app.Use(async (context, next) =>
+            {
+                try
+                {
+                    await next(context);
+                }
+                catch
+                {
+                    context.Response.StatusCode = 500;
+                    throw;
+                }
+            });
+
+
             app.UseHttpMetrics(options =>
             {
                 options.RequestDuration.Histogram = Metrics.CreateHistogram(
@@ -33,17 +47,21 @@ namespace CustomerService
                     {
                         Buckets =
                         [
-                            0.001,   // 1 ms
-                            0.0025,  // 2.5 ms
-                            0.005,   // 5 ms
-                            0.0075,  // 7.5 ms
-                            0.01,    // 10 ms
-                            0.025,   // 25 ms
-                            0.05,    // 50 ms
-                            0.1,     // 100 ms
-                            0.25,    // 250 ms
-                            0.5,     // 500 ms
-                            1.0      // 1 s
+                            0.001,   
+                            0.0025, 
+                            0.005,   
+                            0.0075,  
+                            0.01,    
+                            0.025,   
+                            0.05,    
+                            0.1,     
+                            0.25,    
+                            0.5,     
+                            1.0,
+                            2.5,
+                            5.0,
+                            10.0,
+                            30.0
                         ]
                     });
             });

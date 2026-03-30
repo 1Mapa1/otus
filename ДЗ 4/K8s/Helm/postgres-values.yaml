@@ -22,3 +22,8 @@ primary:
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
