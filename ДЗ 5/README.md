@@ -7,19 +7,19 @@
 
 ## Helm
 
-Расширился Helm из [ДЗ 4] (../ДЗ%204/K8s/)
+Расширился Helm из [ДЗ 4](../ДЗ%204/K8s/)
 
 Добавлена инструкция по Prometheus и модифицированны файлы
 
 ## Приложение
 
-Добавлена работа с Prometheus [Program] (../ДЗ%204/CustomerService/CustomerService.Api/Program.cs)
+Добавлена работа с Prometheus [Program](../ДЗ%204/CustomerService/CustomerService.Api/Program.cs)
 
 ## Dashboard
 
 Настроен Dashboard и Alert в Grafana
 
-- [Dashboard] (./Dashboard/)
+- [Dashboard](./Dashboard/)
 
 ## Тестирование
 
