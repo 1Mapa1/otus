@@ -20,18 +20,16 @@ namespace CustomerService.Infrastructure
             return services;
         }
 
-        public static IServiceCollection AddInfrastructureHealthChecks(
+        public static IHealthChecksBuilder AddInfrastructureHealthChecks(
             this IServiceCollection services,
             string healthCheckName = "Database", IEnumerable<string>? healthCheckTags = null)
         {
             healthCheckTags ??= ["ready", "startup"];
 
-            services.AddHealthChecks()
+            return services.AddHealthChecks()
                 .AddDbContextCheck<DatabaseContext>(
                     name: healthCheckName,
                     tags: healthCheckTags);
-
-            return services;
         }
 
         public static IServiceCollection AddInfrastructureDatabaseContext(

@@ -37,6 +37,20 @@ helm install postgres bitnami/postgresql \
   -f Helm/postgres-values.yaml
 ```
 
+
+### Установка Prometheus + Grafana + Alertmanager
+
+```bash
+kubectl create namespace monitoring
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+helm upgrade monitoring prometheus-community/kube-prometheus-stack \
+  -n monitoring \
+  -f Helm/prometheus-values.yaml
+```
+
 ### Развертывание приложения (Helm)
 
 ```bash
