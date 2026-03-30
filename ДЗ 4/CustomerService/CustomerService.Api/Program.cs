@@ -2,6 +2,7 @@ using CustomerService.Api.Mapping;
 using CustomerService.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Prometheus;
+using Prometheus.HttpMetrics;
 
 namespace CustomerService
 {
@@ -27,7 +28,8 @@ namespace CustomerService
                 options.RequestDuration.Histogram = Metrics.CreateHistogram(
                     "http_request_duration_seconds", 
                     "Duration of HTTP requests in seconds",
-                    new HistogramConfiguration
+                    labelNames: HttpRequestLabelNames.All,
+                    configuration: new HistogramConfiguration
                     {
                         Buckets =
                         [
