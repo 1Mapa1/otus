@@ -1,5 +1,5 @@
 auth:
-  postgres-password: postgres
+  postgresPassword: postgres
   database: customers_db
 
 primary:
@@ -22,3 +22,8 @@ primary:
   containerSecurityContext:
     enabled: true
     runAsUser: 1001
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true

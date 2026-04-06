@@ -75,6 +75,7 @@ spec:
         ports:
         - containerPort: {{ .Values.deployment.port }}
           protocol: {{ .Values.service.protocol }}
+          name: {{ .Values.service.name }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
