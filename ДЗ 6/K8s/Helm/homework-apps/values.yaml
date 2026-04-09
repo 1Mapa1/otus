@@ -1,0 +1,173 @@
+nameOverride: ""
+fullnameOverride: ""
+
+common:
+  dbHost: postgres-postgresql
+  dbPort: "5432"
+  environment: Production
+  secretType: Opaque
+  clusterDomain: cluster.local
+
+authService:
+  enabled: true
+  name: auth
+  dbName: auth_db
+
+  deployment:
+    imageRepository: maslovdeveloper/otus-auth-service
+    imageTag: "latest"
+    replicaCount: 2
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+    monitor:
+      enabled: false
+      port: 8080
+      protocol: TCP
+      name: monitor
+
+  serviceMonitor:
+    enabled: false
+    scrapeTimeout: 30s
+    honorLabels: true
+    path: /metrics
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/otus-auth-migration
+    imageTag: "latest"
+
+  config:
+    msCustomerBaseUrl: ""
+    msCustomerTimeout: "00:00:10"
+    jwtIssuer: ""
+    jwtLifetimeMinutes: "60"
+
+  secret:
+    dbUser: postgres
+    dbPassword: postgres
+    jwtPrivateKeyPem: |
+      -----BEGIN RSA PRIVATE KEY-----
+      MIIEpQIBAAKCAQEA5yIBbI5zCDxCB7wf1i/0EdDGmxI0k9w/FBLnkC1ec/hEGtQx
+      5MazJF3LTQgfVrajOHabVXvE642s7pPpilQS2CnyGXgkRPQ18aLDYDhkS5y3Q1qn
+      SCZJdPtD03ZS4U72s8deJVxRQQK9Z9KVZPtFCCwoQkLTjPYd4TqI7UW4eX/PGVvX
+      8wmlnd9OkmcpbXBQDWWoMhaprbggEOI/p0UTwDkHkCNZCxuzcKkzE5nPCbnPOi6W
+      5Y7jDjmdD2BzmDI4DFvODGgak3tAM5wg9MRhctqQWFc9OnRlPAPsJNGMEZFBBI6w
+      7x6jv4OHTN2HnEqVrfBkUSEuNlAcDdighx3MewIDAQABAoIBAH7isjlwMkJRIkaw
+      xiGFjc3B+WXkJq0NeiuA/VKvNW0g2/KGjyVy16GdRCBz1xB5jz1OD5RsL/zIeCk5
+      Vjo0UWwOCvRkejTIhFy05+EI1DaWQB1fxPnc2vK3hdKu4G0ENncXed20wn6YDHbU
+      qmMXdhw4cZl+qjh2XIzq34Syg8Vek7SmznHsZSPHYRbBVvdK1haRdDMXc2AyA4s7
+      6ib3rkFcOGPYviVrVAB7Y5qj1+ECvunbjrltJhj5CgVSkiT772snLDnHdWcyHbvF
+      9IapBRAuSNG3c1d23bOhYy8ZxJ4RFLGjR0S9A9Vrva0YYZ6OKIKoOr7fg77CG3c+
+      4554VFECgYEA9AZWPnz7KxbCtki30i/gCW1cZ6VcOScANCp/OHWnYPnYHF5wJqR2
+      E1eCWxYVs0S6yT1he28kXUkDG9lRqmG7lC2eZMgsPnbuiH1/v7MGjyHED8SM8Phn
+      2GFe3VY9s+eQQo8JbRqq46dnLz4XaBiCklpd/GE32+ERxL7RKR4abkcCgYEA8nm1
+      Yt28r5udYOZveXJ2GGvs/5FFOvpSDvS/6uzIQRrrzM+G7K669i6zoSwu49mkC7CX
+      Xf/UrKJWzUXZkO7A1lbjJ/CZ2Lvwe+ZMiQN8BQ4/+m/IuZZv2GNlaU/mvdLmCQNn
+      LKIk0lXKYVvZIWpAq1v9yFRdmRn1ZEq6mV6nRi0CgYEAl9Xhj9wgRD1TRiyVBBl5
+      4yPC3VLMwVr9C3ht1GmQjgynZW91hPXL6lkG6ToionrfZhvlLfKHw+uMHaXo5IUP
+      PDHuXnMW5H8ICLFd7Z+tMx4lalI4CC/oHYDoj/v7RJeO8XsiuFphfmlJEOInmkO1
+      6u6DkGfFY/D1J2A7sMPkWj0CgYEAwRUv3mGJ7iCxysbUv9Xounu+xqgMg/FvRJ+a
+      79zLfiSM3pPm8jQVhxIbUl2XnTLjEbf2YRDmbu36xw03OdUVU9junBBYwiCuWEtE
+      aNqQeIonYip/oWFtANftmlXY/RGiwkymbQFU5vUP6kU0ewpcIthnF44u1kq4gLuN
+      KbIY66UCgYEAo9XvjrQcti2KwLCylOPR8gocZJK6+Oz0yFCQaw5utpEqr0yXVYmu
+      CmfweIhRiB37ovDFCKPQ4JEMXWHdhIn8hlzk/A1UGiH6BDnZjzHTk7tN8B3M7vI+
+      +q5sLwnmk9A8pxAAzAtamL262Fqs6j0mHEI/8EUqbY3U9TxijEokJfM=
+      -----END RSA PRIVATE KEY-----
+    jwtKeyId: default-key
+
+customerService:
+  enabled: true
+  name: customer
+  dbName: customers_db
+
+  deployment:
+    imageRepository: maslovdeveloper/otus-customer-service
+    imageTag: "latest"
+    replicaCount: 3
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+    monitor:
+      enabled: true
+      port: 8080
+      protocol: TCP
+      name: monitor
+
+  serviceMonitor:
+    enabled: true
+    scrapeTimeout: 30s
+    honorLabels: true
+    path: /metrics
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/otus-customer-migration
+    imageTag: "latest"
+
+  config:
+    authUrl: ""
+
+  secret:
+    dbUser: postgres
+    dbPassword: postgres
+
+ingress:
+  enabled: true
+  className: nginx
+  host: arch.homework
+  paths:
+    - path: /api/auth
+      service: authService
+    - path: /.well-known
+      service: authService
+    - path: /swagger/auth
+      service: authService
+    - path: /api/customers
+      service: customerService
+    - path: /swagger
+      service: customerService

@@ -1,0 +1,18 @@
+{{- if and .Values.authService.enabled .Values.authService.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "homework-apps.authFullname" . }}
+  labels:
+    {{- include "homework-apps.authLabels" . | nindent 4 }}
+spec:
+  endpoints:
+    - port: {{ .Values.authService.service.monitor.name }}
+      scrapeTimeout: {{ .Values.authService.serviceMonitor.scrapeTimeout }}
+      path: {{ .Values.authService.serviceMonitor.path }}
+      honorLabels: {{ .Values.authService.serviceMonitor.honorLabels }}
+      scheme: http
+  selector:
+    matchLabels:
+      {{- include "homework-apps.authSelectorLabels" . | nindent 6 }}
+{{- end }}

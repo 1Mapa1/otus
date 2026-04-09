@@ -1,0 +1,115 @@
+{{- if .Values.authService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "homework-apps.authFullname" . }}
+  labels:
+    {{- include "homework-apps.authLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.authService.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "homework-apps.authSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "homework-apps.authLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Values.authService.name }}
+          image: {{ .Values.authService.deployment.imageRepository }}:{{ .Values.authService.deployment.imageTag }}
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: {{ .Values.authService.deployment.port }}
+            periodSeconds: {{ .Values.authService.deployment.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.authService.deployment.startupProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.authService.deployment.startupProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: {{ .Values.authService.deployment.port }}
+            periodSeconds: {{ .Values.authService.deployment.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.authService.deployment.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.authService.deployment.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.authService.deployment.readinessProbe.successThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.authService.deployment.port }}
+            periodSeconds: {{ .Values.authService.deployment.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.authService.deployment.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.authService.deployment.livenessProbe.failureThreshold }}
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: DB_NAME
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: Ms__Customer__BaseUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: Ms__Customer__BaseUrl
+            - name: Ms__Customer__Timeout
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: Ms__Customer__Timeout
+            - name: Jwt__Issuer
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: Jwt__Issuer
+            - name: Jwt__LifetimeMinutes
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: Jwt__LifetimeMinutes
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: DB_PASSWORD
+            - name: Jwt__PrivateKeyPem
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: Jwt__PrivateKeyPem
+            - name: Jwt__KeyId
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.authFullname" . }}
+                  key: Jwt__KeyId
+            - name: ASPNETCORE_URLS
+              value: "http://+:{{ .Values.authService.deployment.port }}"
+          ports:
+            - containerPort: {{ .Values.authService.deployment.port }}
+              protocol: {{ .Values.authService.service.protocol }}
+              name: {{ .Values.authService.service.name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.authService.deployment.maxSurge }}
+      maxUnavailable: {{ .Values.authService.deployment.maxUnavailable }}
+{{- end }}

@@ -1,0 +1,34 @@
+auth:
+  postgresPassword: postgres
+
+primary:
+  persistence:
+    enabled: true
+    size: 1Gi
+
+  service:
+    type: ClusterIP
+
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+
+  initdb:
+    user: postgres
+    password: postgres
+    scripts:
+      01-init.sql: |
+        CREATE USER customer_user WITH ENCRYPTED PASSWORD 'customer_pass';
+        CREATE DATABASE customer_db;
+        GRANT ALL PRIVILEGES ON DATABASE customer_db TO customer_user;
+
+        CREATE USER auth_user WITH ENCRYPTED PASSWORD 'auth_pass';
+        CREATE DATABASE auth_db;
+        GRANT ALL PRIVILEGES ON DATABASE auth_db TO auth_user;
+
+metrics:
+  enabled: true

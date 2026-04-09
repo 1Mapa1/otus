@@ -7,7 +7,7 @@ namespace AuthService.Infrastructure.Clients
 {
     internal class CustomerServiceClient : ICustomerServiceClient
     {
-        private const string createEndpoint = "internal/profiles";
+        private const string createEndpoint = "api/internal/profiles";
 
         private readonly HttpClient _httpClient;
 

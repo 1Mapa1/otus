@@ -1,0 +1,90 @@
+{{- if .Values.customerService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "homework-apps.customerFullname" . }}
+  labels:
+    {{- include "homework-apps.customerLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.customerService.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "homework-apps.customerSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "homework-apps.customerLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Values.customerService.name }}
+          image: {{ .Values.customerService.deployment.imageRepository }}:{{ .Values.customerService.deployment.imageTag }}
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: {{ .Values.customerService.deployment.port }}
+            periodSeconds: {{ .Values.customerService.deployment.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.customerService.deployment.startupProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.customerService.deployment.startupProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: {{ .Values.customerService.deployment.port }}
+            periodSeconds: {{ .Values.customerService.deployment.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.customerService.deployment.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.customerService.deployment.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.customerService.deployment.readinessProbe.successThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.customerService.deployment.port }}
+            periodSeconds: {{ .Values.customerService.deployment.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.customerService.deployment.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.customerService.deployment.livenessProbe.failureThreshold }}
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_NAME
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: Auth__Url
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: Auth__Url
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_PASSWORD
+            - name: ASPNETCORE_URLS
+              value: "http://+:{{ .Values.customerService.deployment.port }}"
+          ports:
+            - containerPort: {{ .Values.customerService.deployment.port }}
+              protocol: {{ .Values.customerService.service.protocol }}
+              name: {{ .Values.customerService.service.name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.customerService.deployment.maxSurge }}
+      maxUnavailable: {{ .Values.customerService.deployment.maxUnavailable }}
+{{- end }}
