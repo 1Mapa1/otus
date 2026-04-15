@@ -19,12 +19,12 @@
 newman run otus-hw6.postman_collection.json -e otus-hw6.postman_environment.json
 ```
 
-В GUI Postman: импорт коллекции и окружения, выбрать окружение, выполнить коллекцию (Run collection).
-
 ## Результаты прогона
 
 Скриншоты успешного выполнения:
 
-- [Result 1.jpg](./Result%201.jpg)
-- [Result 2.jpg](./Result%202.jpg)
-- [Result 3.jpg](./Result%203.jpg)
+![Результат прогона 1](./Result%201.jpg)
+
+![Результат прогона 2](./Result%202.jpg)
+
+![Результат прогона 3](./Result%203.jpg)
