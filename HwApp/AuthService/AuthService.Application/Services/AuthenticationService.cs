@@ -52,7 +52,7 @@ namespace AuthService.Application.Services
             if (user.Status != UserStatus.Active)
                 throw new UserNotActiveException(user.Id);
 
-            var isPasswordValid = _hasherService.Verify(request.Password, user.PasswordHash);
+            var isPasswordValid = _hasherService.Verify(user.PasswordHash, request.Password);
 
             if (!isPasswordValid)
                 throw new InvalidCredentialsException();

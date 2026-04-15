@@ -1,5 +1,6 @@
 using CustomerService.Api.Mapping;
 using CustomerService.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -50,22 +51,53 @@ namespace CustomerService
                 .AddInfrastructureHealthChecks()
                 .ForwardToPrometheus();
 
+            var authUrl = builder.Configuration["Auth:Url"]!.TrimEnd('/');
+            var jwksUrl = $"{authUrl}/.well-known/jwks.json";
+
+            using var httpClient = new HttpClient();
+            var jwksJson = httpClient.GetStringAsync(jwksUrl).GetAwaiter().GetResult();
+            var jwks = new JsonWebKeySet(jwksJson);
+
+            Console.WriteLine($"AUTH URL: {authUrl}");
+            Console.WriteLine($"JWKS URL: {jwksUrl}");
+            Console.WriteLine($"JWKS keys count: {jwks.Keys.Count}");
+
             builder.Services
-                .AddAuthentication("Bearer")
-                .AddJwtBearer("Bearer", options =>
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
-                    options.Authority = builder.Configuration["Auth:Url"];
                     options.RequireHttpsMetadata = false;
+                    options.MapInboundClaims = false;
+
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
-                        ValidIssuer = builder.Configuration["Auth:Url"],
-
+                        ValidIssuer = authUrl,
                         ValidateAudience = false,
-
                         ValidateLifetime = true,
-
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKeys = jwks.GetSigningKeys(),
                         NameClaimType = "sub",
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnAuthenticationFailed = context =>
+                        {
+                            Console.WriteLine($"AUTH FAILED: {context.Exception}");
+                            return Task.CompletedTask;
+                        },
+                        OnTokenValidated = context =>
+                        {
+                            Console.WriteLine("TOKEN VALIDATED");
+                            Console.WriteLine($"sub = {context.Principal?.Identity?.Name}");
+                            return Task.CompletedTask;
+                        },
+                        OnChallenge = context =>
+                        {
+                            Console.WriteLine($"AUTH CHALLENGE: {context.Error}; {context.ErrorDescription}");
+                            return Task.CompletedTask;
+                        }
                     };
                 });
 
@@ -102,8 +134,16 @@ namespace CustomerService
 
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwagger(c =>
+                {
+                    c.RouteTemplate = "api/customers/swagger/{documentName}/swagger.json";
+                });
+
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/api/customers/swagger/v1/swagger.json", "Customer API V1");
+                    c.RoutePrefix = "api/customers/swagger";
+                });
             }
 
             app.UseAuthentication();

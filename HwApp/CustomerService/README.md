@@ -1,6 +1,6 @@
 # Customer Service
 
-REST API для управления пользователями (CRUD).
+REST API для управления клиентами (CRUD). Внешние операции с «текущим» профилем защищены JWT (валидация по JWKS AuthService).
 
 ## Архитектура
 
@@ -11,31 +11,33 @@ REST API для управления пользователями (CRUD).
 
 ## API
 
-Base URL:
-http://arch.homework
-Примеры ручек
+Базовый URL (пример с Ingress): `http://arch.homework`
 
-(сильно не раздувай, просто ключевые)
+### CRUD (как в предыдущих ДЗ)
 
-### Создать пользователя
+| Метод | Путь |
+|-------|------|
+| POST | `/api/customers` |
+| GET | `/api/customers/{id}` |
+| PUT | `/api/customers/{id}` |
+| DELETE | `/api/customers/{id}` |
 
-**POST** `/api/customers`
+### Профиль по JWT (ДЗ 6)
 
-### Получить пользователя
+Требуется заголовок `Authorization: Bearer <token>`.
 
-**GET** `/api/customers/{id}`
+| Метод | Путь |
+|-------|------|
+| GET | `/api/customers/me` |
+| PUT | `/api/customers/me` |
 
-### Обновить пользователя
-
-**PUT** `/api/customers/{id}`
-
-### Удалить пользователя
-
-**DELETE** `/api/customers/{id}`
-
-### Swagger:
+### Документация
 
 **GET** `/swagger`
+
+## Связь с репозиторием
+
+Код в каталоге [HwApp](../README.md). Развёртывание — в README соответствующего задания (например [ДЗ 6 / K8s](../../ДЗ%206/K8s/README.md)).
 
 ## Сборка Docker-образа
 

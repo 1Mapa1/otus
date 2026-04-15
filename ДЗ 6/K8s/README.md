@@ -1,17 +1,15 @@
 # Kubernetes
 
-В данной директории находятся Kubernetes манифесты и Helm chart для развёртывания приложений `AuthService` и `CustomerService`.
+Helm chart и значения для развёртывания AuthService и CustomerService, общий PostgreSQL и Ingress.
 
-## Предварительные требования
+## Требования
 
-- установлен Kubernetes (например minikube)
-- установлен Helm
-- настроен ingress-nginx
-- добавлен host:
+- Kubernetes (например, minikube)
+- Helm 3
+- Ingress Controller (ниже — установка ingress-nginx через Helm)
+- В `/etc/hosts` (или аналог): `<IP кластера> arch.homework`
 
-<minikube ip> arch.homework
-
-## Установка ingress-nginx
+## Ingress
 
 ```bash
 kubectl create namespace m
@@ -22,75 +20,56 @@ helm repo update
 helm install nginx ingress-nginx/ingress-nginx \
   --namespace m \
   -f Helm/nginx-ingress.yaml
-``` 
+```
 
-### Установка PostgreSQL
+## PostgreSQL
+
+Один релиз Bitnami PostgreSQL с init-скриптом: пользователи и БД для `auth_db` и `customer_db`.
 
 ```bash
-kubectl create namespace homework-apps
+kubectl create namespace homework
 
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
 helm install postgres bitnami/postgresql \
-  -n homework-apps \
+  -n homework \
   -f Helm/postgres-values.yaml
 ```
 
+## Приложения (Helm chart `homework-apps`)
 
-### Установка Prometheus + Grafana + Alertmanager
-
-```bash
-kubectl create namespace monitoring
-
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-
-helm upgrade monitoring prometheus-community/kube-prometheus-stack \
-  -n monitoring \
-  -f Helm/prometheus-values.yaml
-```
-
-### Развертывание приложений (Helm)
+Chart: [Helm/homework-apps](./Helm/homework-apps/README.md).
 
 ```bash
 cd Helm/homework-apps
 
 helm install homework-apps . \
-  -n homework-apps \
+  -n homework \
   --create-namespace
-```  
+```
 
-## Что происходит при установке
-1. создаются ConfigMap и Secret для каждого сервиса
-2. запускаются Job миграций (pre-install hook) для `AuthService` и `CustomerService`
-3. после успешных миграций разворачиваются оба Deployment
-4. создаются Service для обоих сервисов
-5. создаётся общий Ingress
+При установке создаются ConfigMap и Secret для обоих сервисов, Job миграций (hook), Deployment и Service для Auth и Customer, Ingress с маршрутами:
+
+- `/api/auth`, `/.well-known` → AuthService
+- `/api/customers` → CustomerService
+
+## Мониторинг (опционально)
+
+В каталоге есть `Helm/prometheus-values.yaml` для kube-prometheus-stack (как в предыдущих ДЗ). Установка в отдельный namespace `monitoring` по аналогии с [ДЗ 4](../../ДЗ%204/K8s/README.md). ServiceMonitor для CustomerService включается в `values.yaml` chart при необходимости.
 
 ## Проверка
 
-### Pods
-
 ```bash
-kubectl get pods -n homework-apps
+kubectl get pods -n homework
+kubectl get ingress -n homework
 ```
 
-Ожидается:
-
-- pod `AuthService`
-- pod `CustomerService`
-- pod PostgreSQL
-
-### Ingress
+Примеры запросов (после записи `arch.homework`):
 
 ```bash
-kubectl get ingress -n homework-apps
+curl -sS http://arch.homework/.well-known/jwks.json
+curl -sS -X POST http://arch.homework/api/auth/login -H "Content-Type: application/json" -d "{}"
 ```
 
-## Проверка API
-
-```bash
-curl http://arch.homework/api/auth/login
-curl http://arch.homework/api/customers/me
-```
+Swagger (если включён в образе) — по путям сервисов за Ingress согласно настройке приложения.

@@ -2,6 +2,7 @@
 using CustomerService.Api.Contracts.Requests;
 using CustomerService.Api.Contracts.Responses;
 using CustomerService.Domain.Interfaces;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -58,7 +59,10 @@ namespace CustomerService.Api.Controllers.External
 
         private bool TryGetCurrentUserId(out Guid userId)
         {
-            var idClaim = User.Identity?.Name;
+            var idClaim = User.FindFirstValue("sub")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.Identity?.Name;
+
             return Guid.TryParse(idClaim, out userId);
         }
     }

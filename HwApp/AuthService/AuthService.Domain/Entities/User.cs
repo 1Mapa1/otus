@@ -18,7 +18,7 @@ namespace AuthService.Domain.Entities
 
         public User(string login, string passwordHash)
         {
-            Id = new Guid();
+            Id = Guid.NewGuid();
             Login = login;
             PasswordHash = passwordHash;
             Status = UserStatus.Pending;

@@ -1,5 +1,4 @@
 ﻿using AuthService.Application.Interfaces;
-using AuthService.Domain.Interfaces;
 using AuthService.Infrastructure.Clients.Requests;
 using System.Net.Http.Json;
 
@@ -7,7 +6,7 @@ namespace AuthService.Infrastructure.Clients
 {
     internal class CustomerServiceClient : ICustomerServiceClient
     {
-        private const string createEndpoint = "api/internal/profiles";
+        private const string createEndpoint = "api/internal/customers";
 
         private readonly HttpClient _httpClient;
 

@@ -1,65 +1,30 @@
-# HELM
+# Chart homework-apps
 
-Helm chart для развёртывания двух сервисов в Kubernetes:
+Helm chart для AuthService и CustomerService: отдельные Deployment, Service, миграции, общий Ingress.
 
-- `AuthService`
-- `CustomerService`
+## Состав
 
-Оба сервиса устанавливаются одним chart и одним release.
+- **AuthService**: Deployment, Service, ConfigMap, Secret (в т.ч. ключ JWT), Job миграций, при необходимости шаблоны ServiceMonitor.
+- **CustomerService**: Deployment, Service, ConfigMap, Secret, Job миграций, ServiceMonitor (метрики `/metrics`).
 
-## Состав chart
+## Миграции
 
-Для каждого сервиса создаются:
-
-- `Deployment`
-- `Service`
-- `ConfigMap`
-- `Secret`
-- `Job` для миграций (через Helm hooks)
-
-Дополнительно:
-
-- общий `Ingress` с маршрутами на оба сервиса
-- `ServiceMonitor` (включён по умолчанию для `CustomerService`)
+Выполняются Kubernetes Job с Helm hooks (`pre-install` / `pre-upgrade`), порядок задаётся весами аннотаций в шаблонах.
 
 ## Установка
 
+Из каталога chart (указать namespace и имя релиза по необходимости):
+
 ```bash
-helm install homework-apps . -n homework-apps
+helm install homework-apps . -n homework
 ```
 
 ## Конфигурация
 
-Основные секции `values.yaml`:
+Основные параметры — в `values.yaml`:
 
-- `common` — общие параметры (БД host/port, environment)
-- `authService` — настройки `AuthService`
-- `customerService` — настройки `CustomerService`
-- `ingress` — внешний доступ и маршруты
+- `common` — хост БД, порт, домен кластера.
+- `authService` / `customerService` — образы, реплики, пробы, секреты БД, настройки JWT и URL взаимодействия сервисов.
+- `ingress` — хост, класс, префиксы путей и сопоставление с сервисами.
 
-URL связи между сервисами формируются автоматически внутри шаблонов:
-
-- `AuthService -> CustomerService`
-- `CustomerService -> AuthService`
-- `Jwt:Issuer` для `AuthService` (по умолчанию URL самого `AuthService`)
-
-по схеме `http://<service-name>.<namespace>.svc.<clusterDomain>`.
-При необходимости можно задать override:
-
-- `authService.config.msCustomerBaseUrl`
-- `customerService.config.authUrl`
-- `authService.config.jwtIssuer`
-
-### Важно перед установкой
-
-1. Указать корректные образы:
-   - `authService.deployment.imageRepository`
-   - `authService.migrationJob.imageRepository`
-   - `customerService.deployment.imageRepository`
-   - `customerService.migrationJob.imageRepository`
-2. Для `AuthService` задать реальный приватный ключ:
-   - `authService.secret.jwtPrivateKeyPem`
-
-## Примечание
-
-PostgreSQL не входит в chart и должен быть развернут отдельно.
+PostgreSQL в chart не входит; развёртывается отдельно, см. [README уровня K8s](../../README.md).

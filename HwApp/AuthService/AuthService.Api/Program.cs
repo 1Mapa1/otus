@@ -22,8 +22,16 @@ internal class Program
 
         if (app.Environment.IsDevelopment())
         {
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwagger(c =>
+            {
+                c.RouteTemplate = "api/auth/swagger/{documentName}/swagger.json";
+            });
+
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/api/auth/swagger/v1/swagger.json", "Auth API V1");
+                c.RoutePrefix = "api/auth/swagger";
+            });
         }
 
         app.MapHealthChecks("/health/live", new HealthCheckOptions

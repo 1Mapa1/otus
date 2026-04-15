@@ -4,7 +4,7 @@ fullnameOverride: ""
 common:
   dbHost: postgres-postgresql
   dbPort: "5432"
-  environment: Production
+  environment: Development
   secretType: Opaque
   clusterDomain: cluster.local
 
@@ -14,8 +14,8 @@ authService:
   dbName: auth_db
 
   deployment:
-    imageRepository: maslovdeveloper/otus-auth-service
-    imageTag: "latest"
+    imageRepository: maslovdeveloper/hwapp-auth-service
+    imageTag: "1.7"
     replicaCount: 2
     maxSurge: 1
     maxUnavailable: 1
@@ -56,18 +56,20 @@ authService:
     enabled: true
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
-    imageRepository: maslovdeveloper/otus-auth-migration
-    imageTag: "latest"
+    imageRepository: maslovdeveloper/hwapp-auth-migration
+    imageTag: "1.2"
 
   config:
-    msCustomerBaseUrl: ""
+    # Optional override. Empty value means auto-resolve in-cluster URL.
+    msCustomerBaseUrlOverride: ""
     msCustomerTimeout: "00:00:10"
-    jwtIssuer: ""
+    # Optional override. Empty value means use AuthService in-cluster URL.
+    jwtIssuerOverride: ""
     jwtLifetimeMinutes: "60"
 
   secret:
-    dbUser: postgres
-    dbPassword: postgres
+    dbUser: auth_user
+    dbPassword: auth_pass
     jwtPrivateKeyPem: |
       -----BEGIN RSA PRIVATE KEY-----
       MIIEpQIBAAKCAQEA5yIBbI5zCDxCB7wf1i/0EdDGmxI0k9w/FBLnkC1ec/hEGtQx
@@ -101,11 +103,11 @@ authService:
 customerService:
   enabled: true
   name: customer
-  dbName: customers_db
+  dbName: customer_db
 
   deployment:
-    imageRepository: maslovdeveloper/otus-customer-service
-    imageTag: "latest"
+    imageRepository: maslovdeveloper/hwapp-customer-service
+    imageTag: "1.7"
     replicaCount: 3
     maxSurge: 1
     maxUnavailable: 1
@@ -146,15 +148,16 @@ customerService:
     enabled: true
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
-    imageRepository: maslovdeveloper/otus-customer-migration
-    imageTag: "latest"
+    imageRepository: maslovdeveloper/hwapp-customer-migration
+    imageTag: "1.0"
 
   config:
-    authUrl: ""
+    # Optional override. Empty value means auto-resolve in-cluster URL.
+    authUrlOverride: ""
 
   secret:
-    dbUser: postgres
-    dbPassword: postgres
+    dbUser: customer_user
+    dbPassword: customer_pass
 
 ingress:
   enabled: true
@@ -165,9 +168,5 @@ ingress:
       service: authService
     - path: /.well-known
       service: authService
-    - path: /swagger/auth
-      service: authService
     - path: /api/customers
-      service: customerService
-    - path: /swagger
       service: customerService
