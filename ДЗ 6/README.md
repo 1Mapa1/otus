@@ -4,6 +4,60 @@
 
 Выделить сервис аутентификации, выдавать доступ по JWT, защитить внешние операции с профилем клиента. Исходный код сервисов не хранится в этой папке: он вынесен в каталог [HwApp](../HwApp/).
 
+## 0. Архитектурное решение
+
+**Компоненты.** Клиент обращается к одному хосту (`arch.homework`); Ingress по префиксу пути направляет трафик на **AuthService** (`/api/auth`, `/.well-known`) или **CustomerService** (`/api/customers`). У каждого сервиса своя БД в общем PostgreSQL.
+
+**Регистрация.** AuthService создаёт пользователя, вызывает внутренний API CustomerService (`POST /api/internal/customers`) с идентификатором клиента, совпадающим с идентификатором пользователя, затем активирует учётную запись.
+
+**Профиль.** Чтение и изменение данных только у маршрутов `GET/PUT /api/customers/me`: идентификатор субъекта берётся из JWT (`sub`), а не из URL. Другой пользователь не может запросить профиль первого по «чужому» пути — такого внешнего API нет. CustomerService проверяет подпись и срок JWT; ключи запрашивает у AuthService по `GET /.well-known/jwks.json` **внутри кластера** (Service → Service).
+
+**Cхема.**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Клиент
+    participant A as AuthService
+    participant S as CustomerService
+
+    Note over C,S: Регистрация
+    C->>A: POST /api/auth/register
+    A->>S: POST /api/internal/customers (Id = UserId)
+    S-->>A: 200
+    A-->>C: 200
+
+    Note over C,S: Профиль без токена
+    C->>S: GET /api/customers/me
+    S-->>C: 401 Unauthorized
+
+    Note over C,S: Вход и профиль
+    C->>A: POST /api/auth/login
+    A-->>C: accessToken (JWT, sub = userId)
+
+    C->>S: PUT /api/customers/me + Bearer
+    S->>A: GET /.well-known/jwks.json
+    A-->>S: JWKS
+    S-->>C: 204 No Content
+
+    C->>S: GET /api/customers/me + Bearer
+    S->>A: GET /.well-known/jwks.json (при необходимости)
+    A-->>S: JWKS
+    S-->>C: 200 профиль
+
+    Note over C,S: Изоляция
+    Note right of S: /me только по sub из токена — чужой профиль по URL недоступен
+```
+
+## 1. Установка
+
+Namespace: **`homework`**. Отдельный API-gateway не используется: внешняя точка входа — **ingress-nginx** (см. [K8s/README.md](./K8s/README.md)).
+
+```bash
+kubectl create namespace homework
+# далее PostgreSQL и chart homework-apps — пошагово в K8s/README.md
+```
+
 ## Структура каталога
 
 | Каталог | Содержимое |
