@@ -19,8 +19,6 @@
 newman run otus-hw6.postman_collection.json -e otus-hw6.postman_environment.json --verbose
 ```
 
-Флаг `--verbose` выводит в консоль данные запросов и ответов (требование к прогону из командной строки).
-
 ## Результаты прогона
 
 Скриншоты успешного выполнения:

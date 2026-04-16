@@ -44,9 +44,6 @@ sequenceDiagram
     S->>A: GET /.well-known/jwks.json (при необходимости)
     A-->>S: JWKS
     S-->>C: 200 профиль
-
-    Note over C,S: Изоляция
-    Note right of S: /me только по sub из токена — чужой профиль по URL недоступен
 ```
 
 ## 1. Установка
