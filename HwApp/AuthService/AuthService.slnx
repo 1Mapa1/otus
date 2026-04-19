@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="AuthService.Api/AuthService.Api.csproj" />
+  <Project Path="AuthService.Application/AuthService.Application.csproj" Id="388bb20c-6c6d-4604-94fe-3cc5b1734498" />
+  <Project Path="AuthService.DbMigrator/AuthService.DbMigrator.csproj" Id="1ec01905-75df-4f89-a4a0-76571d0b32a1" />
+  <Project Path="AuthService.Domain/AuthService.Domain.csproj" />
+  <Project Path="AuthService.Infrastructure/AuthService.Infrastructure.csproj" />
+</Solution>

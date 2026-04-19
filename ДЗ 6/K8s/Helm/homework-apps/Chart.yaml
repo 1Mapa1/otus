@@ -1,0 +1,9 @@
+apiVersion: v2
+name: homework-apps
+description: A Helm chart for AuthService and CustomerService
+
+type: application
+
+version: 0.1.0
+
+appVersion: "2.0.0"

@@ -1,0 +1,610 @@
+{
+  "info": {
+    "_postman_id": "95c11cbb-496b-4892-a56e-e2a119708bb3",
+    "name": "otus-hw6",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49328604",
+    "_collection_link": "https://go.postman.co/collection/49328604-95c11cbb-496b-4892-a56e-e2a119708bb3?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Start",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const suffix = `${Date.now()}_${Math.floor(Math.random() * 100000)}`;\r",
+              "\r",
+              "pm.environment.set(\"user1Login\", `user1_${suffix}`);\r",
+              "pm.environment.set(\"user1Password\", `Pass_${suffix}`);\r",
+              "pm.environment.set(\"user1Name\", `User One ${suffix}`);\r",
+              "\r",
+              "pm.environment.set(\"user2Login\", `user2_${suffix}`);\r",
+              "pm.environment.set(\"user2Password\", `Pass_${suffix}_2`);\r",
+              "pm.environment.set(\"user2Name\", `User Two ${suffix}`);\r",
+              "\r",
+              "pm.environment.set(\"user1UpdatedName\", `Updated User One ${suffix}`);\r",
+              "\r",
+              "console.log(\"Generated data:\");\r",
+              "console.log({\r",
+              "    baseUrl: pm.environment.get(\"baseUrl\"),\r",
+              "    user1Login: pm.environment.get(\"user1Login\"),\r",
+              "    user1Password: pm.environment.get(\"user1Password\"),\r",
+              "    user1Name: pm.environment.get(\"user1Name\"),\r",
+              "    user2Login: pm.environment.get(\"user2Login\"),\r",
+              "    user2Password: pm.environment.get(\"user2Password\"),\r",
+              "    user2Name: pm.environment.get(\"user2Name\"),\r",
+              "    user1UpdatedName: pm.environment.get(\"user1UpdatedName\")\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Random test data initialized\", function () {\r",
+              "    pm.expect(pm.environment.get(\"user1Login\")).to.exist;\r",
+              "    pm.expect(pm.environment.get(\"user2Login\")).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health/live",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health",
+            "live"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register user 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Register user 1 - status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200]);\r",
+              "});\r",
+              "\r",
+              "console.log(\"Register user 1 request:\");\r",
+              "console.log({\r",
+              "    login: pm.environment.get(\"user1Login\"),\r",
+              "    password: pm.environment.get(\"user1Password\"),\r",
+              "    name: pm.environment.get(\"user1Name\")\r",
+              "});\r",
+              "\r",
+              "console.log(\"Register user 1 response:\");\r",
+              "console.log(pm.response.text());"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"login\": \"{{user1Login}}\",\r\n  \"password\": \"{{user1Password}}\",\r\n  \"name\": \"{{user1Name}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "No token user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get my profile without auth -> 401\", function () {\r",
+              "    pm.response.to.have.status(401);\r",
+              "});\r",
+              "\r",
+              "console.log(\"Get without auth response:\");\r",
+              "console.log(pm.response.text());"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "customers",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Hacker",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Update my profile without auth -> 401\", function () {\r",
+              "    pm.response.to.have.status(401);\r",
+              "});\r",
+              "\r",
+              "console.log(\"Update without auth response:\");\r",
+              "console.log(pm.response.text());"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Hacker\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "customers",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login user 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Login user 1 - status 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Access token exists\", function () {\r",
+              "    pm.expect(json.accessToken).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"user1Token\", json.accessToken);\r",
+              "\r",
+              "console.log(\"User1 token saved\");\r",
+              "console.log(json);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"login\": \"{{user1Login}}\",\r\n  \"password\": \"{{user1Password}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get user 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get my profile as user 1 -> 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Profile belongs to user 1\", function () {\r",
+              "    pm.expect(json.name).to.eql(pm.environment.get(\"user1Name\"));\r",
+              "});\r",
+              "\r",
+              "console.log(\"User1 profile:\");\r",
+              "console.log(json);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{user1Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "customers",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Change user 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Update my profile as user 1 -> 204\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([204]);\r",
+              "});\r",
+              "\r",
+              "console.log(\"User1 profile update response:\");\r",
+              "console.log(pm.response.text());"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{user1Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"{{user1UpdatedName}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "customers",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check change user 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get updated profile as user 1 -> 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Profile name was updated\", function () {\r",
+              "    pm.expect(json.name).to.eql(pm.environment.get(\"user1UpdatedName\"));\r",
+              "});\r",
+              "\r",
+              "console.log(\"Updated user1 profile:\");\r",
+              "console.log(json);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{user1Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "customers",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register user 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Register user 2 - status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200]);\r",
+              "});\r",
+              "\r",
+              "console.log(\"Register user 2 response:\");\r",
+              "console.log(pm.response.text());"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"login\": \"{{user2Login}}\",\r\n  \"password\": \"{{user2Password}}\",\r\n  \"name\": \"{{user2Name}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login user 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Login user 2 - status 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "pm.environment.set(\"user2Token\", json.accessToken);\r",
+              "\r",
+              "pm.test(\"Access token for user 2 exists\", function () {\r",
+              "    pm.expect(json.accessToken).to.exist;\r",
+              "});\r",
+              "\r",
+              "console.log(\"User2 token saved\");\r",
+              "console.log(json);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"login\": \"{{user2Login}}\",\r\n  \"password\": \"{{user2Password}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get user 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Get my profile as user 2 -> 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"User2 does not see user1 updated profile data\", function () {\r",
+              "    pm.expect(json.name).to.not.eql(pm.environment.get(\"user1UpdatedName\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"User2 sees own profile\", function () {\r",
+              "    pm.expect(json.name).to.eql(pm.environment.get(\"user2Name\"));\r",
+              "});\r",
+              "\r",
+              "console.log(\"User2 profile:\");\r",
+              "console.log(json);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{user2Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "customers",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{{- if .Values.customerService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "homework-apps.customerFullname" . }}
+  labels:
+    {{- include "homework-apps.customerLabels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+data:
+  DB_HOST: {{ .Values.common.dbHost }}
+  DB_PORT: {{ .Values.common.dbPort | quote }}
+  DB_NAME: {{ .Values.customerService.dbName }}
+  ASPNETCORE_ENVIRONMENT: {{ .Values.common.environment }}
+  Auth__Url: {{ default (include "homework-apps.authServiceUrl" .) .Values.customerService.config.authUrlOverride | quote }}
+{{- end }}

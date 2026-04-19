@@ -1,0 +1,20 @@
+{{- if .Values.authService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "homework-apps.authFullname" . }}
+  labels:
+    {{- include "homework-apps.authLabels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+data:
+  DB_HOST: {{ .Values.common.dbHost }}
+  DB_PORT: {{ .Values.common.dbPort | quote }}
+  DB_NAME: {{ .Values.authService.dbName }}
+  ASPNETCORE_ENVIRONMENT: {{ .Values.common.environment }}
+  Ms__Customer__BaseUrl: {{ default (include "homework-apps.customerServiceUrl" .) .Values.authService.config.msCustomerBaseUrlOverride | quote }}
+  Ms__Customer__Timeout: {{ .Values.authService.config.msCustomerTimeout | quote }}
+  Jwt__Issuer: {{ default (include "homework-apps.authServiceUrl" .) .Values.authService.config.jwtIssuerOverride | quote }}
+  Jwt__LifetimeMinutes: {{ .Values.authService.config.jwtLifetimeMinutes | quote }}
+{{- end }}

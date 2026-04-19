@@ -1,0 +1,13 @@
+prometheus:
+  prometheusSpec:
+    # Разрешаем брать ServiceMonitor не только из monitoring
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+
+grafana:
+  adminUser: admin
+  adminPassword: admin
+
+  service:
+    type: ClusterIP
