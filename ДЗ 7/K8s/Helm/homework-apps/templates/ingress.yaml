@@ -1,0 +1,26 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "homework-apps.fullname" . }}
+  labels:
+    {{- include "homework-apps.labels" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          {{- range .Values.ingress.paths }}
+          {{- $serviceCfg := index $.Values .service }}
+          {{- if $serviceCfg.enabled }}
+          - pathType: Prefix
+            path: {{ .path | quote }}
+            backend:
+              service:
+                name: {{ include "homework-apps.serviceFullnameByKey" (list $ .service) }}
+                port:
+                  number: {{ $serviceCfg.service.port }}
+          {{- end }}
+          {{- end }}
+{{- end -}}

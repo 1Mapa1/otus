@@ -1,0 +1,19 @@
+1. Access your applications:
+
+{{- if .Values.ingress.enabled }}
+  AuthService:
+  http://{{ .Values.ingress.host }}/api/auth
+
+  CustomerService:
+  http://{{ .Values.ingress.host }}/api/customers
+{{- else }}
+  {{- if .Values.authService.enabled }}
+  kubectl port-forward svc/{{ include "homework-apps.authFullname" . }} 8081:{{ .Values.authService.service.port }}
+  AuthService: http://127.0.0.1:8081/api/auth
+  {{- end }}
+
+  {{- if .Values.customerService.enabled }}
+  kubectl port-forward svc/{{ include "homework-apps.customerFullname" . }} 8080:{{ .Values.customerService.service.port }}
+  CustomerService: http://127.0.0.1:8080/api/customers
+  {{- end }}
+{{- end }}

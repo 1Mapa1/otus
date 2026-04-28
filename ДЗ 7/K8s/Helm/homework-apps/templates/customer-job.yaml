@@ -1,0 +1,48 @@
+{{- if and .Values.customerService.enabled .Values.customerService.migrationJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "homework-apps.customerFullname" . }}-migration
+  labels:
+    {{- include "homework-apps.customerLabels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: {{ .Values.customerService.migrationJob.ttlSecondsAfterFinished }}
+  completions: 1
+  backoffLimit: {{ .Values.customerService.migrationJob.backoffLimit }}
+  template:
+    spec:
+      containers:
+        - name: {{ .Values.customerService.name }}-migration
+          image: {{ .Values.customerService.migrationJob.imageRepository }}:{{ .Values.customerService.migrationJob.imageTag }}
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: DB_PASSWORD
+      restartPolicy: Never
+{{- end }}

@@ -1,0 +1,39 @@
+replicaCount: 1
+
+image:
+  registry: docker.io
+  repository: bitnamilegacy/kafka
+  tag: 4.0.0-debian-12-r10
+
+kraft:
+  enabled: true
+
+zookeeper:
+  enabled: false
+
+listeners:
+  client:
+    protocol: PLAINTEXT
+
+auth:
+  clientProtocol: plaintext
+  interBrokerProtocol: plaintext
+
+persistence:
+  enabled: true
+  size: 1Gi
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+provisioning:
+  enabled: true
+  topics:
+    - name: customers
+      partitions: 3
+      replicationFactor: 1
