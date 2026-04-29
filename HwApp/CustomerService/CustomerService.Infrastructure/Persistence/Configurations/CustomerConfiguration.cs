@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CustomerService.Infrastructure.Ef.Entities
+namespace CustomerService.Infrastructure.Persistence.Configurations
 {
     internal class CustomerConfiguration : IEntityTypeConfiguration<Customer>
     {
@@ -22,6 +22,7 @@ namespace CustomerService.Infrastructure.Ef.Entities
                 .HasMaxLength(50);
 
             builder.Property(x => x.Email)
+                .IsRequired()
                 .HasColumnName("email")
                 .HasMaxLength(50);
 

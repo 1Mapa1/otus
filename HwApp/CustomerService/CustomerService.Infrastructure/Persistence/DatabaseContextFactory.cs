@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CustomerService.Infrastructure.Persistence.Outbox;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using System;
 
-namespace CustomerService.Infrastructure.Ef
+namespace CustomerService.Infrastructure.Persistence
 {
     internal class DatabaseContextFactory : IDesignTimeDbContextFactory<DatabaseContext>
     {
@@ -21,7 +22,9 @@ namespace CustomerService.Infrastructure.Ef
 
             optionsBuilder.UseNpgsql(connectionString);
 
-            return new DatabaseContext(optionsBuilder.Options);
+            return new DatabaseContext(
+                optionsBuilder.Options,
+                new IntegrationEventMapping());
         }
     }
 }

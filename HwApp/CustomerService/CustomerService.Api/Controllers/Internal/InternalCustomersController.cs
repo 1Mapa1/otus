@@ -11,12 +11,10 @@ namespace CustomerService.Api.Controllers.Internal
     public class InternalCustomersController : ControllerBase
     {
         private readonly ICustomerRepository _repository;
-        private readonly IMapper _mapper;
 
-        public InternalCustomersController(ICustomerRepository repository, IMapper mapper)
+        public InternalCustomersController(ICustomerRepository repository)
         {
             _repository = repository;
-            _mapper = mapper;
         }
 
         [HttpPost]
@@ -27,7 +25,7 @@ namespace CustomerService.Api.Controllers.Internal
             if (existingCustomer is not null)
                 return Ok();
 
-            var customer = _mapper.Map<Customer>(request);
+            var customer = Customer.Create(request.Id, request.Name, request.Email, request.DateOfBirth);
 
             await _repository.AddAsync(customer, ct);
 
