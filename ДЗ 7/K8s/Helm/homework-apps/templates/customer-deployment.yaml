@@ -76,6 +76,21 @@ spec:
                 secretKeyRef:
                   name: {{ include "homework-apps.customerFullname" . }}
                   key: DB_PASSWORD
+            - name: Kafka__BootstrapServers
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: Kafka__BootstrapServers
+            - name: Kafka__Acks
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: Kafka__Acks
+            - name: Kafka__EnableIdempotence
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "homework-apps.customerFullname" . }}
+                  key: Kafka__EnableIdempotence
             - name: ASPNETCORE_URLS
               value: "http://+:{{ .Values.customerService.deployment.port }}"
           ports:

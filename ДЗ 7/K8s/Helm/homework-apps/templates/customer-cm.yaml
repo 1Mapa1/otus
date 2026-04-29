@@ -14,4 +14,7 @@ data:
   DB_NAME: {{ .Values.customerService.dbName }}
   ASPNETCORE_ENVIRONMENT: {{ .Values.common.environment }}
   Auth__Url: {{ default (include "homework-apps.authServiceUrl" .) .Values.customerService.config.authUrlOverride | quote }}
+  Kafka__BootstrapServers: {{ default (include "homework-apps.kafkaBootstrapServersDefault" .) .Values.common.kafkaBootstrapServers | quote }}
+  Kafka__Acks: {{ .Values.customerService.config.kafkaAcks | quote }}
+  Kafka__EnableIdempotence: {{ .Values.customerService.config.kafkaEnableIdempotence }}
 {{- end }}

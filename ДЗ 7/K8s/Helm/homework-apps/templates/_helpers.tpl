@@ -151,3 +151,13 @@ In-cluster URL for CustomerService.
 {{- define "homework-apps.customerServiceUrl" -}}
 {{- printf "http://%s.%s.svc.%s" (include "homework-apps.customerFullname" .) .Release.Namespace (default "cluster.local" .Values.common.clusterDomain) -}}
 {{- end }}
+
+{{/*
+Bootstrap servers for Bitnami Kafka (KRaft): client bootstrap via controller headless Service.
+Same pattern as kafka-ui-values.yaml bootstrapServers; release name must match `helm install <name> bitnami/kafka`.
+Override with common.kafkaBootstrapServers when non-empty.
+*/}}
+{{- define "homework-apps.kafkaBootstrapServersDefault" -}}
+{{- $kafkaRelease := .Values.common.kafkaClusterReleaseName | default "kafka" -}}
+{{- printf "%s-controller-headless.%s.svc.%s:9092" $kafkaRelease .Release.Namespace (default "cluster.local" .Values.common.clusterDomain) -}}
+{{- end }}

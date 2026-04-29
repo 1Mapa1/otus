@@ -7,6 +7,10 @@ common:
   environment: Development
   secretType: Opaque
   clusterDomain: cluster.local
+  # Пусто — собрать адрес как у Bitnami Kafka (KRaft): <kafkaClusterReleaseName>-controller-headless.<namespace>.svc.<clusterDomain>:9092 (должен совпадать ns с homework-apps).
+  kafkaBootstrapServers: ""
+  # Имя Helm-релиза Kafka: helm install <kafkaClusterReleaseName> bitnami/kafka ...
+  kafkaClusterReleaseName: kafka
 
 authService:
   enabled: true
@@ -154,6 +158,8 @@ customerService:
   config:
     # Optional override. Empty value means auto-resolve in-cluster URL.
     authUrlOverride: ""
+    kafkaAcks: "All"
+    kafkaEnableIdempotence: true
 
   secret:
     dbUser: customer_user
