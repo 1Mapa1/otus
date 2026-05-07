@@ -6,14 +6,22 @@
 
   CustomerService:
   http://{{ .Values.ingress.host }}/api/customers
+
+  NotificationService:
+  http://{{ .Values.ingress.host }}/api/notifications
 {{- else }}
   {{- if .Values.authService.enabled }}
-  kubectl port-forward svc/{{ include "homework-apps.authFullname" . }} 8081:{{ .Values.authService.service.port }}
+  kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.authService.name) }} 8081:{{ .Values.authService.service.port }}
   AuthService: http://127.0.0.1:8081/api/auth
   {{- end }}
 
   {{- if .Values.customerService.enabled }}
-  kubectl port-forward svc/{{ include "homework-apps.customerFullname" . }} 8080:{{ .Values.customerService.service.port }}
+  kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.customerService.name) }} 8080:{{ .Values.customerService.service.port }}
   CustomerService: http://127.0.0.1:8080/api/customers
+  {{- end }}
+
+  {{- if .Values.notificationService.enabled }}
+  kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.notificationService.name) }} 8082:{{ .Values.notificationService.service.port }}
+  NotificationService: http://127.0.0.1:8082/api/notifications
   {{- end }}
 {{- end }}

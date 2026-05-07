@@ -6,9 +6,7 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
+Create a default fully qualified app name (umbrella release base name).
 */}}
 {{- define "homework-apps.fullname" -}}
 {{- if .Values.fullnameOverride }}
@@ -51,7 +49,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create resource name for a specific component.
+Resource name: <umbrella fullname>-<component> (must match subchart auth-service.fullname when Release.Name matches umbrella naming).
+Subcharts use Release.Name-component; umbrella fullname equals Release.Name when release name contains chart name.
 */}}
 {{- define "homework-apps.componentFullname" -}}
 {{- $root := .root -}}
@@ -60,104 +59,11 @@ Create resource name for a specific component.
 {{- end }}
 
 {{/*
-Common labels for a specific component.
-*/}}
-{{- define "homework-apps.componentLabels" -}}
-{{- $root := .root -}}
-{{- $component := .component -}}
-helm.sh/chart: {{ include "homework-apps.chart" $root }}
-app.kubernetes.io/name: {{ include "homework-apps.name" $root }}
-app.kubernetes.io/instance: {{ $root.Release.Name }}
-app.kubernetes.io/component: {{ $component }}
-{{- if $root.Chart.AppVersion }}
-app.kubernetes.io/version: {{ $root.Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ $root.Release.Service }}
-{{- end }}
-
-{{/*
-Selector labels for a specific component.
-*/}}
-{{- define "homework-apps.componentSelectorLabels" -}}
-{{- $root := .root -}}
-{{- $component := .component -}}
-app.kubernetes.io/name: {{ include "homework-apps.name" $root }}
-app.kubernetes.io/instance: {{ $root.Release.Name }}
-app.kubernetes.io/component: {{ $component }}
-{{- end }}
-
-{{/*
-AuthService fullname.
-*/}}
-{{- define "homework-apps.authFullname" -}}
-{{- include "homework-apps.componentFullname" (dict "root" . "component" .Values.authService.name) -}}
-{{- end }}
-
-{{/*
-AuthService labels.
-*/}}
-{{- define "homework-apps.authLabels" -}}
-{{- include "homework-apps.componentLabels" (dict "root" . "component" .Values.authService.name) -}}
-{{- end }}
-
-{{/*
-AuthService selector labels.
-*/}}
-{{- define "homework-apps.authSelectorLabels" -}}
-{{- include "homework-apps.componentSelectorLabels" (dict "root" . "component" .Values.authService.name) -}}
-{{- end }}
-
-{{/*
-CustomerService fullname.
-*/}}
-{{- define "homework-apps.customerFullname" -}}
-{{- include "homework-apps.componentFullname" (dict "root" . "component" .Values.customerService.name) -}}
-{{- end }}
-
-{{/*
-CustomerService labels.
-*/}}
-{{- define "homework-apps.customerLabels" -}}
-{{- include "homework-apps.componentLabels" (dict "root" . "component" .Values.customerService.name) -}}
-{{- end }}
-
-{{/*
-CustomerService selector labels.
-*/}}
-{{- define "homework-apps.customerSelectorLabels" -}}
-{{- include "homework-apps.componentSelectorLabels" (dict "root" . "component" .Values.customerService.name) -}}
-{{- end }}
-
-{{/*
-Resolve service fullname by values key: authService/customerService.
+Resolve K8s Service name for ingress by values key authService / customerService.
 */}}
 {{- define "homework-apps.serviceFullnameByKey" -}}
 {{- $root := index . 0 -}}
 {{- $serviceKey := index . 1 -}}
 {{- $serviceCfg := index $root.Values $serviceKey -}}
 {{- include "homework-apps.componentFullname" (dict "root" $root "component" $serviceCfg.name) -}}
-{{- end }}
-
-{{/*
-In-cluster URL for AuthService.
-*/}}
-{{- define "homework-apps.authServiceUrl" -}}
-{{- printf "http://%s.%s.svc.%s" (include "homework-apps.authFullname" .) .Release.Namespace (default "cluster.local" .Values.common.clusterDomain) -}}
-{{- end }}
-
-{{/*
-In-cluster URL for CustomerService.
-*/}}
-{{- define "homework-apps.customerServiceUrl" -}}
-{{- printf "http://%s.%s.svc.%s" (include "homework-apps.customerFullname" .) .Release.Namespace (default "cluster.local" .Values.common.clusterDomain) -}}
-{{- end }}
-
-{{/*
-Bootstrap servers for Bitnami Kafka (KRaft): client bootstrap via controller headless Service.
-Same pattern as kafka-ui-values.yaml bootstrapServers; release name must match `helm install <name> bitnami/kafka`.
-Override with common.kafkaBootstrapServers when non-empty.
-*/}}
-{{- define "homework-apps.kafkaBootstrapServersDefault" -}}
-{{- $kafkaRelease := .Values.common.kafkaClusterReleaseName | default "kafka" -}}
-{{- printf "%s-controller-headless.%s.svc.%s:9092" $kafkaRelease .Release.Namespace (default "cluster.local" .Values.common.clusterDomain) -}}
 {{- end }}

@@ -1,0 +1,12 @@
+dependencies:
+- name: auth-service
+  repository: file://subcharts/auth-service
+  version: 0.1.0
+- name: customer-service
+  repository: file://subcharts/customer-service
+  version: 0.1.0
+- name: notification-service
+  repository: file://subcharts/notification-service
+  version: 0.1.0
+digest: sha256:390ba6b2eadb2a374ff6240f8fdc44f3d0c9a119a61346514fce1cbfca6f2b41
+generated: "2026-05-07T20:37:56.821070093Z"

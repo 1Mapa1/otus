@@ -39,20 +39,25 @@ helm install postgres bitnami/postgresql \
 
 ## Приложения (Helm chart `homework-apps`)
 
-Chart: [Helm/homework-apps](./Helm/homework-apps/README.md).
+Chart: [Helm/homework-apps](./Helm/homework-apps/README.md) — umbrella chart с подчартами `auth-service` и `customer-service` (исходники в `subcharts/`).
 
 ```bash
 cd Helm/homework-apps
 
-helm install homework-apps . \
+helm dependency update
+
+helm upgrade --install homework-apps . \
   -n homework \
   --create-namespace
 ```
 
-При установке создаются ConfigMap и Secret для обоих сервисов, Job миграций (hook), Deployment и Service для Auth и Customer, Ingress с маршрутами:
+Либо одной командой: добавьте **`--dependency-update`** к `helm upgrade --install`, если не вызывали `helm dependency update` вручную.
+
+При установке создаются ресурсы для Auth, Customer и Notification (ConfigMap, Secret, Job миграций, Deployment, Service), Ingress с маршрутами:
 
 - `/api/auth`, `/.well-known` → AuthService
 - `/api/customers` → CustomerService
+- `/api/notifications` → NotificationService
 
 ## Мониторинг (опционально)
 

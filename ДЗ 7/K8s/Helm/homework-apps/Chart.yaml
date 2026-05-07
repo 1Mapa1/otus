@@ -1,9 +1,26 @@
 apiVersion: v2
 name: homework-apps
-description: A Helm chart for AuthService and CustomerService
+description: Umbrella chart for Auth, Customer and Notification services
 
 type: application
 
 version: 0.1.0
 
 appVersion: "2.0.0"
+
+dependencies:
+  - name: auth-service
+    version: 0.1.0
+    repository: file://subcharts/auth-service
+    alias: authService
+    condition: authService.enabled
+  - name: customer-service
+    version: 0.1.0
+    repository: file://subcharts/customer-service
+    alias: customerService
+    condition: customerService.enabled
+  - name: notification-service
+    version: 0.1.0
+    repository: file://subcharts/notification-service
+    alias: notificationService
+    condition: notificationService.enabled

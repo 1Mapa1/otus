@@ -1,15 +1,20 @@
 nameOverride: ""
 fullnameOverride: ""
 
-common:
+global:
+  # Должно совпадать с .Chart.Name родительского umbrella; участвует в именах вида <releaseBase>-auth вместе с логикой homework-apps.fullname.
+  umbrellaChartName: homework-apps
+  # app.kubernetes.io/name для подов/сервисов (как в монолитном chart).
+  kubernetesAppName: homework-apps
+  peerAuthName: auth
+  peerCustomerName: customer
   dbHost: postgres-postgresql
   dbPort: "5432"
   environment: Development
   secretType: Opaque
   clusterDomain: cluster.local
-  # Пусто — собрать адрес как у Bitnami Kafka (KRaft): <kafkaClusterReleaseName>-controller-headless.<namespace>.svc.<clusterDomain>:9092 (должен совпадать ns с homework-apps).
+  # Пусто — Bitnami Kafka (KRaft): <kafkaClusterReleaseName>-controller-headless.<namespace>.svc.<clusterDomain>:9092
   kafkaBootstrapServers: ""
-  # Имя Helm-релиза Kafka: helm install <kafkaClusterReleaseName> bitnami/kafka ...
   kafkaClusterReleaseName: kafka
 
 authService:
@@ -156,7 +161,6 @@ customerService:
     imageTag: "1.2"
 
   config:
-    # Optional override. Empty value means auto-resolve in-cluster URL.
     authUrlOverride: ""
     kafkaAcks: "All"
     kafkaEnableIdempotence: true
@@ -164,6 +168,57 @@ customerService:
   secret:
     dbUser: customer_user
     dbPassword: customer_pass
+
+notificationService:
+  enabled: true
+  name: notification
+  dbName: notification_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-notification-service
+    imageTag: "1.0"
+    replicaCount: 2
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-notification-migration
+    imageTag: "1.0"
+
+  config:
+    authUrlOverride: ""
+    kafkaGroupId: notification-service
+    kafkaTopics:
+      - customers
+      - orders
+
+  secret:
+    dbUser: notification_user
+    dbPassword: notification_pass
 
 ingress:
   enabled: true
@@ -176,3 +231,5 @@ ingress:
       service: authService
     - path: /api/customers
       service: customerService
+    - path: /api/notifications
+      service: notificationService

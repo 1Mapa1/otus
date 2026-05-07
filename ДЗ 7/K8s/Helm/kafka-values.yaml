@@ -34,6 +34,9 @@ resources:
 provisioning:
   enabled: true
   topics:
+    - name: orders
+      partitions: 3
+      replicationFactor: 1
     - name: customers
       partitions: 3
       replicationFactor: 1

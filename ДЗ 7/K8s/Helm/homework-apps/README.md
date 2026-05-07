@@ -1,30 +1,38 @@
 # Chart homework-apps
 
-Helm chart для AuthService и CustomerService: отдельные Deployment, Service, миграции, общий Ingress.
+Umbrella chart: общий Ingress родителя и подчарты **auth-service**, **customer-service**, **notification-service** (каталог `subcharts/`). Postgres, Kafka и прочая инфраструктура в chart не входят.
 
 ## Состав
 
-- **AuthService**: Deployment, Service, ConfigMap, Secret (в т.ч. ключ JWT), Job миграций, при необходимости шаблоны ServiceMonitor.
-- **CustomerService**: Deployment, Service, ConfigMap, Secret, Job миграций, ServiceMonitor (метрики `/metrics`).
+- **Родитель**: Ingress, `NOTES.txt`.
+- **auth-service**: Deployment, Service, ConfigMap, Secret (JWT), Job миграций, при необходимости ServiceMonitor.
+- **customer-service**: Deployment, Service, ConfigMap, Secret, Job миграций, ServiceMonitor (`/metrics`).
+- **notification-service**: Deployment, Service, ConfigMap, Secret, Job миграций; Kafka consumer + HTTP API (`/api/notifications`).
 
-## Миграции
+## Требования
 
-Выполняются Kubernetes Job с Helm hooks (`pre-install` / `pre-upgrade`), порядок задаётся весами аннотаций в шаблонах.
+- **Helm 3** на машине, с которой выполняется установка.
 
 ## Установка
 
-Из каталога chart (указать namespace и имя релиза по необходимости):
+Из каталога этого chart:
 
 ```bash
-helm install homework-apps . -n homework
+helm dependency update
+
+helm upgrade --install homework-apps . \
+  -n homework \
+  --create-namespace
 ```
+
+Флаг **`--dependency-update`** у `helm upgrade --install` может заменить отдельный вызов `helm dependency update` (подтянет зависимости из `subcharts/` в `charts/*.tgz` перед рендером).
 
 ## Конфигурация
 
-Основные параметры — в `values.yaml`:
+Файл `values.yaml`:
 
-- `common` — хост БД, порт, домен кластера.
-- `authService` / `customerService` — образы, реплики, пробы, секреты БД, настройки JWT и URL взаимодействия сервисов.
-- `ingress` — хост, класс, префиксы путей и сопоставление с сервисами.
+- **`global`** — общие настройки для подчартов: БД, окружение, домен кластера, Kafka bootstrap, имена компонентов для in-cluster URL (`peerAuthName`, `peerCustomerName`, `umbrellaChartName`, `kubernetesAppName`).
+- **`authService`** / **`customerService`** / **`notificationService`** — параметры подчартов (образы, реплики, пробы, секреты, список Kafka-топиков для Notification и т.д.).
+- **`ingress`** — хост, класс, пути и привязка к сервисам.
 
-PostgreSQL в chart не входит; развёртывается отдельно, см. [README уровня K8s](../../README.md).
+PostgreSQL и остальное — отдельно, см. [README уровня K8s](../../README.md).
