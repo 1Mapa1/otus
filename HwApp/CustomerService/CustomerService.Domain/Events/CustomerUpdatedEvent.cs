@@ -6,5 +6,8 @@ namespace CustomerService.Domain.Events
             Guid UserId,
             string Name,
             string Email
-        ) : IDomainEvent;
+        ) : IDomainEvent
+    {
+        public string Key => UserId.ToString();
+    }
 }

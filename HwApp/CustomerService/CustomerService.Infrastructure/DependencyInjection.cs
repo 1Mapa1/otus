@@ -28,8 +28,6 @@ namespace CustomerService.Infrastructure
 
             services.AddScoped<ICustomerRepository, CustomerRepository>();
 
-            services.AddSingleton<IIntegrationEventMapping, IntegrationEventMapping>();
-
             services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
             services.AddHostedService<OutboxPublisher>();
@@ -53,6 +51,8 @@ namespace CustomerService.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            services.AddSingleton<IIntegrationEventMapping, IntegrationEventMapping>();
+
             var connectionString = configuration.GetConnectionStringLocal();
 
             services.AddDbContext<DatabaseContext>(options =>

@@ -2,9 +2,12 @@
 
 namespace CustomerService.Domain.Events
 {
-    public record CustomerCreatedEvent (
+    public record CustomerCreatedEvent(
             Guid UserId,
             string Name,
             string Email
-        ) : IDomainEvent;
+        ) : IDomainEvent
+    {
+        public string Key => UserId.ToString();
+    }
 }

@@ -21,6 +21,11 @@ namespace CustomerService.Infrastructure.Persistence.Configurations
                 .HasColumnName("topic")
                 .HasMaxLength(50);
 
+            builder.Property(x => x.Key)
+                .IsRequired()
+                .HasColumnName("key")
+                .HasMaxLength(50);
+
             builder.Property(x => x.Payload)
                 .IsRequired()
                 .HasColumnName("payload")

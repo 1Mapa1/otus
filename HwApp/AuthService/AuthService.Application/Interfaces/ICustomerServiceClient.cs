@@ -2,6 +2,6 @@
 {
     public interface ICustomerServiceClient
     {
-        Task CreateAsync(Guid userId, string name, CancellationToken ct);
+        Task CreateAsync(Guid userId, string name, string email, CancellationToken ct);
     }
 }

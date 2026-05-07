@@ -15,9 +15,9 @@ namespace AuthService.Infrastructure.Clients
             _httpClient = httpClient;
         }
 
-        public async Task CreateAsync(Guid userId, string name, CancellationToken ct)
+        public async Task CreateAsync(Guid userId, string name, string email, CancellationToken ct)
         {
-            var request = new CreateCustomerRequest(userId, name);
+            var request = new CreateCustomerRequest(userId, name, email);
 
             using var response = await _httpClient.PostAsJsonAsync(
                 createEndpoint,

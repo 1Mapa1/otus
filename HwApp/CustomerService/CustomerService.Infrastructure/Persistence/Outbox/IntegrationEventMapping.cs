@@ -5,18 +5,23 @@ namespace CustomerService.Infrastructure.Persistence.Outbox
 {
     internal sealed class IntegrationEventMapping : IIntegrationEventMapping
     {
-        private static readonly IReadOnlyDictionary<Type, EventMetadata> mapping = new Dictionary<Type, EventMetadata>
-        {
-            [typeof(CustomerCreatedEvent)] = new EventMetadata("customers", "customer.created.v1"),
-            [typeof(CustomerUpdatedEvent)] = new EventMetadata("customers", "customer.updated.v1")
-        };
+        private static readonly IReadOnlyDictionary<Type, (string Topic, string EventType)> Mapping =
+           new Dictionary<Type, (string Topic, string EventType)>
+           {
+               [typeof(CustomerCreatedEvent)] = ("customers", "customer.created.v1"),
+               [typeof(CustomerUpdatedEvent)] = ("customers", "customer.updated.v1")
+           };
 
         public EventMetadata Resolve(IDomainEvent domainEvent)
         {
-            if (!mapping.TryGetValue(domainEvent.GetType(), out var metadata))
-                throw new InvalidOperationException($"No integration mapping for {domainEvent.GetType().Name}");
+            if (!Mapping.TryGetValue(domainEvent.GetType(), out var metadata))
+                throw new InvalidOperationException(
+                    $"No integration mapping for {domainEvent.GetType().Name}");
 
-            return metadata;
+            return new EventMetadata(
+                metadata.Topic,
+                metadata.EventType,
+                domainEvent.Key);
         }
     }
 }

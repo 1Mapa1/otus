@@ -37,7 +37,7 @@ namespace AuthService.Application.Services
                 await _userRepository.AddAsync(user, ct);
             }
 
-            await _customerClient.CreateAsync(user.Id, request.Name, ct);
+            await _customerClient.CreateAsync(user.Id, request.Name, request.Email, ct);
 
             await _userRepository.UpdateStatusToActiveAsync(user.Id, ct);
         }

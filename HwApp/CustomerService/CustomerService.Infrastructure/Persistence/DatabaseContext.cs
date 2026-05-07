@@ -39,20 +39,25 @@ namespace CustomerService.Infrastructure.Persistence
             {
                 var @event = _mapping.Resolve(domainEvent);
 
+                var eventData = JsonSerializer.SerializeToElement(
+                    domainEvent,
+                    domainEvent.GetType());
+
                 var envelope = new
                 {
                     EventId = Guid.NewGuid(),
                     @event.EventType,
-                    OccuredAt = DateTime.UtcNow,
-                    Data = domainEvent
+                    OccurredAt = DateTime.UtcNow,
+                    Data = eventData
                 };
 
                 OutboxMessages.Add(new OutboxMessage
                 {
                     Id = envelope.EventId,
                     Topic = @event.Topic,
+                    Key = @event.Key,
                     Payload = JsonSerializer.Serialize(envelope),
-                    CreatedAt = envelope.OccuredAt
+                    CreatedAt = envelope.OccurredAt
                 });
             }    
 

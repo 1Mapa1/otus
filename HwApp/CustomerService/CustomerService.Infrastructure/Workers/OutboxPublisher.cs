@@ -66,7 +66,7 @@ namespace CustomerService.Infrastructure.Workers
             {
                 await kafka.ProduceAsync(
                     message.Topic,
-                    message.Id.ToString(),
+                    message.Key,
                     message.Payload,
                     ct);
 

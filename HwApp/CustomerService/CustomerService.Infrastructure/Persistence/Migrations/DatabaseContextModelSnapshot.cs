@@ -61,6 +61,12 @@ namespace CustomerService.Infrastructure.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("key");
+
                     b.Property<string>("Payload")
                         .IsRequired()
                         .HasMaxLength(1000)

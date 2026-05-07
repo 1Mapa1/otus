@@ -6,6 +6,8 @@
 
         public string Topic { get; set; } = default!;
 
+        public string Key { get; set; } = default!;
+
         public string Payload { get; set; } = default!;
 
         public DateTime CreatedAt { get; set; }

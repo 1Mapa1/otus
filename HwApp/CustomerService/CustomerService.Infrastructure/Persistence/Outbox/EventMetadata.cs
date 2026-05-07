@@ -2,6 +2,7 @@
 {
     internal record EventMetadata (
             string Topic,
-            string EventType
+            string EventType,
+            string Key
         );
 }
