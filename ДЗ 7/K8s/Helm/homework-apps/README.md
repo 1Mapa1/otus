@@ -1,6 +1,6 @@
 # Chart homework-apps
 
-Umbrella chart: общий Ingress родителя и подчарты **auth-service**, **customer-service**, **notification-service** (каталог `subcharts/`). Postgres, Kafka и прочая инфраструктура в chart не входят.
+Umbrella chart: общий Ingress родителя и подчарты **auth-service**, **customer-service**, **notification-service**, **billing-service** (каталог `subcharts/`). Postgres, Kafka и прочая инфраструктура в chart не входят.
 
 ## Состав
 
@@ -8,6 +8,7 @@ Umbrella chart: общий Ingress родителя и подчарты **auth-s
 - **auth-service**: Deployment, Service, ConfigMap, Secret (JWT), Job миграций, при необходимости ServiceMonitor.
 - **customer-service**: Deployment, Service, ConfigMap, Secret, Job миграций, ServiceMonitor (`/metrics`).
 - **notification-service**: Deployment, Service, ConfigMap, Secret, Job миграций; Kafka consumer + HTTP API (`/api/notifications`).
+- **billing-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API (`/api/billing/...`, `/api/internal/billing/...`).
 
 ## Требования
 
@@ -32,7 +33,7 @@ helm upgrade --install homework-apps . \
 Файл `values.yaml`:
 
 - **`global`** — общие настройки для подчартов: БД, окружение, домен кластера, Kafka bootstrap, имена компонентов для in-cluster URL (`peerAuthName`, `peerCustomerName`, `umbrellaChartName`, `kubernetesAppName`).
-- **`authService`** / **`customerService`** / **`notificationService`** — параметры подчартов (образы, реплики, пробы, секреты, список Kafka-топиков для Notification и т.д.).
+- **`authService`** / **`customerService`** / **`notificationService`** / **`billingService`** — параметры подчартов (образы, реплики, пробы, секреты, список Kafka-топиков для Notification и т.д.).
 - **`ingress`** — хост, класс, пути и привязка к сервисам.
 
 PostgreSQL и остальное — отдельно, см. [README уровня K8s](../../README.md).

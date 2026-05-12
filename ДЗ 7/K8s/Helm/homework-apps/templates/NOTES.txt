@@ -9,6 +9,12 @@
 
   NotificationService:
   http://{{ .Values.ingress.host }}/api/notifications
+
+  BillingService (external API):
+  http://{{ .Values.ingress.host }}/api/billing
+
+  BillingService (internal API):
+  http://{{ .Values.ingress.host }}/api/internal/billing
 {{- else }}
   {{- if .Values.authService.enabled }}
   kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.authService.name) }} 8081:{{ .Values.authService.service.port }}
@@ -23,5 +29,10 @@
   {{- if .Values.notificationService.enabled }}
   kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.notificationService.name) }} 8082:{{ .Values.notificationService.service.port }}
   NotificationService: http://127.0.0.1:8082/api/notifications
+  {{- end }}
+
+  {{- if .Values.billingService.enabled }}
+  kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.billingService.name) }} 8083:{{ .Values.billingService.service.port }}
+  BillingService: http://127.0.0.1:8083/api/billing
   {{- end }}
 {{- end }}

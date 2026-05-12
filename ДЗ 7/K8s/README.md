@@ -1,6 +1,6 @@
 # Kubernetes
 
-Helm chart и значения для развёртывания AuthService и CustomerService, общий PostgreSQL и Ingress.
+Helm chart и значения для развёртывания приложений (Auth, Customer, Notification, Billing и др.), общий PostgreSQL и Ingress.
 
 ## Требования
 
@@ -24,7 +24,7 @@ helm install nginx ingress-nginx/ingress-nginx \
 
 ## PostgreSQL
 
-Один релиз Bitnami PostgreSQL с init-скриптом: пользователи и БД для `auth_db` и `customer_db`.
+Один релиз Bitnami PostgreSQL с init-скриптом: пользователи и БД для сервисов (см. `Helm/postgres-values.yaml`).
 
 ```bash
 kubectl create namespace homework
@@ -39,7 +39,7 @@ helm install postgres bitnami/postgresql \
 
 ## Приложения (Helm chart `homework-apps`)
 
-Chart: [Helm/homework-apps](./Helm/homework-apps/README.md) — umbrella chart с подчартами `auth-service` и `customer-service` (исходники в `subcharts/`).
+Chart: [Helm/homework-apps](./Helm/homework-apps/README.md) — umbrella chart с подчартами в `subcharts/` (auth, customer, notification, billing).
 
 ```bash
 cd Helm/homework-apps
@@ -53,11 +53,13 @@ helm upgrade --install homework-apps . \
 
 Либо одной командой: добавьте **`--dependency-update`** к `helm upgrade --install`, если не вызывали `helm dependency update` вручную.
 
-При установке создаются ресурсы для Auth, Customer и Notification (ConfigMap, Secret, Job миграций, Deployment, Service), Ingress с маршрутами:
+При установке создаются ресурсы для подключённых сервисов (ConfigMap, Secret, Job миграций, Deployment, Service), Ingress с маршрутами:
 
 - `/api/auth`, `/.well-known` → AuthService
 - `/api/customers` → CustomerService
 - `/api/notifications` → NotificationService
+- `/api/billing` — внешнее API BillingService (`/api/billing/accounts`, Swagger и т.д.)
+- `/api/internal/billing` — внутреннее API BillingService
 
 ## Мониторинг (опционально)
 

@@ -31,6 +31,9 @@ primary:
         CREATE USER order_user WITH ENCRYPTED PASSWORD 'order_pass';
         CREATE DATABASE order_db OWNER order_user;
 
+        CREATE USER billing_user WITH ENCRYPTED PASSWORD 'billing_pass';
+        CREATE DATABASE billing_db OWNER billing_user;
+
         CREATE USER notification_user WITH ENCRYPTED PASSWORD 'notification_pass';
         CREATE DATABASE notification_db OWNER notification_user;
 

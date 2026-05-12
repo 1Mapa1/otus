@@ -220,6 +220,53 @@ notificationService:
     dbUser: notification_user
     dbPassword: notification_pass
 
+billingService:
+  enabled: true
+  name: billing
+  dbName: billing_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-billing-service
+    imageTag: "1.0"
+    replicaCount: 2
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-billing-migration
+    imageTag: "1.0"
+
+  config:
+    authUrlOverride: ""
+
+  secret:
+    dbUser: billing_user
+    dbPassword: billing_pass
+
 ingress:
   enabled: true
   className: nginx
@@ -233,3 +280,7 @@ ingress:
       service: customerService
     - path: /api/notifications
       service: notificationService
+    - path: /api/internal/billing
+      service: billingService
+    - path: /api/billing
+      service: billingService
