@@ -1,4 +1,4 @@
-﻿namespace AuthService.Infrastructure.Clients.Requests
+﻿namespace AuthService.Infrastructure.Clients.CustomerService.Requests
 {
     internal class CreateCustomerRequest
     {

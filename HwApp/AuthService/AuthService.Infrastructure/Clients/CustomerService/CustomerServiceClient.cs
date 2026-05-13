@@ -1,8 +1,8 @@
 ﻿using AuthService.Application.Interfaces;
-using AuthService.Infrastructure.Clients.Requests;
+using AuthService.Infrastructure.Clients.CustomerService.Requests;
 using System.Net.Http.Json;
 
-namespace AuthService.Infrastructure.Clients
+namespace AuthService.Infrastructure.Clients.CustomerService
 {
     internal class CustomerServiceClient : ICustomerServiceClient
     {

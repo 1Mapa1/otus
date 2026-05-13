@@ -1,4 +1,4 @@
-﻿namespace AuthService.Infrastructure.Options
+﻿namespace AuthService.Infrastructure.Security
 {
     internal sealed class JwtOptions
     {

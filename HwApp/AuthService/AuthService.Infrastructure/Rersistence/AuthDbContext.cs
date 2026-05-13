@@ -1,7 +1,7 @@
 ﻿using AuthService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace AuthService.Infrastructure.Ef
+namespace AuthService.Infrastructure.Rersistence
 {
     internal class AuthDbContext : DbContext
     {

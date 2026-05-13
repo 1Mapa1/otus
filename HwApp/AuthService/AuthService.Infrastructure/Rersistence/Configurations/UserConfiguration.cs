@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace AuthService.Infrastructure.Ef.Configurations
+namespace AuthService.Infrastructure.Rersistence.Configurations
 {
     internal class UserConfiguration : IEntityTypeConfiguration<User>
     {

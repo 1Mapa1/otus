@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NotificationService.Application.Abstractions;
 using NotificationService.Domain.Customers;
 using NotificationService.Domain.Notifications;
 using NotificationService.Infrastructure.Messaging.Kafka;
+using NotificationService.Infrastructure.Messaging.Kafka.HealthCheck;
 using NotificationService.Infrastructure.Messaging.Kafka.IntegrationEventHandlers;
 using NotificationService.Infrastructure.Persistence;
 using NotificationService.Infrastructure.Persistence.Repositories;
@@ -31,13 +33,17 @@ namespace NotificationService.Infrastructure
 
         public static IHealthChecksBuilder AddInfrastructureHealthChecks(
             this IServiceCollection services,
-            string healthCheckName = "Database", IEnumerable<string>? healthCheckTags = null)
+            IEnumerable<string>? healthCheckTags = null)
         {
             healthCheckTags ??= ["ready", "startup"];
 
             return services.AddHealthChecks()
                 .AddDbContextCheck<DatabaseContext>(
-                    name: healthCheckName,
+                    name: "Database",
+                    tags: healthCheckTags)
+                .AddCheck<KafkaConsumerHealthCheck>(
+                    name: "KafkaConsumer",
+                    failureStatus: HealthStatus.Unhealthy,
                     tags: healthCheckTags);
         }
 
@@ -73,6 +79,8 @@ namespace NotificationService.Infrastructure
                 .Validate(options => !string.IsNullOrEmpty(options.GroupId), "GroupId must be provided.")
                 .Validate(options => options.Topics.Length > 0)
                 .ValidateOnStart();
+
+            services.AddSingleton<KafkaConsumerState>();
 
             services.AddScoped<KafkaMessageDispatcher>();
 

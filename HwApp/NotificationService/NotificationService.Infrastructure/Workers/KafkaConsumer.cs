@@ -4,21 +4,25 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NotificationService.Infrastructure.Messaging.Kafka;
+using NotificationService.Infrastructure.Messaging.Kafka.HealthCheck;
 
 namespace NotificationService.Infrastructure.Workers
 {
     internal class KafkaConsumer : BackgroundService
     {
         private readonly KafkaOptions _options;
+        private readonly KafkaConsumerState _state;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<KafkaConsumer> _logger;
 
         public KafkaConsumer(
             IOptions<KafkaOptions> options,
+            KafkaConsumerState state,
             IServiceScopeFactory scopeFactory,
             ILogger<KafkaConsumer> logger)
         {
             _options = options.Value;
+            _state = state;
             _scopeFactory = scopeFactory;
             _logger = logger;
         }
@@ -42,6 +46,8 @@ namespace NotificationService.Infrastructure.Workers
             using var consumer = new ConsumerBuilder<string, string>(config)
                 .SetErrorHandler((_, error) =>
                 {
+                    _state.MarkError(error.Reason);
+
                     _logger.LogError(
                         "Kafka consumer error. Code: {Code}, Reason: {Reason}, IsFatal: {IsFatal}",
                         error.Code,
@@ -50,7 +56,11 @@ namespace NotificationService.Infrastructure.Workers
                 })
                 .Build();
 
+            _state.MarkStarted();
+
             consumer.Subscribe(_options.Topics);
+
+            _state.MarkSubscribed();
 
             _logger.LogInformation(
                 "Notification Kafka consumer started. GroupId: {GroupId}. Topics: {Topics}",
@@ -65,7 +75,9 @@ namespace NotificationService.Infrastructure.Workers
 
                     try
                     {
-                        consumeResult = consumer.Consume(stoppingToken);
+                        consumeResult = consumer.Consume(TimeSpan.FromSeconds(5));
+
+                        _state.MarkPoll();
 
                         if (consumeResult?.Message is null)
                         {
@@ -97,6 +109,8 @@ namespace NotificationService.Infrastructure.Workers
                     }
                     catch (ConsumeException ex)
                     {
+                        _state.MarkError(ex);
+
                         _logger.LogError(
                             ex,
                             "Kafka consume error. Reason: {Reason}",
@@ -104,6 +118,8 @@ namespace NotificationService.Infrastructure.Workers
                     }
                     catch (KafkaException ex)
                     {
+                        _state.MarkError(ex);
+
                         _logger.LogError(
                             ex,
                             "Kafka error while processing message. Topic: {Topic}, Offset: {Offset}",
@@ -112,6 +128,8 @@ namespace NotificationService.Infrastructure.Workers
                     }
                     catch (Exception ex)
                     {
+                        _state.MarkError(ex);
+
                         _logger.LogError(
                             ex,
                             "Kafka message processing failed. Topic: {Topic}, Key: {Key}, Partition: {Partition}, Offset: {Offset}",

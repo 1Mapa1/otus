@@ -1,9 +1,9 @@
 ﻿using AuthService.Domain.Entities;
 using AuthService.Domain.Interfaces;
-using AuthService.Infrastructure.Ef;
+using AuthService.Infrastructure.Rersistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace AuthService.Infrastructure.Repositories
+namespace AuthService.Infrastructure.Rersistence.Repositories
 {
     internal class UserRepository : IUserRepository
     {

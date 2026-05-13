@@ -1,4 +1,4 @@
-﻿namespace AuthService.Infrastructure.Options
+﻿namespace AuthService.Infrastructure.Clients.CustomerService
 {
     internal sealed class CustomerServiceOptions
     {

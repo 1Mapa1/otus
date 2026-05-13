@@ -1,6 +1,5 @@
 ﻿using AuthService.Application.Interfaces;
 using AuthService.Domain.Entities;
-using AuthService.Infrastructure.Options;
 using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
