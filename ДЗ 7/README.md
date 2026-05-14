@@ -11,4 +11,4 @@
 
 **Namespace** и порядок установки Postgres / Kafka / приложений — только в [K8s/README.md](./K8s/README.md) (один общий namespace для связанных релизов).
 
-**Состав HwApp** — [HwApp/README.md](../HwApp/README.md).
+**Состав HwApp** — [HwApp/README.md](../HwApp/README.md). Детали по каждому сервису — в его **`README.md`** в каталоге проекта в [HwApp](../HwApp/).

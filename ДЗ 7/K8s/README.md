@@ -102,10 +102,6 @@ helm upgrade --install homework-apps . \
 - `/api/internal/billing` — внутреннее API BillingService
 - `/api/orders` — OrderService (Swagger: `.../api/orders/swagger/...`)
 
-## Мониторинг (опционально)
-
-В каталоге есть `Helm/prometheus-values.yaml` для kube-prometheus-stack (как в предыдущих ДЗ). Установка в отдельный namespace `monitoring` по аналогии с [ДЗ 4](../../ДЗ%204/K8s/README.md). ServiceMonitor для CustomerService включается в `values.yaml` chart при необходимости.
-
 ## Проверка
 
 ```bash

@@ -8,9 +8,11 @@
 |--------|----------|
 | [AuthService](./AuthService/README.md) | Регистрация, вход, JWT, JWKS; при регистрации — CustomerService и BillingService (счёт) |
 | [CustomerService](./CustomerService/README.md) | Клиенты, внешний API с JWT (`/api/customers/me`), внутренние ручки для Auth |
-| **BillingService** | Счета, пополнение, списание; внутренний API для Auth и Order |
-| **NotificationService** | Kafka consumer, сохранение уведомлений в БД, HTTP API |
-| **OrderService** | Заказы, вызов Billing, события в Kafka (outbox) |
+| [BillingService](./BillingService/README.md) | Счета, пополнение, списание; внутренний API для Auth и Order |
+| [NotificationService](./NotificationService/README.md) | Kafka consumer, сохранение уведомлений в БД, HTTP API |
+| [OrderService](./OrderService/README.md) | Заказы, вызов Billing, события в Kafka (outbox) |
+
+У каждого сервиса в таблице — ссылка на **`README.md` в каталоге проекта**; детали API дополнительно смотрите в Swagger в образе.
 
 ## Развёртывание
 

@@ -5,8 +5,8 @@ Umbrella chart: общий Ingress родителя и подчарты **auth-s
 ## Состав
 
 - **Родитель**: Ingress, `NOTES.txt`.
-- **auth-service**: Deployment, Service, ConfigMap, Secret (JWT), Job миграций, при необходимости ServiceMonitor.
-- **customer-service**: Deployment, Service, ConfigMap, Secret, Job миграций, ServiceMonitor (`/metrics`).
+- **auth-service**: Deployment, Service, ConfigMap, Secret (JWT), Job миграций.
+- **customer-service**: Deployment, Service, ConfigMap, Secret, Job миграций.
 - **notification-service**: Deployment, Service, ConfigMap, Secret, Job миграций; Kafka consumer + HTTP API (`/api/notifications`).
 - **billing-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API (`/api/billing/...`).
 - **order-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API заказов (`/api/orders`), JWT, Billing, Kafka.
