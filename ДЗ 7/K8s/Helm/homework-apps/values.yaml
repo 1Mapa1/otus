@@ -8,6 +8,7 @@ global:
   kubernetesAppName: homework-apps
   peerAuthName: auth
   peerCustomerName: customer
+  peerBillingName: billing
   dbHost: postgres-postgresql
   dbPort: "5432"
   environment: Development
@@ -72,6 +73,8 @@ authService:
     # Optional override. Empty value means auto-resolve in-cluster URL.
     msCustomerBaseUrlOverride: ""
     msCustomerTimeout: "00:00:10"
+    msBillingBaseUrlOverride: ""
+    msBillingTimeout: "00:00:10"
     # Optional override. Empty value means use AuthService in-cluster URL.
     jwtIssuerOverride: ""
     jwtLifetimeMinutes: "60"
@@ -267,6 +270,57 @@ billingService:
     dbUser: billing_user
     dbPassword: billing_pass
 
+orderService:
+  enabled: true
+  name: order
+  dbName: order_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-order-service
+    imageTag: "1.0"
+    replicaCount: 2
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-order-migration
+    imageTag: "1.0"
+
+  config:
+    authUrlOverride: ""
+    msBillingBaseUrlOverride: ""
+    msBillingTimeout: "00:00:10"
+    kafkaAcks: "All"
+    kafkaEnableIdempotence: true
+
+  secret:
+    dbUser: order_user
+    dbPassword: order_pass
+
 ingress:
   enabled: true
   className: nginx
@@ -284,3 +338,5 @@ ingress:
       service: billingService
     - path: /api/billing
       service: billingService
+    - path: /api/orders
+      service: orderService

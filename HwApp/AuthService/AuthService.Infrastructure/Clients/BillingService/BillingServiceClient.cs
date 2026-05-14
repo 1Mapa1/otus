@@ -6,7 +6,7 @@ namespace AuthService.Infrastructure.Clients.BillingService
 {
     internal sealed class BillingServiceClient : IBillingServiceClient
     {
-        private const string createAccountEndpoint = "api/internal/billing/accounts";
+        private const string CreateAccountEndpoint = "api/internal/billing/accounts";
 
         private readonly HttpClient _httpClient;
 
@@ -20,7 +20,7 @@ namespace AuthService.Infrastructure.Clients.BillingService
             var request = new CreateBillingAccountRequest(userId);
 
             using var response = await _httpClient.PostAsJsonAsync(
-                createAccountEndpoint,
+                CreateAccountEndpoint,
                 request,
                 ct);
 

@@ -43,6 +43,11 @@ app.kubernetes.io/component: {{ .Values.name }}
 {{- printf "http://%s.%s.svc.%s" $host .Release.Namespace (default "cluster.local" .Values.global.clusterDomain) -}}
 {{- end }}
 
+{{- define "auth-service.billingServiceUrl" -}}
+{{- $host := printf "%s-%s" (include "auth-service.releaseBase" .) .Values.global.peerBillingName | trunc 63 | trimSuffix "-" -}}
+{{- printf "http://%s.%s.svc.%s" $host .Release.Namespace (default "cluster.local" .Values.global.clusterDomain) -}}
+{{- end }}
+
 {{- define "auth-service.authServiceUrl" -}}
 {{- $host := printf "%s-%s" (include "auth-service.releaseBase" .) .Values.name | trunc 63 | trimSuffix "-" -}}
 {{- printf "http://%s.%s.svc.%s" $host .Release.Namespace (default "cluster.local" .Values.global.clusterDomain) -}}

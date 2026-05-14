@@ -17,7 +17,7 @@ dbName: notification_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-notification-service
-  imageTag: "1.0"
+  imageTag: "7.0"
   replicaCount: 2
   maxSurge: 1
   maxUnavailable: 1
@@ -48,7 +48,7 @@ migrationJob:
   ttlSecondsAfterFinished: 100
   backoffLimit: 3
   imageRepository: maslovdeveloper/hwapp-notification-migration
-  imageTag: "1.0"
+  imageTag: "7.0"
 
 config:
   authUrlOverride: ""

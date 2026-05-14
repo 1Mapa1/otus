@@ -10,6 +10,8 @@
 
         public DateTime UpdatedAt { get; private set; }
 
+        private Account() { }
+
         public static Account Create(Guid userId)
         {
             var utcNow = DateTime.UtcNow;

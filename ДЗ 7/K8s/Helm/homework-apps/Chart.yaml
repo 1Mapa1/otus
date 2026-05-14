@@ -1,6 +1,6 @@
 apiVersion: v2
 name: homework-apps
-description: Umbrella chart for Auth, Customer, Billing and Notification services
+description: Umbrella chart for Auth, Customer, Billing, Notification and Order services
 
 type: application
 
@@ -29,3 +29,8 @@ dependencies:
     repository: file://subcharts/billing-service
     alias: billingService
     condition: billingService.enabled
+  - name: order-service
+    version: 0.1.0
+    repository: file://subcharts/order-service
+    alias: orderService
+    condition: orderService.enabled

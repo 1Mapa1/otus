@@ -16,6 +16,8 @@
 
         public DateTime CreatedAt { get; private set; }
 
+        private Notification() { }
+
         private Notification(
             Guid id,
             Guid userId,

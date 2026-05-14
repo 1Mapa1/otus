@@ -71,6 +71,16 @@ spec:
                 configMapKeyRef:
                   name: {{ include "auth-service.fullname" . }}
                   key: Ms__Customer__Timeout
+            - name: Ms__Billing__BaseUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "auth-service.fullname" . }}
+                  key: Ms__Billing__BaseUrl
+            - name: Ms__Billing__Timeout
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "auth-service.fullname" . }}
+                  key: Ms__Billing__Timeout
             - name: Jwt__Issuer
               valueFrom:
                 configMapKeyRef:

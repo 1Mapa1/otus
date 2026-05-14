@@ -15,6 +15,8 @@ data:
   ASPNETCORE_ENVIRONMENT: {{ .Values.global.environment }}
   Ms__Customer__BaseUrl: {{ default (include "auth-service.customerServiceUrl" .) .Values.config.msCustomerBaseUrlOverride | quote }}
   Ms__Customer__Timeout: {{ .Values.config.msCustomerTimeout | quote }}
+  Ms__Billing__BaseUrl: {{ default (include "auth-service.billingServiceUrl" .) .Values.config.msBillingBaseUrlOverride | quote }}
+  Ms__Billing__Timeout: {{ .Values.config.msBillingTimeout | quote }}
   Jwt__Issuer: {{ default (include "auth-service.authServiceUrl" .) .Values.config.jwtIssuerOverride | quote }}
   Jwt__LifetimeMinutes: {{ .Values.config.jwtLifetimeMinutes | quote }}
 {{- end }}

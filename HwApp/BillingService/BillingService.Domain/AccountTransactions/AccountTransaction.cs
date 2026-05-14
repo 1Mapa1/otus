@@ -18,6 +18,8 @@
 
         public DateTime CreatedAt { get; private set; }
 
+        private AccountTransaction() { }
+
         public static AccountTransaction Create(
             Guid userId,
             Guid? orderId,

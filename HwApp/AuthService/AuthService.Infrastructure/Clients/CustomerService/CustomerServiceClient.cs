@@ -6,7 +6,7 @@ namespace AuthService.Infrastructure.Clients.CustomerService
 {
     internal class CustomerServiceClient : ICustomerServiceClient
     {
-        private const string createEndpoint = "api/internal/customers";
+        private const string CreateEndpoint = "api/internal/customers";
 
         private readonly HttpClient _httpClient;
 
@@ -20,7 +20,7 @@ namespace AuthService.Infrastructure.Clients.CustomerService
             var request = new CreateCustomerRequest(userId, name, email);
 
             using var response = await _httpClient.PostAsJsonAsync(
-                createEndpoint,
+                CreateEndpoint,
                 request,
                 ct);
 

@@ -4,6 +4,7 @@ global:
   kubernetesAppName: homework-apps
   peerAuthName: auth
   peerCustomerName: customer
+  peerBillingName: billing
   clusterDomain: cluster.local
   secretType: Opaque
   dbHost: postgres-postgresql
@@ -16,7 +17,7 @@ dbName: auth_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-auth-service
-  imageTag: "2.0"
+  imageTag: "7.0"
   replicaCount: 2
   maxSurge: 1
   maxUnavailable: 1
@@ -58,11 +59,13 @@ migrationJob:
   ttlSecondsAfterFinished: 100
   backoffLimit: 3
   imageRepository: maslovdeveloper/hwapp-auth-migration
-  imageTag: "1.3"
+  imageTag: "7.0"
 
 config:
   msCustomerBaseUrlOverride: ""
   msCustomerTimeout: "00:00:10"
+  msBillingBaseUrlOverride: ""
+  msBillingTimeout: "00:00:10"
   jwtIssuerOverride: ""
   jwtLifetimeMinutes: "60"
 
