@@ -16,7 +16,7 @@ namespace NotificationService.Infrastructure.Persistence.Configurations
                 .HasColumnName("id");
 
             builder.Property(x => x.UserId)
-                .HasColumnName("customer_id")
+                .HasColumnName("user_id")
                 .IsRequired();
 
             builder.Property(x => x.OrderId)

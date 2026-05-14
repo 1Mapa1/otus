@@ -4,6 +4,6 @@ namespace OrderService.Application.Orders.GetMyOrders
 {
     public sealed record OrderDto(
         Guid Id,
-        OrderStatus Status,
+        string Status,
         DateTime CreatedAt);
 }

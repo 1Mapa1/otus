@@ -48,7 +48,7 @@ migrationJob:
   ttlSecondsAfterFinished: 100
   backoffLimit: 3
   imageRepository: maslovdeveloper/hwapp-notification-migration
-  imageTag: "7.0"
+  imageTag: "7.1"
 
 config:
   authUrlOverride: ""

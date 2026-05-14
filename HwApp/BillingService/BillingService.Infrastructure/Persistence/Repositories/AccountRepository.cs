@@ -29,7 +29,7 @@ namespace BillingService.Infrastructure.Persistence.Repositories
 
             var updatedAt = DateTime.UtcNow;
 
-            var result = await _databaseContext.Database
+            var rows = await _databaseContext.Database
                 .SqlQuery<BalanceChangeSqlResult>($"""
                     UPDATE accounts
                     SET balance = balance + {amount},
@@ -38,7 +38,9 @@ namespace BillingService.Infrastructure.Persistence.Repositories
                     RETURNING balance - {amount} AS "BalanceBefore",
                               balance AS "BalanceAfter"
                     """)
-                .SingleOrDefaultAsync(cancellationToken);
+                .ToListAsync(cancellationToken);
+
+            var result = rows.SingleOrDefault();
 
             if (result is null)
             {
@@ -81,7 +83,7 @@ namespace BillingService.Infrastructure.Persistence.Repositories
 
             var updatedAt = DateTime.UtcNow;
 
-            var result = await _databaseContext.Database
+            var rows = await _databaseContext.Database
                 .SqlQuery<BalanceChangeSqlResult>($"""
                     UPDATE accounts
                     SET balance = balance - {amount},
@@ -91,7 +93,9 @@ namespace BillingService.Infrastructure.Persistence.Repositories
                     RETURNING balance + {amount} AS "BalanceBefore",
                               balance AS "BalanceAfter"
                     """)
-                .SingleOrDefaultAsync(cancellationToken);
+                .ToListAsync(cancellationToken);
+
+            var result = rows.SingleOrDefault();
 
             if (result is null)
             {

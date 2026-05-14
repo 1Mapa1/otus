@@ -20,8 +20,8 @@ namespace OrderService.Application.Orders.GetOrderById
 
             return new OrderDetailsDto(
                 order.Id,
-                order.Status,
-                order.FailureReason,
+                order.Status.ToString(),
+                order.FailureReason?.ToString(),
                 order.Price,
                 order.CreatedAt);
         }

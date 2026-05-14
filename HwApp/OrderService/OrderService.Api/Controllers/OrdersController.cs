@@ -37,7 +37,7 @@ namespace OrderService.Api
             }
 
             [HttpGet("{id:guid}")]
-            public async Task<ActionResult> GetById(Guid id, CancellationToken cancellationToken)
+            public async Task<ActionResult<OrderDetailsDto>> GetById(Guid id, CancellationToken cancellationToken)
             {
                 if (!TryGetCurrentUserId(out var userId))
                     return Unauthorized();

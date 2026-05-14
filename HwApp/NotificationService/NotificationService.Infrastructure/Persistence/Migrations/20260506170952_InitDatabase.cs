@@ -30,7 +30,7 @@ namespace NotificationService.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    customer_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
                     order_id = table.Column<Guid>(type: "uuid", nullable: true),
                     type = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     subject = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
@@ -43,9 +43,9 @@ namespace NotificationService.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_notifications_customer_id",
+                name: "IX_notifications_user_id",
                 table: "notifications",
-                column: "customer_id");
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_notifications_order_id",

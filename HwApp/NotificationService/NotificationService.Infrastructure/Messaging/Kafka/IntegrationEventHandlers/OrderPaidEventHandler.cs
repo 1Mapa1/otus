@@ -20,8 +20,8 @@ namespace NotificationService.Infrastructure.Messaging.Kafka.IntegrationEventHan
         {
             return _sender.Send(
                 new CreateOrderPaidNotificationCommand(
-                    integrationEvent.UserId,
                     integrationEvent.OrderId,
+                    integrationEvent.UserId,
                     integrationEvent.Price),
                 cancellationToken);
         }

@@ -19,7 +19,7 @@ namespace OrderService.Application.Orders.GetMyOrders
             var items = await _orders.GetByUserIdAsync(request.UserId, cancellationToken);
 
             return items
-                .Select(o => new OrderDto(o.Id, o.Status, o.CreatedAt))
+                .Select(o => new OrderDto(o.Id, o.Status.ToString(), o.CreatedAt))
                 .ToList();
         }
     }
