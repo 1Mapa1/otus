@@ -3,5 +3,6 @@
     public sealed record AccountDto(
         Guid UserId,
         decimal Balance,
-        DateTime CreatedAt);
+        decimal HeldAmount,
+        decimal AvailableBalance);
 }

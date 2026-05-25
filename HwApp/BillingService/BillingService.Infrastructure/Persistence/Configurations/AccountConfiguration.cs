@@ -22,6 +22,13 @@ namespace BillingService.Infrastructure.Persistence.Configurations
                 .HasPrecision(18, 2)
                 .IsRequired();
 
+            builder.Property(a => a.HeldAmount)
+                .HasColumnName("held_amount")
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            builder.Ignore(a => a.AvailableBalance);
+
             builder.Property(a => a.CreatedAt)
                 .HasColumnName("created_at")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")

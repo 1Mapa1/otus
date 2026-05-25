@@ -1,5 +1,6 @@
 ﻿using BillingService.Domain.Accounts;
 using BillingService.Domain.AccountTransactions;
+using BillingService.Domain.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,52 +12,73 @@ namespace BillingService.Infrastructure.Persistence.Configurations
         {
             builder.ToTable("account_transactions");
 
-            builder.HasKey(at => at.Id);
+            builder.HasKey(x => x.Id);
 
-            builder.Property(at => at.Id)
+            builder.Property(x => x.Id)
                 .HasColumnName("id")
                 .ValueGeneratedNever()
                 .IsRequired();
 
-            builder.Property(at => at.UserId)
+            builder.Property(x => x.UserId)
                 .HasColumnName("user_id")
                 .IsRequired();
 
-            builder.Property(at => at.OrderId)
+            builder.Property(x => x.OrderId)
                 .HasColumnName("order_id");
 
-            builder.Property(at => at.Type)
+            builder.Property(x => x.PaymentId)
+               .HasColumnName("payment_id");
+
+            builder.Property(x => x.Type)
                 .HasColumnName("type")
                 .HasConversion<string>()
                 .HasMaxLength(64)
                 .IsRequired();
 
-            builder.Property(at => at.Amount)
+            builder.Property(x => x.Amount)
                 .HasColumnName("amount")
                 .HasPrecision(18, 2)
                 .IsRequired();
 
-            builder.Property(at => at.BalanceAfter)
+            builder.Property(x => x.BalanceAfter)
                 .HasColumnName("balance_after")
                 .HasPrecision(18, 2)
                 .IsRequired();
 
-            builder.Property(at => at.BalanceBefore)
-                .HasColumnName("balance_before")
+            builder.Property(x => x.HeldAfter)
+                .HasColumnName("held_after")
                 .HasPrecision(18, 2)
                 .IsRequired();
 
-            builder.Property(at => at.CreatedAt)
+            builder.Property(x => x.BalanceBefore)
+                .HasColumnName("balance_before")
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0)
+                .IsRequired();
+
+            builder.Property(x => x.HeldBefore)
+                .HasColumnName("held_before")
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0)
+                .IsRequired();
+
+            builder.Property(x => x.CreatedAt)
                 .HasColumnName("created_at")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .IsRequired();
 
-            builder.HasIndex(at => at.UserId);
-            builder.HasIndex(at => at.OrderId);
+            builder.HasIndex(x => x.UserId);
+            builder.HasIndex(x => x.OrderId);
+            builder.HasIndex(x => x.PaymentId);
 
             builder.HasOne<Account>()
                 .WithMany()
-                .HasForeignKey(at => at.UserId)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne<Payment>()
+                .WithMany()
+                .HasForeignKey(x => x.PaymentId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

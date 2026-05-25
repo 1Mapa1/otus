@@ -1,5 +1,4 @@
-﻿using BillingService.Application.Accounts.WithdrawAccount;
-using MediatR;
+﻿using MediatR;
 
 namespace BillingService.Application.Accounts.DepositAccount
 {

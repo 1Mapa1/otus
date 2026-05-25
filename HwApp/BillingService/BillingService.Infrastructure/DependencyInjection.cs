@@ -1,5 +1,6 @@
 ﻿using BillingService.Application.Abstractions;
 using BillingService.Application.Accounts;
+using BillingService.Application.Payments;
 using BillingService.Infrastructure.Persistence;
 using BillingService.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +53,7 @@ namespace BillingService.Infrastructure
             this IServiceCollection services)
         {
             services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
 
             return services;
         }
