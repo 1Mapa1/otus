@@ -1,9 +1,9 @@
 ﻿using AuthService.Application.Interfaces;
 using AuthService.Domain.Interfaces;
-using AuthService.Infrastructure.Clients;
-using AuthService.Infrastructure.Ef;
-using AuthService.Infrastructure.Options;
-using AuthService.Infrastructure.Repositories;
+using AuthService.Infrastructure.Clients.BillingService;
+using AuthService.Infrastructure.Clients.CustomerService;
+using AuthService.Infrastructure.Rersistence;
+using AuthService.Infrastructure.Rersistence.Repositories;
 using AuthService.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,15 +24,7 @@ namespace AuthService.Infrastructure
 
             services.AddInfrastructureOptions(configuration);
 
-            services.AddHttpClient<ICustomerServiceClient, CustomerServiceClient>((sp, httpClient) =>
-            {
-                var options = sp
-                    .GetRequiredService<IOptions<CustomerServiceOptions>>()
-                    .Value;
-
-                httpClient.BaseAddress = new Uri(options.BaseUrl);
-                httpClient.Timeout = options.Timeout;
-            });
+            services.AddInfrastructureHttpClients();
 
             services.AddSingleton<RsaJwtSigningKeyProvider>();
             services.AddSingleton<IJwksProvider, JwksProvider>();
@@ -83,6 +75,32 @@ namespace AuthService.Infrastructure
             return connectionString;
         }
 
+        private static IServiceCollection AddInfrastructureHttpClients(
+            this IServiceCollection services)
+        {
+            services.AddHttpClient<ICustomerServiceClient, CustomerServiceClient>((sp, httpClient) =>
+            {
+                var options = sp
+                    .GetRequiredService<IOptions<CustomerServiceOptions>>()
+                    .Value;
+
+                httpClient.BaseAddress = new Uri(options.BaseUrl);
+                httpClient.Timeout = options.Timeout;
+            });
+
+            services.AddHttpClient<IBillingServiceClient, BillingServiceClient>((sp, httpClient) =>
+            {
+                var options = sp
+                    .GetRequiredService<IOptions<BillingServiceOptions>>()
+                    .Value;
+
+                httpClient.BaseAddress = new Uri(options.BaseUrl);
+                httpClient.Timeout = options.Timeout;
+            });
+
+            return services;
+        }
+
         private static IServiceCollection AddInfrastructureOptions(
             this IServiceCollection services,
             IConfiguration configuration)
@@ -93,6 +111,14 @@ namespace AuthService.Infrastructure
                 .Validate(
                     o => Uri.TryCreate(o.BaseUrl, UriKind.Absolute, out _),
                     $"{CustomerServiceOptions.SectionName}:BaseUrl must be a valid absolute URI")
+                .ValidateOnStart();
+
+            services
+                .AddOptions<BillingServiceOptions>()
+                .Bind(configuration.GetSection(BillingServiceOptions.SectionName))
+                .Validate(
+                    o => Uri.TryCreate(o.BaseUrl, UriKind.Absolute, out _),
+                    $"{BillingServiceOptions.SectionName}:BaseUrl must be a valid absolute URI")
                 .ValidateOnStart();
 
             services

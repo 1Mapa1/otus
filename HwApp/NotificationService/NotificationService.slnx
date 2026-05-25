@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="NotificationService.Application/NotificationService.Application.csproj" />
+  <Project Path="NotificationService.DbMigrator/NotificationService.DbMigrator.csproj" />
+  <Project Path="NotificationService.Domain/NotificationService.Domain.csproj" />
+  <Project Path="NotificationService.Infrastructure/NotificationService.Infrastructure.csproj" />
+  <Project Path="NotificationService.Api/NotificationService.Api.csproj" />
+</Solution>

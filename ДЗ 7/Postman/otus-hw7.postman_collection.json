@@ -1,0 +1,764 @@
+{
+  "info": {
+    "_postman_id": "3dc3f163-d9f8-4b12-8c8b-cbcd6aed7ecf",
+    "name": "otus-hw7",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49328604",
+    "_collection_link": "https://go.postman.co/collection/49328604-3dc3f163-d9f8-4b12-8c8b-cbcd6aed7ecf?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Start",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Random test data initialized\", function () {\r",
+              "    pm.expect(pm.environment.get(\"userLogin\")).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const suffix = `${Date.now()}_${Math.floor(Math.random() * 100000)}`;\r",
+              "\r",
+              "pm.environment.set(\"userLogin\", `user1_${suffix}`);\r",
+              "pm.environment.set(\"userPassword\", `Pass_${suffix}`);\r",
+              "pm.environment.set(\"userName\", `User One ${suffix}`);\r",
+              "pm.environment.set(\"userEmail\", `${suffix}@test.com`);\r",
+              "\r",
+              "console.log(\"Generated data:\");\r",
+              "console.log({\r",
+              "    baseUrl: pm.environment.get(\"baseUrl\"),\r",
+              "    user1Login: pm.environment.get(\"userLogin\"),\r",
+              "    user1Password: pm.environment.get(\"userPassword\"),\r",
+              "    user1Name: pm.environment.get(\"userName\"),\r",
+              "    user1Email: pm.environment.get(\"userEmail\"),\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health/live",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health",
+            "live"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Register user - status is 200\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200]);\r",
+              "});\r",
+              "\r",
+              "console.log(\"Register user request:\");\r",
+              "console.log({\r",
+              "    login: pm.environment.get(\"userLogin\"),\r",
+              "    password: pm.environment.get(\"userPassword\"),\r",
+              "    name: pm.environment.get(\"userName\"),\r",
+              "    name: pm.environment.get(\"userEmail\")\r",
+              "});\r",
+              "\r",
+              "console.log(\"Register user response:\");\r",
+              "console.log(pm.response.text());"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"login\": \"{{userLogin}}\",\r\n  \"password\": \"{{userPassword}}\",\r\n  \"name\": \"{{userName}}\",\r\n  \"email\": \"{{userEmail}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Login user - status 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Access token exists\", function () {\r",
+              "    pm.expect(json.accessToken).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"userToken\", json.accessToken);\r",
+              "\r",
+              "console.log(\"User token saved\");\r",
+              "console.log(json);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"login\": \"{{userLogin}}\",\r\n  \"password\": \"{{userPassword}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Deposit",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Deposit completed\", function () {\r",
+              "    pm.response.to.have.status(204);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"amount\": 150\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/billing/accounts/deposit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "billing",
+            "accounts",
+            "deposit"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check balance after Deposit",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Balance response is OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Balance is 150 after deposit\", function () {\r",
+              "    pm.expect(json.balance).to.eql(150);\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"initialBalance\", json.balance);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/billing/accounts/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "billing",
+            "accounts",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create order with enough money",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Paid order request successful\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Order is paid\", function () {\r",
+              "    pm.expect(json.status).to.eql(\"Paid\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Paid order id exists\", function () {\r",
+              "    pm.expect(json.orderId).to.be.a(\"string\").and.not.empty;\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"paidOrderId\", json.orderId);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"price\": 100\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check balance after paid order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Balance response is OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "\r",
+              "const initialBalance = Number(pm.environment.get(\"initialBalance\"));\r",
+              "const expectedBalance = initialBalance - 100;\r",
+              "\r",
+              "pm.test(\"Money was withdrawn after paid order\", function () {\r",
+              "    pm.expect(json.balance).to.eql(expectedBalance);\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"balanceAfterPaidOrder\", json.balance);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/billing/accounts/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "billing",
+            "accounts",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check notification paid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Notifications list response is OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const notifications = pm.response.json();\r",
+              "const paidOrderId = pm.environment.get(\"paidOrderId\");\r",
+              "\r",
+              "pm.test(\"Notifications response is array\", function () {\r",
+              "    pm.expect(notifications).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "const paidNotification = notifications.find(x =>\r",
+              "    x.orderId === paidOrderId && x.type === \"OrderPaid\"\r",
+              ");\r",
+              "\r",
+              "pm.test(\"OrderPaid notification exists\", function () {\r",
+              "    pm.expect(paidNotification, `Notification for order ${paidOrderId}`).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"paidNotificationId\", paidNotification.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/notifications/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "notifications",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get notification paid details",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Paid notification details response is OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "const paidOrderId = pm.environment.get(\"paidOrderId\");\r",
+              "\r",
+              "pm.test(\"Paid notification has correct orderId\", function () {\r",
+              "    pm.expect(json.orderId).to.eql(paidOrderId);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Paid notification has correct type\", function () {\r",
+              "    pm.expect(json.type).to.eql(\"OrderPaid\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Paid notification body mentions successful payment\", function () {\r",
+              "    pm.expect(json.body).to.include(paidOrderId);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/notifications/{{paidNotificationId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "notifications",
+            "{{paidNotificationId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create order without enough money",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Rejected order request successful\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Order is rejected\", function () {\r",
+              "    pm.expect(json.status).to.eql(\"Rejected\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Failure reason is insufficient funds\", function () {\r",
+              "    pm.expect(json.failureReason).to.eql(\"InsufficientFunds\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Rejected order id exists\", function () {\r",
+              "    pm.expect(json.orderId).to.be.a(\"string\").and.not.empty;\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"rejectedOrderId\", json.orderId);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"price\": 1000\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check balance after rejected order",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Balance response is OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "const balanceAfterPaidOrder = Number(pm.environment.get(\"balanceAfterPaidOrder\"));\r",
+              "\r",
+              "pm.test(\"Balance did not change after rejected order\", function () {\r",
+              "    pm.expect(json.balance).to.eql(balanceAfterPaidOrder);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/billing/accounts/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "billing",
+            "accounts",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check notification rejected",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Notifications list response is OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const notifications = pm.response.json();\r",
+              "const rejectedOrderId = pm.environment.get(\"rejectedOrderId\");\r",
+              "\r",
+              "pm.test(\"Notifications response is array\", function () {\r",
+              "    pm.expect(notifications).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "const rejectedNotification = notifications.find(x =>\r",
+              "    x.orderId === rejectedOrderId && x.type === \"OrderRejected\"\r",
+              ");\r",
+              "\r",
+              "pm.test(\"OrderRejected notification exists\", function () {\r",
+              "    pm.expect(rejectedNotification, `Notification for order ${rejectedOrderId}`).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"rejectedNotificationId\", rejectedNotification.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/notifications/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "notifications",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check notification rejected details",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Rejected notification details response is OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "const rejectedOrderId = pm.environment.get(\"rejectedOrderId\");\r",
+              "\r",
+              "pm.test(\"Rejected notification has correct orderId\", function () {\r",
+              "    pm.expect(json.orderId).to.eql(rejectedOrderId);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Rejected notification has correct type\", function () {\r",
+              "    pm.expect(json.type).to.eql(\"OrderRejected\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Rejected notification body mentions order\", function () {\r",
+              "    pm.expect(json.body).to.include(rejectedOrderId);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{userToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/notifications/{{rejectedNotificationId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "notifications",
+            "{{rejectedNotificationId}}"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

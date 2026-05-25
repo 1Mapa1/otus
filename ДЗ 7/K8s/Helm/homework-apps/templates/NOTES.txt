@@ -1,0 +1,43 @@
+1. Access your applications:
+
+{{- if .Values.ingress.enabled }}
+  AuthService:
+  http://{{ .Values.ingress.host }}/api/auth
+
+  CustomerService:
+  http://{{ .Values.ingress.host }}/api/customers
+
+  NotificationService:
+  http://{{ .Values.ingress.host }}/api/notifications
+
+  BillingService:
+  http://{{ .Values.ingress.host }}/api/billing
+
+  OrderService:
+  http://{{ .Values.ingress.host }}/api/orders
+{{- else }}
+  {{- if .Values.authService.enabled }}
+  kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.authService.name) }} 8081:{{ .Values.authService.service.port }}
+  AuthService: http://127.0.0.1:8081/api/auth
+  {{- end }}
+
+  {{- if .Values.customerService.enabled }}
+  kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.customerService.name) }} 8080:{{ .Values.customerService.service.port }}
+  CustomerService: http://127.0.0.1:8080/api/customers
+  {{- end }}
+
+  {{- if .Values.notificationService.enabled }}
+  kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.notificationService.name) }} 8082:{{ .Values.notificationService.service.port }}
+  NotificationService: http://127.0.0.1:8082/api/notifications
+  {{- end }}
+
+  {{- if .Values.billingService.enabled }}
+  kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.billingService.name) }} 8083:{{ .Values.billingService.service.port }}
+  BillingService: http://127.0.0.1:8083/api/billing
+  {{- end }}
+
+  {{- if .Values.orderService.enabled }}
+  kubectl port-forward svc/{{ include "homework-apps.componentFullname" (dict "root" . "component" .Values.orderService.name) }} 8083:{{ .Values.billingService.service.port }}
+  OrderService: http://127.0.0.1:8083/api/orders
+  {{- end }}
+{{- end }}

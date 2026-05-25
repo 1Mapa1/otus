@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="BillingService.Application/BillingService.Application.csproj" />
+  <Project Path="BillingService.DbMigrator/BillingService.DbMigrator.csproj" />
+  <Project Path="BillingService.Domain/BillingService.Domain.csproj" />
+  <Project Path="BillingService.Infrastructure/BillingService.Infrastructure.csproj" />
+  <Project Path="BillingService.Api/BillingService.Api.csproj" />
+</Solution>

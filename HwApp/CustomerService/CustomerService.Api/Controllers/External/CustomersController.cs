@@ -48,9 +48,7 @@ namespace CustomerService.Api.Controllers.External
             if (customer == null)
                 return NotFound();
 
-            customer.SetName(request.Name);
-            customer.SetEmail(request.Email);
-            customer.SetDateOfBirth(request.DateOfBirth);
+            customer.Update(request.Name, request.Email, request.DateOfBirth);
 
             await _repository.UpdateAsync(customer, ct);
 

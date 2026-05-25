@@ -1,9 +1,13 @@
 ﻿using CustomerService.Domain.Interfaces;
-using CustomerService.Infrastructure.Ef;
+using CustomerService.Infrastructure.Messaging.Kafka;
+using CustomerService.Infrastructure.Persistence;
+using CustomerService.Infrastructure.Persistence.Outbox;
 using CustomerService.Infrastructure.Repositories;
+using CustomerService.Infrastructure.Workers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace CustomerService.Infrastructure
 {
@@ -11,11 +15,22 @@ namespace CustomerService.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(
             this IServiceCollection services,
-            IConfiguration configuration, IEnumerable<string>? healthCheckTags = null)
+            IConfiguration configuration)
         {
             services.AddInfrastructureDatabaseContext(configuration);
 
+            services.AddOptions<KafkaOptions>()
+                .Bind(configuration.GetSection(KafkaOptions.SectionName))
+                .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "BootstrapServers must be provided.")
+                .Validate(options => !string.IsNullOrEmpty(options.Acks), "Acks must be provided.")
+                .Validate(options => options.Acks == "All" || options.Acks == "Leader" || options.Acks == "None", "Acks must be 'All', 'Leader', or 'None'.")
+                .ValidateOnStart();
+
             services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+            services.AddSingleton<IKafkaProducer, KafkaProducer>();
+
+            services.AddHostedService<OutboxPublisher>();
 
             return services;
         }
@@ -36,6 +51,8 @@ namespace CustomerService.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            services.AddSingleton<IIntegrationEventMapping, IntegrationEventMapping>();
+
             var connectionString = configuration.GetConnectionStringLocal();
 
             services.AddDbContext<DatabaseContext>(options =>

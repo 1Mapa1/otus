@@ -1,6 +1,6 @@
 ﻿using CustomerService.Domain.Entities;
 using CustomerService.Domain.Interfaces;
-using CustomerService.Infrastructure.Ef;
+using CustomerService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace CustomerService.Infrastructure.Repositories

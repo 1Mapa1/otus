@@ -12,13 +12,20 @@ namespace AuthService.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly ICustomerServiceClient _customerClient;
+        private readonly IBillingServiceClient _billingServiceClient;
         private readonly IPasswordHasherService _hasherService;
         private readonly IJwtTokenGenerator _tokenGenerator;
 
-        public AuthenticationService(IUserRepository userRepository, ICustomerServiceClient customerServiceClient, IPasswordHasherService hasherService, IJwtTokenGenerator tokenGenerator)
+        public AuthenticationService(
+            IUserRepository userRepository,
+            ICustomerServiceClient customerServiceClient,
+            IBillingServiceClient billingServiceClient,
+            IPasswordHasherService hasherService,
+            IJwtTokenGenerator tokenGenerator)
         {
             _userRepository = userRepository;
             _customerClient = customerServiceClient;
+            _billingServiceClient = billingServiceClient;
             _hasherService = hasherService;
             _tokenGenerator = tokenGenerator;
         }
@@ -37,7 +44,9 @@ namespace AuthService.Application.Services
                 await _userRepository.AddAsync(user, ct);
             }
 
-            await _customerClient.CreateAsync(user.Id, request.Name, ct);
+            await _customerClient.CreateAsync(user.Id, request.Name, request.Email, ct);
+
+            await _billingServiceClient.CreateAccountAsync(user.Id, ct);
 
             await _userRepository.UpdateStatusToActiveAsync(user.Id, ct);
         }
