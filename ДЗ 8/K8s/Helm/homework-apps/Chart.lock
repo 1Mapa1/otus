@@ -1,0 +1,18 @@
+dependencies:
+- name: auth-service
+  repository: file://subcharts/auth-service
+  version: 0.1.0
+- name: customer-service
+  repository: file://subcharts/customer-service
+  version: 0.1.0
+- name: notification-service
+  repository: file://subcharts/notification-service
+  version: 0.1.0
+- name: billing-service
+  repository: file://subcharts/billing-service
+  version: 0.1.0
+- name: order-service
+  repository: file://subcharts/order-service
+  version: 0.1.0
+digest: sha256:3a44c0ccbf7942141bbee6c5265d1ceae54032edaacbd60e178ed608a9722b51
+generated: "2026-05-14T14:35:15.022808317+03:00"
