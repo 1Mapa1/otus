@@ -14,5 +14,8 @@ dependencies:
 - name: order-service
   repository: file://subcharts/order-service
   version: 0.1.0
-digest: sha256:3a44c0ccbf7942141bbee6c5265d1ceae54032edaacbd60e178ed608a9722b51
-generated: "2026-05-14T14:35:15.022808317+03:00"
+- name: warehouse-service
+  repository: file://subcharts/warehouse-service
+  version: 0.1.0
+digest: sha256:7466e8f6511174dd3771e62e679be2d30d0d0f7d31a70a02383e484a19500d6d
+generated: "2026-05-26T18:50:19.983417439+03:00"

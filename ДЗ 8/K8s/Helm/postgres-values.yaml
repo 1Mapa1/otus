@@ -34,6 +34,9 @@ primary:
         CREATE USER billing_user WITH ENCRYPTED PASSWORD 'billing_pass';
         CREATE DATABASE billing_db OWNER billing_user;
 
+        CREATE USER warehouse_user WITH ENCRYPTED PASSWORD 'warehouse_pass';
+        CREATE DATABASE warehouse_db OWNER warehouse_user;
+
         CREATE USER notification_user WITH ENCRYPTED PASSWORD 'notification_pass';
         CREATE DATABASE notification_db OWNER notification_user;
 
