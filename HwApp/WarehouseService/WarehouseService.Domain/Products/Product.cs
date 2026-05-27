@@ -32,21 +32,21 @@
             return new Product(name, unitPrice);
         }
 
-        public void IncreaseAvailableQuantity(int quantity)
+        public void IncreaseAvailableQuantity(uint quantity)
         {
-            AvailableQuantity += quantity;
+            AvailableQuantity += (int)quantity;
             UpdatedAt = DateTime.UtcNow;
         }
 
-        public void IncreaseReservedQuantity(int quantity)
+        public void IncreaseReservedQuantity(uint quantity)
         {
-            ReservedQuantity += quantity;
+            ReservedQuantity += (int)quantity;
             UpdatedAt = DateTime.UtcNow;
         }
 
-        public void DecreaseReservedQuantity(int quantity)
+        public void DecreaseReservedQuantity(uint quantity)
         {
-            ReservedQuantity -= quantity;
+            ReservedQuantity -= (int)quantity;
             UpdatedAt = DateTime.UtcNow;
         }
     }

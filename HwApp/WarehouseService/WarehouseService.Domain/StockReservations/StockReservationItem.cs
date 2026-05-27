@@ -26,14 +26,9 @@
         public static StockReservationItem Create(
             Guid reservationId,
             Guid productId,
-            int quantity)
+            uint quantity)
         {
-            if (quantity <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be greater than zero.");
-            }
-
-            return new StockReservationItem(reservationId, productId, quantity);
+            return new StockReservationItem(reservationId, productId, (int)quantity);
         }
     }
 }

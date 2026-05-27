@@ -36,8 +36,7 @@ namespace WarehouseService.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             builder.Property(a => a.CanceledAt)
-                .HasColumnName("canceled_at")
-                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                .HasColumnName("canceled_at");
 
             builder.HasIndex(x => x.UserId);
             builder.HasIndex(x => x.OrderId).IsUnique();

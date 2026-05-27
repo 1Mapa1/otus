@@ -7,6 +7,7 @@ namespace WarehouseService.Application.Products.AddProductStock
     public sealed class AddProductStockHandler : IRequestHandler<AddProductStockCommand, Result<AddProductStockResult>>
     {
         private static readonly Error ProductNotFound = new("ProductNotFound", "Product not found.", ErrorType.NotFound);
+        private static readonly Error InvalidQuantity = new("InvalidQuantity", "Quantity must be greater than zero.", ErrorType.Validation);
 
         private readonly IProductRepository _productRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -24,7 +25,10 @@ namespace WarehouseService.Application.Products.AddProductStock
             if (product is null)
                 return Result<AddProductStockResult>.Failure(ProductNotFound);
 
-            product.IncreaseAvailableQuantity(request.Quantity);
+            if (request.Quantity <= 0)
+                return Result<AddProductStockResult>.Failure(InvalidQuantity);
+
+            product.IncreaseAvailableQuantity((uint)request.Quantity);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

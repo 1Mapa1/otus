@@ -65,7 +65,7 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
                 if (!productsById.TryGetValue(reservationItem.ProductId, out var product))
                     continue;
 
-                product.DecreaseReservedQuantity(reservationItem.Quantity);
+                product.DecreaseReservedQuantity((uint)reservationItem.Quantity);
             }
 
             reservation.Cancel();
@@ -170,13 +170,13 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
                 .Select(item => StockReservationItem.Create(
                     reservation.Id,
                     item.ProductId,
-                    item.Quantity))
+                    (uint)item.Quantity))
                 .ToList();
 
             foreach (var requestedItem in requestedItems)
             {
                 var product = productsById[requestedItem.ProductId];
-                product.IncreaseReservedQuantity(requestedItem.Quantity);
+                product.IncreaseReservedQuantity((uint)requestedItem.Quantity);
             }
 
             await _databaseContext.StockReservations.AddAsync(reservation, cancellationToken);
