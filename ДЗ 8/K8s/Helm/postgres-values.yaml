@@ -37,6 +37,9 @@ primary:
         CREATE USER warehouse_user WITH ENCRYPTED PASSWORD 'warehouse_pass';
         CREATE DATABASE warehouse_db OWNER warehouse_user;
 
+        CREATE USER delivery_user WITH ENCRYPTED PASSWORD 'delivery_pass';
+        CREATE DATABASE delivery_db OWNER delivery_user;
+
         CREATE USER notification_user WITH ENCRYPTED PASSWORD 'notification_pass';
         CREATE DATABASE notification_db OWNER notification_user;
 

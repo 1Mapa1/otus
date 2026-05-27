@@ -4,11 +4,11 @@ using WarehouseService.Application.Reservations.Operations;
 
 namespace WarehouseService.Application.Reservations.CreateReservation
 {
-    public sealed class CreateReservationHandler : IRequestHandler<CreateReservationCommand, Result<CreateReservationResult>>
+    internal sealed class CreateReservationHandler : IRequestHandler<CreateReservationCommand, Result<CreateReservationResult>>
     {
         private static readonly Error ValidateItems = new("ValidateItems", "The reservation must contain at least one item.", ErrorType.Validation);
         private static readonly Error ValidateItemQuantity = new("ValidateItemQuantity", "The reservation only positive quantity.", ErrorType.Validation);
-        private static readonly Error InvalidReservationState = new("InvalidReservationState", "The reservation is in an invalid state for this operation.", ErrorType.Validation);
+        private static readonly Error InvalidReservationState = new("InvalidReservationState", "The reservation is in an invalid state for this operation.", ErrorType.Conflict);
         private static readonly Error UnknownError = new("UnknownError", "An unknown error occurred while creating the reservation.", ErrorType.Failure);
         private static Error StockNotAvailable(IEnumerable<UnavailableStockItem>? unavailableItems) => 
             new("StockNotAvailable", "The following items are not available in the requested quantity", ErrorType.Conflict, new StockNotAvailableError("StockNotAvailable", unavailableItems?.ToList() ?? []));

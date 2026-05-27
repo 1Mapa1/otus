@@ -5,7 +5,7 @@ using WarehouseService.Domain.Products;
 
 namespace WarehouseService.Application.Products.CreateProduct
 {
-    public sealed class CreateProductHandler : IRequestHandler<CreateProductCommand, Result<CreateProductResult>>
+    internal sealed class CreateProductHandler : IRequestHandler<CreateProductCommand, Result<CreateProductResult>>
     {
         private static readonly Error ValidateUnitPrice = new("ValidateUnitPrice", "Unit price cannot be negative.", ErrorType.Validation);
 

@@ -17,5 +17,8 @@ dependencies:
 - name: warehouse-service
   repository: file://subcharts/warehouse-service
   version: 0.1.0
-digest: sha256:7466e8f6511174dd3771e62e679be2d30d0d0f7d31a70a02383e484a19500d6d
-generated: "2026-05-26T18:50:19.983417439+03:00"
+- name: delivery-service
+  repository: file://subcharts/delivery-service
+  version: 0.1.0
+digest: sha256:3bdab83069317b1940c6b456fa0c0afb6e0aa288d3164d8864a7c4e5fa8edae1
+generated: "2026-05-27T15:16:02.941012508+03:00"

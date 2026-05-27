@@ -3,7 +3,7 @@ using WarehouseService.Application.Common;
 
 namespace WarehouseService.Application.Products.ResolveProducts
 {
-    public sealed class ResolveProductsHandler : IRequestHandler<ResolveProductsCommand, Result<ResolveProductsResult>>
+    internal sealed class ResolveProductsHandler : IRequestHandler<ResolveProductsCommand, Result<ResolveProductsResult>>
     {
         private static readonly Error ValidateItems = new("ValidateItems", "The reservation must contain at least one item.", ErrorType.Validation);
         private static readonly Error ValidateItemPositiveQuantity = new("ValidateItemPositiveQuantity", "The reservation only positive quantity.", ErrorType.Validation);

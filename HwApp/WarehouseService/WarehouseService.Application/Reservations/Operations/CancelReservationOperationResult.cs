@@ -3,8 +3,6 @@
     public enum CancelReservationOperationResult
     {
         Success = 0,
-        ReservationNotFound = 1,
-        InvalidReservationState = 2,
-        StockStateConflict = 3
+        ReservationNotFound = 1
     }
 }

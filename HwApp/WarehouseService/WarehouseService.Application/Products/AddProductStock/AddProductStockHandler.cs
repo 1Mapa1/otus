@@ -4,7 +4,7 @@ using WarehouseService.Application.Common;
 
 namespace WarehouseService.Application.Products.AddProductStock
 {
-    public sealed class AddProductStockHandler : IRequestHandler<AddProductStockCommand, Result<AddProductStockResult>>
+    internal sealed class AddProductStockHandler : IRequestHandler<AddProductStockCommand, Result<AddProductStockResult>>
     {
         private static readonly Error ProductNotFound = new("ProductNotFound", "Product not found.", ErrorType.NotFound);
         private static readonly Error InvalidQuantity = new("InvalidQuantity", "Quantity must be greater than zero.", ErrorType.Validation);

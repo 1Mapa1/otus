@@ -3,7 +3,7 @@ using WarehouseService.Application.Common;
 
 namespace WarehouseService.Application.Products.GetProducts
 {
-    public sealed class GetProductsHandler : IRequestHandler<GetProductsQuery, Result<GetProductsResult>>
+    internal sealed class GetProductsHandler : IRequestHandler<GetProductsQuery, Result<GetProductsResult>>
     {
         private readonly IProductRepository _productRepository;
 

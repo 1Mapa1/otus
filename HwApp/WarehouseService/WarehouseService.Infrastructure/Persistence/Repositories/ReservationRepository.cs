@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using WarehouseService.Application.Reservations;
 using WarehouseService.Application.Reservations.Operations;
 using WarehouseService.Domain.StockReservations;
@@ -29,7 +30,7 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
             if (reservation is null)
             {
                 await transaction.CommitAsync(cancellationToken);
-                return CancelReservationOperationResult.Success;
+                return CancelReservationOperationResult.ReservationNotFound;
             }
 
             if (reservation.Status == StockReservationStatus.Canceled)
@@ -100,92 +101,112 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
             await using var transaction = await _databaseContext.Database
                 .BeginTransactionAsync(cancellationToken);
 
-            var existingReservation = await _databaseContext.StockReservations
-                .FirstOrDefaultAsync(
-                    reservation => reservation.OrderId == orderId,
-                    cancellationToken);
-
-            if (existingReservation is not null)
+            try
             {
-                await transaction.CommitAsync(cancellationToken);
+                var existingReservation = await _databaseContext.StockReservations
+                    .FirstOrDefaultAsync(
+                        reservation => reservation.OrderId == orderId,
+                        cancellationToken);
 
-                if (existingReservation.Status == StockReservationStatus.Reserved)
-                    return ReserveProductsOperationResult.Success(existingReservation.Id);
+                if (existingReservation is not null)
+                {
+                    await transaction.CommitAsync(cancellationToken);
 
-                return ReserveProductsOperationResult.InvalidReservationState();
-            }
+                    if (existingReservation.Status == StockReservationStatus.Reserved)
+                        return ReserveProductsOperationResult.Success(existingReservation.Id);
 
-            var productIds = requestedItems
-                .Select(item => item.ProductId)
-                .ToArray();
+                    return ReserveProductsOperationResult.InvalidReservationState();
+                }
 
-            var products = await _databaseContext.Products
-                .FromSqlInterpolated($"""
+                var productIds = requestedItems
+                    .Select(item => item.ProductId)
+                    .ToArray();
+
+                var products = await _databaseContext.Products
+                    .FromSqlInterpolated($"""
                     SELECT *
                     FROM products
                     WHERE id = ANY({productIds})
                     ORDER BY id
                     FOR UPDATE
                 """)
-                .ToListAsync(cancellationToken);
+                    .ToListAsync(cancellationToken);
 
-            var productsById = products.ToDictionary(product => product.Id);
+                var productsById = products.ToDictionary(product => product.Id);
 
-            var unavailableItems = new List<UnavailableStockItem>();
+                var unavailableItems = new List<UnavailableStockItem>();
 
-            foreach (var requestedItem in requestedItems)
-            {
-                if (!productsById.TryGetValue(requestedItem.ProductId, out var product))
+                foreach (var requestedItem in requestedItems)
                 {
-                    unavailableItems.Add(new UnavailableStockItem(
-                        requestedItem.ProductId,
-                        requestedItem.Quantity,
-                        0));
+                    if (!productsById.TryGetValue(requestedItem.ProductId, out var product))
+                    {
+                        unavailableItems.Add(new UnavailableStockItem(
+                            requestedItem.ProductId,
+                            requestedItem.Quantity,
+                            0));
 
-                    continue;
+                        continue;
+                    }
+
+                    var currentAvailableQuantity = product.AvailableQuantity - product.ReservedQuantity;
+
+                    if (currentAvailableQuantity < requestedItem.Quantity)
+                    {
+                        unavailableItems.Add(new UnavailableStockItem(
+                            product.Id,
+                            requestedItem.Quantity,
+                            currentAvailableQuantity));
+                    }
                 }
 
-                var currentAvailableQuantity = product.AvailableQuantity - product.ReservedQuantity;
-
-                if (currentAvailableQuantity < requestedItem.Quantity)
+                if (unavailableItems.Count > 0)
                 {
-                    unavailableItems.Add(new UnavailableStockItem(
-                        product.Id,
-                        requestedItem.Quantity,
-                        currentAvailableQuantity));
+                    await transaction.RollbackAsync(cancellationToken);
+                    return ReserveProductsOperationResult.StockNotAvailable(unavailableItems);
                 }
+
+                var reservation = StockReservation.Create(
+                    orderId,
+                    userId);
+
+                var reservationItems = requestedItems
+                    .Select(item => StockReservationItem.Create(
+                        reservation.Id,
+                        item.ProductId,
+                        (uint)item.Quantity))
+                    .ToList();
+
+                foreach (var requestedItem in requestedItems)
+                {
+                    var product = productsById[requestedItem.ProductId];
+                    product.IncreaseReservedQuantity((uint)requestedItem.Quantity);
+                }
+
+                await _databaseContext.StockReservations.AddAsync(reservation, cancellationToken);
+                await _databaseContext.StockReservationItems.AddRangeAsync(reservationItems, cancellationToken);
+
+                await _databaseContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return ReserveProductsOperationResult.Success(reservation.Id);
             }
-
-            if (unavailableItems.Count > 0)
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException postgresException
+               && postgresException.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                return ReserveProductsOperationResult.StockNotAvailable(unavailableItems);
+
+                var reservation = await _databaseContext.StockReservations
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(p => p.OrderId == orderId, cancellationToken);
+
+                if (reservation is null)
+                    throw;
+
+                if (reservation.Status == StockReservationStatus.Canceled)
+                    return ReserveProductsOperationResult.InvalidReservationState();
+
+                return ReserveProductsOperationResult.Success(reservation.Id);
             }
-
-            var reservation = StockReservation.Create(
-                orderId,
-                userId);
-
-            var reservationItems = requestedItems
-                .Select(item => StockReservationItem.Create(
-                    reservation.Id,
-                    item.ProductId,
-                    (uint)item.Quantity))
-                .ToList();
-
-            foreach (var requestedItem in requestedItems)
-            {
-                var product = productsById[requestedItem.ProductId];
-                product.IncreaseReservedQuantity((uint)requestedItem.Quantity);
-            }
-
-            await _databaseContext.StockReservations.AddAsync(reservation, cancellationToken);
-            await _databaseContext.StockReservationItems.AddRangeAsync(reservationItems, cancellationToken);
-
-            await _databaseContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-
-            return ReserveProductsOperationResult.Success(reservation.Id);
         }
     }
 }
