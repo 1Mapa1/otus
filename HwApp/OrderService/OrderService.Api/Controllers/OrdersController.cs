@@ -31,7 +31,7 @@ namespace OrderService.Api
                 if (!TryGetCurrentUserId(out var userId))
                     return Unauthorized();
 
-                var result = await _sender.Send(new CreateOrderCommand(userId, request.Price), cancellationToken);
+                var result = await _sender.Send(new CreateOrderCommand(userId, request.DeliverySlotId, request.Items), cancellationToken);
 
                 return Ok(new CreateOrderResponse(result.OrderId, result.Status.ToString(), result.FailureReason.ToString()));
             }

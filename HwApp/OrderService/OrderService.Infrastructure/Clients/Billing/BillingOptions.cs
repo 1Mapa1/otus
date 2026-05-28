@@ -1,6 +1,6 @@
-namespace OrderService.Infrastructure.Billing
+namespace OrderService.Infrastructure.Clients.Billing
 {
-    internal sealed class BillingServiceOptions
+    internal class BillingOptions
     {
         public const string SectionName = "Ms:Billing";
 
