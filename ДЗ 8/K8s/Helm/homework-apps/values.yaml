@@ -1,0 +1,444 @@
+nameOverride: ""
+fullnameOverride: ""
+
+global:
+  # Должно совпадать с .Chart.Name родительского umbrella; участвует в именах вида <releaseBase>-auth вместе с логикой homework-apps.fullname.
+  umbrellaChartName: homework-apps
+  # app.kubernetes.io/name для подов/сервисов (как в монолитном chart).
+  kubernetesAppName: homework-apps
+  peerAuthName: auth
+  peerCustomerName: customer
+  peerBillingName: billing
+  peerWarehouseName: warehouse
+  peerDeliveryName: delivery
+  dbHost: postgres-postgresql
+  dbPort: "5432"
+  environment: Development
+  secretType: Opaque
+  clusterDomain: cluster.local
+  # Пусто — Bitnami Kafka (KRaft): <kafkaClusterReleaseName>-controller-headless.<namespace>.svc.<clusterDomain>:9092
+  kafkaBootstrapServers: ""
+  kafkaClusterReleaseName: kafka
+
+authService:
+  enabled: true
+  name: auth
+  dbName: auth_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-auth-service
+    imageTag: "7.0"
+    replicaCount: 1
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+    monitor:
+      enabled: false
+      port: 8080
+      protocol: TCP
+      name: monitor
+
+  serviceMonitor:
+    enabled: false
+    scrapeTimeout: 30s
+    honorLabels: true
+    path: /metrics
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-auth-migration
+    imageTag: "7.0"
+
+  config:
+    # Optional override. Empty value means auto-resolve in-cluster URL.
+    msCustomerBaseUrlOverride: ""
+    msCustomerTimeout: "00:00:10"
+    msBillingBaseUrlOverride: ""
+    msBillingTimeout: "00:00:10"
+    # Optional override. Empty value means use AuthService in-cluster URL.
+    jwtIssuerOverride: ""
+    jwtLifetimeMinutes: "60"
+
+  secret:
+    dbUser: auth_user
+    dbPassword: auth_pass
+    jwtPrivateKeyPem: |
+      -----BEGIN RSA PRIVATE KEY-----
+      MIIEpQIBAAKCAQEA5yIBbI5zCDxCB7wf1i/0EdDGmxI0k9w/FBLnkC1ec/hEGtQx
+      5MazJF3LTQgfVrajOHabVXvE642s7pPpilQS2CnyGXgkRPQ18aLDYDhkS5y3Q1qn
+      SCZJdPtD03ZS4U72s8deJVxRQQK9Z9KVZPtFCCwoQkLTjPYd4TqI7UW4eX/PGVvX
+      8wmlnd9OkmcpbXBQDWWoMhaprbggEOI/p0UTwDkHkCNZCxuzcKkzE5nPCbnPOi6W
+      5Y7jDjmdD2BzmDI4DFvODGgak3tAM5wg9MRhctqQWFc9OnRlPAPsJNGMEZFBBI6w
+      7x6jv4OHTN2HnEqVrfBkUSEuNlAcDdighx3MewIDAQABAoIBAH7isjlwMkJRIkaw
+      xiGFjc3B+WXkJq0NeiuA/VKvNW0g2/KGjyVy16GdRCBz1xB5jz1OD5RsL/zIeCk5
+      Vjo0UWwOCvRkejTIhFy05+EI1DaWQB1fxPnc2vK3hdKu4G0ENncXed20wn6YDHbU
+      qmMXdhw4cZl+qjh2XIzq34Syg8Vek7SmznHsZSPHYRbBVvdK1haRdDMXc2AyA4s7
+      6ib3rkFcOGPYviVrVAB7Y5qj1+ECvunbjrltJhj5CgVSkiT772snLDnHdWcyHbvF
+      9IapBRAuSNG3c1d23bOhYy8ZxJ4RFLGjR0S9A9Vrva0YYZ6OKIKoOr7fg77CG3c+
+      4554VFECgYEA9AZWPnz7KxbCtki30i/gCW1cZ6VcOScANCp/OHWnYPnYHF5wJqR2
+      E1eCWxYVs0S6yT1he28kXUkDG9lRqmG7lC2eZMgsPnbuiH1/v7MGjyHED8SM8Phn
+      2GFe3VY9s+eQQo8JbRqq46dnLz4XaBiCklpd/GE32+ERxL7RKR4abkcCgYEA8nm1
+      Yt28r5udYOZveXJ2GGvs/5FFOvpSDvS/6uzIQRrrzM+G7K669i6zoSwu49mkC7CX
+      Xf/UrKJWzUXZkO7A1lbjJ/CZ2Lvwe+ZMiQN8BQ4/+m/IuZZv2GNlaU/mvdLmCQNn
+      LKIk0lXKYVvZIWpAq1v9yFRdmRn1ZEq6mV6nRi0CgYEAl9Xhj9wgRD1TRiyVBBl5
+      4yPC3VLMwVr9C3ht1GmQjgynZW91hPXL6lkG6ToionrfZhvlLfKHw+uMHaXo5IUP
+      PDHuXnMW5H8ICLFd7Z+tMx4lalI4CC/oHYDoj/v7RJeO8XsiuFphfmlJEOInmkO1
+      6u6DkGfFY/D1J2A7sMPkWj0CgYEAwRUv3mGJ7iCxysbUv9Xounu+xqgMg/FvRJ+a
+      79zLfiSM3pPm8jQVhxIbUl2XnTLjEbf2YRDmbu36xw03OdUVU9junBBYwiCuWEtE
+      aNqQeIonYip/oWFtANftmlXY/RGiwkymbQFU5vUP6kU0ewpcIthnF44u1kq4gLuN
+      KbIY66UCgYEAo9XvjrQcti2KwLCylOPR8gocZJK6+Oz0yFCQaw5utpEqr0yXVYmu
+      CmfweIhRiB37ovDFCKPQ4JEMXWHdhIn8hlzk/A1UGiH6BDnZjzHTk7tN8B3M7vI+
+      +q5sLwnmk9A8pxAAzAtamL262Fqs6j0mHEI/8EUqbY3U9TxijEokJfM=
+      -----END RSA PRIVATE KEY-----
+    jwtKeyId: default-key
+
+customerService:
+  enabled: true
+  name: customer
+  dbName: customer_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-customer-service
+    imageTag: "7.1"
+    replicaCount: 1
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+    monitor:
+      enabled: true
+      port: 8080
+      protocol: TCP
+      name: monitor
+
+  serviceMonitor:
+    enabled: true
+    scrapeTimeout: 30s
+    honorLabels: true
+    path: /metrics
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-customer-migration
+    imageTag: "7.0"
+
+  config:
+    authUrlOverride: ""
+    kafkaAcks: "All"
+    kafkaEnableIdempotence: true
+
+  secret:
+    dbUser: customer_user
+    dbPassword: customer_pass
+
+notificationService:
+  enabled: true
+  name: notification
+  dbName: notification_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-notification-service
+    imageTag: "7.4"
+    replicaCount: 1
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-notification-migration
+    imageTag: "7.1"
+
+  config:
+    authUrlOverride: ""
+    kafkaGroupId: notification-service
+    kafkaTopics:
+      - customers
+      - orders
+
+  secret:
+    dbUser: notification_user
+    dbPassword: notification_pass
+
+billingService:
+  enabled: true
+  name: billing
+  dbName: billing_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-billing-service
+    imageTag: "7.2"
+    replicaCount: 1
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-billing-migration
+    imageTag: "7.0"
+
+  config:
+    authUrlOverride: ""
+
+  secret:
+    dbUser: billing_user
+    dbPassword: billing_pass
+
+orderService:
+  enabled: true
+  name: order
+  dbName: order_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-order-service
+    imageTag: "7.2"
+    replicaCount: 1
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-order-migration
+    imageTag: "7.0"
+
+  config:
+    authUrlOverride: ""
+    msBillingBaseUrlOverride: ""
+    msBillingTimeout: "00:00:10"
+    kafkaAcks: "All"
+    kafkaEnableIdempotence: true
+
+  secret:
+    dbUser: order_user
+    dbPassword: order_pass
+
+warehouseService:
+  enabled: true
+  name: warehouse
+  dbName: warehouse_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-warehouse-service
+    imageTag: "7.0"
+    replicaCount: 1
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-warehouse-migration
+    imageTag: "7.0"
+
+  config:
+    authUrlOverride: ""
+
+  secret:
+    dbUser: warehouse_user
+    dbPassword: warehouse_pass
+
+deliveryService:
+  enabled: true
+  name: delivery
+  dbName: delivery_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-delivery-service
+    imageTag: "7.0"
+    replicaCount: 1
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-delivery-migration
+    imageTag: "7.0"
+
+  config:
+    authUrlOverride: ""
+
+  secret:
+    dbUser: delivery_user
+    dbPassword: delivery_pass
+
+ingress:
+  enabled: true
+  className: nginx
+  host: arch.homework
+  paths:
+    - path: /api/auth
+      service: authService
+    - path: /.well-known
+      service: authService
+    - path: /api/customers
+      service: customerService
+    - path: /api/notifications
+      service: notificationService
+    - path: /api/billing
+      service: billingService
+    - path: /api/internal/warehouse
+      service: warehouseService
+    - path: /api/warehouse
+      service: warehouseService
+    - path: /api/internal/delivery
+      service: deliveryService
+    - path: /api/delivery
+      service: deliveryService
+    - path: /api/orders
+      service: orderService

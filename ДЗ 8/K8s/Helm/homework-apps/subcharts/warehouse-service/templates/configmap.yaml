@@ -1,0 +1,17 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "warehouse-service.fullname" . }}
+  labels:
+    {{- include "warehouse-service.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+data:
+  DB_HOST: {{ .Values.global.dbHost }}
+  DB_PORT: {{ .Values.global.dbPort | quote }}
+  DB_NAME: {{ .Values.dbName }}
+  ASPNETCORE_ENVIRONMENT: {{ .Values.global.environment }}
+  Auth__Url: {{ default (include "warehouse-service.authServiceUrl" .) .Values.config.authUrlOverride | quote }}
+{{- end }}

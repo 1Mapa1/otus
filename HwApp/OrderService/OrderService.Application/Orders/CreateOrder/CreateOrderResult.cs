@@ -5,5 +5,5 @@ namespace OrderService.Application.Orders.CreateOrder
     public sealed record CreateOrderResult(
         Guid OrderId,
         OrderStatus Status,
-        OrderFailureReason? FailureReason);
+        string? FailureReason);
 }

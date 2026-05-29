@@ -40,7 +40,9 @@ namespace BillingService.Api.Controllers.External
 
             return Ok(new GetMyAccountResponse(
                 account.UserId,
-                account.Balance));
+                account.Balance,
+                account.HeldAmount,
+                account.AvailableBalance));
         }
 
         [HttpPost("deposit")]

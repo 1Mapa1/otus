@@ -28,26 +28,81 @@ namespace OrderService.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<Guid?>("DeliveryReservationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("delivery_reservation_id");
+
+                    b.Property<Guid>("DeliverySlotId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("delivery_slot_id");
+
+                    b.Property<string>("FailureDetails")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("failure_details");
+
                     b.Property<string>("FailureReason")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("failure_reason");
 
-                    b.Property<decimal>("Price")
+                    b.Property<string>("LockedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("locked_by");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_until");
+
+                    b.Property<DateTime?>("NextRetryAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_retry_at");
+
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_id");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("rejected_at");
+
+                    b.Property<int>("RetryCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("retry_count");
+
+                    b.Property<string>("SagaStep")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("saga_step");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid?>("StockReservationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("stock_reservation_id");
+
+                    b.Property<decimal>("TotalAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
-                        .HasColumnName("price");
-
-                    b.Property<int>("Status")
-                        .HasMaxLength(32)
-                        .HasColumnType("integer")
-                        .HasColumnName("status");
+                        .HasColumnName("total_amount");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -61,9 +116,54 @@ namespace OrderService.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DeliverySlotId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("orders", (string)null);
+                });
+
+            modelBuilder.Entity("OrderService.Domain.Orders.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_price");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("unit_price");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("order_items", (string)null);
                 });
 
             modelBuilder.Entity("OrderService.Infrastructure.Persistence.Outbox.OutboxMessage", b =>
@@ -102,6 +202,20 @@ namespace OrderService.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("outbox_messages", (string)null);
+                });
+
+            modelBuilder.Entity("OrderService.Domain.Orders.OrderItem", b =>
+                {
+                    b.HasOne("OrderService.Domain.Orders.Order", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("OrderService.Domain.Orders.Order", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

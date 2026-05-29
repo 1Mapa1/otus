@@ -6,9 +6,13 @@
 
         public decimal Balance { get; private set; }
 
-        public DateTime CreatedAt { get; private set; }
+        public decimal HeldAmount { get; private set; }
 
-        public DateTime UpdatedAt { get; private set; }
+        public decimal AvailableBalance => Balance - HeldAmount;
+
+        public DateTime CreatedAt{ get; private set; }
+
+        public DateTime UpdatedAt{ get; private set; }
 
         private Account() { }
 
@@ -20,8 +24,9 @@
             {
                 UserId = userId,
                 Balance = 0,
-                CreatedAt = utcNow,
-                UpdatedAt = utcNow
+                HeldAmount = 0,
+                CreatedAt= utcNow,
+                UpdatedAt= utcNow
             };
         }
     }

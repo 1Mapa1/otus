@@ -87,7 +87,7 @@ namespace NotificationService.Infrastructure
             services.AddScoped<IKafkaIntegrationEventHandler, CustomerCreatedEventHandler>();
             services.AddScoped<IKafkaIntegrationEventHandler, CustomerUpdatedEventHandler>();
             services.AddScoped<IKafkaIntegrationEventHandler, OrderPaidEventHandler>();
-            services.AddScoped<IKafkaIntegrationEventHandler, OrderRejectedEventHandler>();
+            services.AddScoped<IKafkaIntegrationEventHandler, OrderRejectedV1EventHandler>();
 
             services.AddHostedService<KafkaConsumer>();
 

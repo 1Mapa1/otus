@@ -1,5 +1,4 @@
 using MediatR;
-using OrderService.Domain.Orders;
 
 namespace OrderService.Application.Orders.GetOrderById
 {
@@ -21,8 +20,17 @@ namespace OrderService.Application.Orders.GetOrderById
             return new OrderDetailsDto(
                 order.Id,
                 order.Status.ToString(),
+                order.SagaStep.ToString(),
+                order.TotalAmount,
+                order.Items.Select(i => new OrderItemDetailsDto(
+                    i.Id,
+                    i.Name,
+                    i.UnitPrice,
+                    i.Quantity,
+                    i.TotalPrice
+                )).ToArray(),
+                order.DeliverySlotId,
                 order.FailureReason?.ToString(),
-                order.Price,
                 order.CreatedAt);
         }
     }

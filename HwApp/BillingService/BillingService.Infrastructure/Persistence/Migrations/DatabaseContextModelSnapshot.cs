@@ -39,8 +39,10 @@ namespace BillingService.Infrastructure.Persistence.Migrations
                         .HasColumnName("balance_after");
 
                     b.Property<decimal>("BalanceBefore")
+                        .ValueGeneratedOnAdd()
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m)
                         .HasColumnName("balance_before");
 
                     b.Property<DateTime>("CreatedAt")
@@ -49,9 +51,25 @@ namespace BillingService.Infrastructure.Persistence.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<decimal>("HeldAfter")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("held_after");
+
+                    b.Property<decimal>("HeldBefore")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("held_before");
+
                     b.Property<Guid?>("OrderId")
                         .HasColumnType("uuid")
                         .HasColumnName("order_id");
+
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_id");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -66,6 +84,8 @@ namespace BillingService.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("PaymentId");
 
                     b.HasIndex("UserId");
 
@@ -89,6 +109,11 @@ namespace BillingService.Infrastructure.Persistence.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<decimal>("HeldAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("held_amount");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -100,7 +125,80 @@ namespace BillingService.Infrastructure.Persistence.Migrations
                     b.ToTable("accounts", (string)null);
                 });
 
+            modelBuilder.Entity("BillingService.Domain.Payments.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime?>("AuthorizedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("authorized_at");
+
+                    b.Property<DateTime?>("CanceledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_at");
+
+                    b.Property<DateTime?>("CapturedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("captured_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("payments", (string)null);
+                });
+
             modelBuilder.Entity("BillingService.Domain.AccountTransactions.AccountTransaction", b =>
+                {
+                    b.HasOne("BillingService.Domain.Payments.Payment", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("BillingService.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BillingService.Domain.Payments.Payment", b =>
                 {
                     b.HasOne("BillingService.Domain.Accounts.Account", null)
                         .WithMany()

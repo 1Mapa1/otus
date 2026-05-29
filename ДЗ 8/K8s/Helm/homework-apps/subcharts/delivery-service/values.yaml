@@ -1,0 +1,55 @@
+global:
+  umbrellaChartName: homework-apps
+  kubernetesAppName: homework-apps
+  peerAuthName: auth
+  clusterDomain: cluster.local
+  secretType: Opaque
+  dbHost: postgres-postgresql
+  dbPort: "5432"
+  environment: Development
+
+enabled: true
+name: delivery
+dbName: delivery_db
+
+deployment:
+  imageRepository: maslovdeveloper/hwapp-delivery-service
+  imageTag: "7.0"
+  replicaCount: 2
+  maxSurge: 1
+  maxUnavailable: 1
+  port: 8000
+  protocol: TCP
+  startupProbe:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 12
+  readinessProbe:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 3
+    successThreshold: 1
+  livenessProbe:
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+service:
+  type: ClusterIP
+  port: 80
+  protocol: TCP
+  name: http
+
+migrationJob:
+  enabled: true
+  ttlSecondsAfterFinished: 100
+  backoffLimit: 3
+  imageRepository: maslovdeveloper/hwapp-delivery-migration
+  imageTag: "7.0"
+
+config:
+  authUrlOverride: ""
+
+secret:
+  dbUser: delivery_user
+  dbPassword: delivery_pass

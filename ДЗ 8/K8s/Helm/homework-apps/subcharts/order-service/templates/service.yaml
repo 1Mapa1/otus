@@ -1,0 +1,17 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "order-service.fullname" . }}
+  labels:
+    {{- include "order-service.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "order-service.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.deployment.port }}
+      protocol: {{ .Values.service.protocol }}
+      name: {{ .Values.service.name }}
+  type: {{ .Values.service.type }}
+{{- end }}

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="WarehouseService.Application/WarehouseService.Application.csproj" />
+  <Project Path="WarehouseService.DbMigrator/WarehouseService.DbMigrator.csproj" />
+  <Project Path="WarehouseService.Domain/WarehouseService.Domain.csproj" />
+  <Project Path="WarehouseService.Infrastructure/WarehouseService.Infrastructure.csproj" />
+  <Project Path="WarehouseService.Api/WarehouseService.Api.csproj" />
+</Solution>

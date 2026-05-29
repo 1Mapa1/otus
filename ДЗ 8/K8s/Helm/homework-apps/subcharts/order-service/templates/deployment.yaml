@@ -1,0 +1,115 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "order-service.fullname" . }}
+  labels:
+    {{- include "order-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "order-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "order-service.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.deployment.imageRepository }}:{{ .Values.deployment.imageTag }}
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: {{ .Values.deployment.port }}
+            periodSeconds: {{ .Values.deployment.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.deployment.startupProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.deployment.startupProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: {{ .Values.deployment.port }}
+            periodSeconds: {{ .Values.deployment.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.deployment.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.deployment.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.deployment.readinessProbe.successThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.deployment.port }}
+            periodSeconds: {{ .Values.deployment.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.deployment.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.deployment.livenessProbe.failureThreshold }}
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: DB_NAME
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: Auth__Url
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Auth__Url
+            - name: Ms__Billing__BaseUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Ms__Billing__BaseUrl
+            - name: Ms__Billing__Timeout
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Ms__Billing__Timeout
+            - name: Kafka__BootstrapServers
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Kafka__BootstrapServers
+            - name: Kafka__Acks
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Kafka__Acks
+            - name: Kafka__EnableIdempotence
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Kafka__EnableIdempotence
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: DB_PASSWORD
+            - name: ASPNETCORE_URLS
+              value: "http://+:{{ .Values.deployment.port }}"
+          ports:
+            - containerPort: {{ .Values.deployment.port }}
+              protocol: {{ .Values.service.protocol }}
+              name: {{ .Values.service.name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.deployment.maxSurge }}
+      maxUnavailable: {{ .Values.deployment.maxUnavailable }}
+{{- end }}

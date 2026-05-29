@@ -3,12 +3,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OrderService.Application.Abstractions;
-using OrderService.Application.Billing;
+using OrderService.Application.Abstractions.Clients.Billing;
+using OrderService.Application.Abstractions.Clients.Delivery;
+using OrderService.Application.Abstractions.Clients.Warehouse;
 using OrderService.Application.Orders;
 using OrderService.Domain.Orders;
-using OrderService.Infrastructure.Billing;
 using OrderService.Infrastructure.Clients.Billing;
+using OrderService.Infrastructure.Clients.Delivery;
+using OrderService.Infrastructure.Clients.Warehouse;
 using OrderService.Infrastructure.Messaging.Kafka;
+using OrderService.Infrastructure.Options;
 using OrderService.Infrastructure.Persistence;
 using OrderService.Infrastructure.Persistence.Outbox;
 using OrderService.Infrastructure.Persistence.Repositories;
@@ -24,7 +28,8 @@ namespace OrderService.Infrastructure
         {
             services.AddInfrastructureDatabaseContext(configuration);
 
-            services.AddInfrastructureBillingServiceClient(configuration);
+            services.AddInfrastructureClients(configuration);
+            services.AddInfrastructureSaga(configuration);
 
             services.AddOptions<KafkaOptions>()
                 .Bind(configuration.GetSection(KafkaOptions.SectionName))
@@ -71,22 +76,72 @@ namespace OrderService.Infrastructure
             return services;
         }
 
-        public static IServiceCollection AddInfrastructureBillingServiceClient(
+        private static IServiceCollection AddInfrastructureSaga(
             this IServiceCollection services,
             IConfiguration configuration)
         {
             services
-                .AddOptions<BillingServiceOptions>()
-                .Bind(configuration.GetSection(BillingServiceOptions.SectionName))
-                .Validate(
-                    o => Uri.TryCreate(o.BaseUrl, UriKind.Absolute, out _),
-                    $"{BillingServiceOptions.SectionName}:BaseUrl must be a valid absolute URI")
+                .AddOptions<OrderSagaOptions>()
+                .Bind(configuration.GetSection(OrderSagaOptions.SectionName))
                 .ValidateOnStart();
 
-            services.AddHttpClient<IBillingServiceClient, BillingServiceClient>((sp, httpClient) =>
+            services.AddHostedService<OrderSagaWorker>();
+
+            return services;
+        }
+
+        private static IServiceCollection AddInfrastructureClients(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            services
+                .AddOptions<BillingOptions>()
+                .Bind(configuration.GetSection(BillingOptions.SectionName))
+                .Validate(
+                    o => Uri.TryCreate(o.BaseUrl, UriKind.Absolute, out _),
+                    $"{BillingOptions.SectionName}:BaseUrl must be a valid absolute URI")
+                .ValidateOnStart();
+
+            services.AddHttpClient<IBillingClient, BillingClient>((sp, httpClient) =>
             {
                 var options = sp
-                    .GetRequiredService<IOptions<BillingServiceOptions>>()
+                    .GetRequiredService<IOptions<BillingOptions>>()
+                    .Value;
+
+                httpClient.BaseAddress = new Uri(options.BaseUrl);
+                httpClient.Timeout = options.Timeout;
+            });
+
+            services
+               .AddOptions<WarehouseOptions>()
+               .Bind(configuration.GetSection(WarehouseOptions.SectionName))
+               .Validate(
+                   o => Uri.TryCreate(o.BaseUrl, UriKind.Absolute, out _),
+                   $"{WarehouseOptions.SectionName}:BaseUrl must be a valid absolute URI")
+               .ValidateOnStart();
+
+            services.AddHttpClient<IWarehouseClient, WarehouseClient>((sp, httpClient) =>
+            {
+                var options = sp
+                    .GetRequiredService<IOptions<WarehouseOptions>>()
+                    .Value;
+
+                httpClient.BaseAddress = new Uri(options.BaseUrl);
+                httpClient.Timeout = options.Timeout;
+            });
+
+            services
+                .AddOptions<DeliveryOptions>()
+                .Bind(configuration.GetSection(DeliveryOptions.SectionName))
+                .Validate(
+                    o => Uri.TryCreate(o.BaseUrl, UriKind.Absolute, out _),
+                    $"{DeliveryOptions.SectionName}:BaseUrl must be a valid absolute URI")
+                .ValidateOnStart();
+
+            services.AddHttpClient<IDeliveryClient, DeliveryClient>((sp, httpClient) =>
+            {
+                var options = sp
+                    .GetRequiredService<IOptions<DeliveryOptions>>()
                     .Value;
 
                 httpClient.BaseAddress = new Uri(options.BaseUrl);
