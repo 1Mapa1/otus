@@ -4,10 +4,10 @@ using NotificationService.Infrastructure.Messaging.Kafka.IntegrationEvents;
 
 namespace NotificationService.Infrastructure.Messaging.Kafka.IntegrationEventHandlers
 {
-    internal sealed class OrderRejectedEventHandler
-        : KafkaIntegrationEventHandler<OrderRejectedEvent>
+    internal sealed class OrderRejectedV1EventHandler
+        : KafkaIntegrationEventHandler<OrderRejectedV1Event>
     {
-        public OrderRejectedEventHandler(ISender sender)
+        public OrderRejectedV1EventHandler(ISender sender)
             : base(sender)
         {
         }
@@ -15,7 +15,7 @@ namespace NotificationService.Infrastructure.Messaging.Kafka.IntegrationEventHan
         public override string EventType => "order.rejected.v1";
 
         protected override Task HandleAsync(
-            OrderRejectedEvent integrationEvent,
+            OrderRejectedV1Event integrationEvent,
             CancellationToken cancellationToken)
         {
             return _sender.Send(
@@ -23,7 +23,8 @@ namespace NotificationService.Infrastructure.Messaging.Kafka.IntegrationEventHan
                     integrationEvent.OrderId,
                     integrationEvent.UserId,
                     integrationEvent.Price,
-                    integrationEvent.FailureReason),
+                    integrationEvent.FailureReason,
+                    null),
                 cancellationToken);
         }
     }

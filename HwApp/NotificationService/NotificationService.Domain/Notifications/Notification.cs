@@ -55,7 +55,8 @@
             Guid userId,
             Guid orderId,
             decimal price,
-            string failureReason)
+            string failureReason,
+            string? failureDetails)
         {
             return new Notification(
                 Guid.NewGuid(),
@@ -63,7 +64,7 @@
                 orderId,
                 NotificationType.OrderRejected,
                 "Order rejected",
-                $"Your order {orderId} was rejected. Amount: {price}. Reason: {failureReason}.",
+                $"Your order {orderId} was rejected. Amount: {price}. Reason: {failureReason}. Details: {failureDetails}.",
                 DateTime.UtcNow);
         }
     }
