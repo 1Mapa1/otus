@@ -33,7 +33,7 @@ namespace OrderService.Api
 
                 var result = await _sender.Send(new CreateOrderCommand(userId, request.DeliverySlotId, request.Items), cancellationToken);
 
-                return Ok(new CreateOrderResponse(result.OrderId, result.Status.ToString(), result.FailureReason.ToString()));
+                return Accepted(new CreateOrderResponse(result.OrderId, result.Status.ToString(), result.FailureReason?.ToString()));
             }
 
             [HttpGet("{id:guid}")]

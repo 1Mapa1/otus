@@ -1,7 +1,7 @@
 using MediatR;
 using OrderService.Application.Abstractions;
-using OrderService.Application.Abstractions.Warehouse;
-using OrderService.Application.Abstractions.Warehouse.ResolveProducts;
+using OrderService.Application.Abstractions.Clients.Warehouse;
+using OrderService.Application.Abstractions.Clients.Warehouse.ResolveProducts;
 using OrderService.Domain.Orders;
 
 namespace OrderService.Application.Orders.CreateOrder

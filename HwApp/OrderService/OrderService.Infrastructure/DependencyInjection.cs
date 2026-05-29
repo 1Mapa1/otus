@@ -3,15 +3,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OrderService.Application.Abstractions;
-using OrderService.Application.Abstractions.Billing;
-using OrderService.Application.Abstractions.Delivery;
-using OrderService.Application.Abstractions.Warehouse;
+using OrderService.Application.Abstractions.Clients.Billing;
+using OrderService.Application.Abstractions.Clients.Delivery;
+using OrderService.Application.Abstractions.Clients.Warehouse;
 using OrderService.Application.Orders;
 using OrderService.Domain.Orders;
 using OrderService.Infrastructure.Clients.Billing;
 using OrderService.Infrastructure.Clients.Delivery;
 using OrderService.Infrastructure.Clients.Warehouse;
 using OrderService.Infrastructure.Messaging.Kafka;
+using OrderService.Infrastructure.Options;
 using OrderService.Infrastructure.Persistence;
 using OrderService.Infrastructure.Persistence.Outbox;
 using OrderService.Infrastructure.Persistence.Repositories;
@@ -28,6 +29,7 @@ namespace OrderService.Infrastructure
             services.AddInfrastructureDatabaseContext(configuration);
 
             services.AddInfrastructureClients(configuration);
+            services.AddInfrastructureSaga(configuration);
 
             services.AddOptions<KafkaOptions>()
                 .Bind(configuration.GetSection(KafkaOptions.SectionName))
@@ -74,7 +76,21 @@ namespace OrderService.Infrastructure
             return services;
         }
 
-        public static IServiceCollection AddInfrastructureClients(
+        private static IServiceCollection AddInfrastructureSaga(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            services
+                .AddOptions<OrderSagaOptions>()
+                .Bind(configuration.GetSection(OrderSagaOptions.SectionName))
+                .ValidateOnStart();
+
+            services.AddHostedService<OrderSagaWorker>();
+
+            return services;
+        }
+
+        private static IServiceCollection AddInfrastructureClients(
             this IServiceCollection services,
             IConfiguration configuration)
         {

@@ -5,5 +5,6 @@ namespace OrderService.Domain.Orders
         Processing = 0,
         Confirmed = 1,
         Rejected = 2,
+        CompensationFailed = 3,
     }
 }

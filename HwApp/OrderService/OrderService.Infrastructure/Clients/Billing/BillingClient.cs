@@ -1,7 +1,7 @@
-using OrderService.Application.Abstractions.Billing;
-using OrderService.Application.Abstractions.Billing.AuthorizePayment;
-using OrderService.Application.Abstractions.Billing.CancelAuthorization;
-using OrderService.Application.Abstractions.Billing.CapturePayment;
+using OrderService.Application.Abstractions.Clients.Billing;
+using OrderService.Application.Abstractions.Clients.Billing.AuthorizePayment;
+using OrderService.Application.Abstractions.Clients.Billing.CancelAuthorization;
+using OrderService.Application.Abstractions.Clients.Billing.CapturePayment;
 using OrderService.Infrastructure.Clients.Billing.Requests;
 using OrderService.Infrastructure.Clients.Billing.Responses;
 using System.Net;
@@ -34,88 +34,109 @@ namespace OrderService.Infrastructure.Clients.Billing
             decimal amount,
             CancellationToken cancellationToken = default)
         {
-            var request = new AuthorizePaymentRequest(userId, orderId, amount);
-
-            var response = await _httpClient.PostAsJsonAsync(
-                AuthorizePaymentEndpoint,
-                request,
-                Options,
-                cancellationToken);
-
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var body = JsonSerializer.Deserialize<AuthorizePaymentResponse>(content, Options);
-
-                if (body is null)
+            return await HttpClientTechnicalFailureHandler.ExecuteAsync(
+                "BillingService",
+                async () =>
                 {
+                    var request = new AuthorizePaymentRequest(userId, orderId, amount);
+
+                    var response = await _httpClient.PostAsJsonAsync(
+                        AuthorizePaymentEndpoint,
+                        request,
+                        Options,
+                        cancellationToken);
+
+                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "BillingService", "authorize payment");
+
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var body = JsonSerializer.Deserialize<AuthorizePaymentResponse>(content, Options);
+
+                        if (body is null)
+                        {
+                            return AuthorizePaymentResult.Failure(
+                                new BillingClientError(BillingClientErrorCode.Unknown, "Billing authorize empty response."));
+                        }
+
+                        return AuthorizePaymentResult.Success(body.PaymentId, body.AuthorizedAmount);
+                    }
+
+                    var errorResponse = JsonSerializer.Deserialize<BillingErrorResponse>(content, Options);
+
                     return AuthorizePaymentResult.Failure(
-                        new BillingClientError(BillingClientErrorCode.Unknown, "Billing authorize empty response."));
-                }
-
-                return AuthorizePaymentResult.Success(body.PaymentId, body.AuthorizedAmount);
-            }
-
-            var errorResponse = JsonSerializer.Deserialize<BillingErrorResponse>(content, Options);
-
-            return AuthorizePaymentResult.Failure(
-                ToBillingError(response.StatusCode, errorResponse, isAuthorize: true));
+                        ToBillingError(response.StatusCode, errorResponse, isAuthorize: true));
+                });
         }
 
         public async Task<CapturePaymentResult> CapturePaymentAsync(
             Guid orderId,
             CancellationToken cancellationToken = default)
         {
-            var request = new CapturePaymentRequest(orderId);
-
-            var response = await _httpClient.PostAsJsonAsync(
-                CapturePaymentEndpoint,
-                request,
-                Options,
-                cancellationToken);
-
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var body = JsonSerializer.Deserialize<CapturePaymentResponse>(content, Options);
-
-                if (body is null)
+            return await HttpClientTechnicalFailureHandler.ExecuteAsync(
+                "BillingService",
+                async () =>
                 {
+                    var request = new CapturePaymentRequest(orderId);
+
+                    var response = await _httpClient.PostAsJsonAsync(
+                        CapturePaymentEndpoint,
+                        request,
+                        Options,
+                        cancellationToken);
+
+                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "BillingService", "capture payment");
+
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var body = JsonSerializer.Deserialize<CapturePaymentResponse>(content, Options);
+
+                        if (body is null)
+                        {
+                            return CapturePaymentResult.Failure(
+                                new BillingClientError(BillingClientErrorCode.Unknown, "Billing capture empty response."));
+                        }
+
+                        return CapturePaymentResult.Success(body.PaymentId, body.AuthorizedAmount);
+                    }
+
+                    var errorResponse = JsonSerializer.Deserialize<BillingErrorResponse>(content, Options);
+
                     return CapturePaymentResult.Failure(
-                        new BillingClientError(BillingClientErrorCode.Unknown, "Billing capture empty response."));
-                }
-
-                return CapturePaymentResult.Success(body.PaymentId, body.AuthorizedAmount);
-            }
-
-            var errorResponse = JsonSerializer.Deserialize<BillingErrorResponse>(content, Options);
-
-            return CapturePaymentResult.Failure(
-                ToBillingError(response.StatusCode, errorResponse, isAuthorize: false));
+                        ToBillingError(response.StatusCode, errorResponse, isAuthorize: false));
+                });
         }
 
         public async Task<CancelAuthorizationResult> CancelAuthorizationAsync(
             Guid orderId,
             CancellationToken cancellationToken = default)
         {
-            var request = new CancelAuthorizationPaymentRequest(orderId);
+            return await HttpClientTechnicalFailureHandler.ExecuteAsync(
+                "BillingService",
+                async () =>
+                {
+                    var request = new CancelAuthorizationPaymentRequest(orderId);
 
-            var response = await _httpClient.PostAsJsonAsync(
-                CancelAuthorizationEndpoint,
-                request,
-                Options,
-                cancellationToken);
+                    var response = await _httpClient.PostAsJsonAsync(
+                        CancelAuthorizationEndpoint,
+                        request,
+                        Options,
+                        cancellationToken);
 
-            if (response.IsSuccessStatusCode)
-                return CancelAuthorizationResult.Success();
+                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "BillingService", "cancel authorication");
 
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            var errorResponse = JsonSerializer.Deserialize<BillingErrorResponse>(content, Options);
+                    if (response.IsSuccessStatusCode)
+                        return CancelAuthorizationResult.Success();
 
-            return CancelAuthorizationResult.Failure(
-                ToBillingError(response.StatusCode, errorResponse, isAuthorize: false));
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var errorResponse = JsonSerializer.Deserialize<BillingErrorResponse>(content, Options);
+
+                    return CancelAuthorizationResult.Failure(
+                        ToBillingError(response.StatusCode, errorResponse, isAuthorize: false));
+                });
         }
 
         private static BillingClientError ToBillingError(

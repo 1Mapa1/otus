@@ -6,8 +6,9 @@
         PaymentAuthorized = 1,
         StockReserved= 2,
         DeliveryReserved = 3,
-        Completed = 4,
-        Compensating = 5,
-        Compensated = 6
+        Completed = 5,
+        Compensating = 6,
+        Compensated = 7,
+        CompensationFailed = 8,
     }
 }

@@ -1,5 +1,6 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.Options;
+using OrderService.Infrastructure.Options;
 
 namespace OrderService.Infrastructure.Messaging.Kafka
 {

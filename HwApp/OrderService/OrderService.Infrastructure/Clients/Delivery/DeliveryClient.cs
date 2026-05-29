@@ -1,6 +1,6 @@
-using OrderService.Application.Abstractions.Delivery;
-using OrderService.Application.Abstractions.Delivery.CancelReservation;
-using OrderService.Application.Abstractions.Delivery.CreateReservation;
+using OrderService.Application.Abstractions.Clients.Delivery;
+using OrderService.Application.Abstractions.Clients.Delivery.CancelReservation;
+using OrderService.Application.Abstractions.Clients.Delivery.CreateReservation;
 using OrderService.Infrastructure.Clients.Delivery.Requests;
 using OrderService.Infrastructure.Clients.Delivery.Responses;
 using System.Net;
@@ -30,23 +30,30 @@ namespace OrderService.Infrastructure.Clients.Delivery
             Guid orderId,
             CancellationToken cancellationToken = default)
         {
-            var request = new CancelReservationRequest(orderId);
+            return await HttpClientTechnicalFailureHandler.ExecuteAsync(
+                "DeliveryService",
+                async () =>
+                {
+                    var request = new CancelReservationRequest(orderId);
 
-            var response = await _httpClient.PostAsJsonAsync(
-                CancelReservation,
-                request,
-                Options,
-                cancellationToken);
+                    var response = await _httpClient.PostAsJsonAsync(
+                        CancelReservation,
+                        request,
+                        Options,
+                        cancellationToken);
 
-            if (response.IsSuccessStatusCode)
-                return CancelReservationResult.Success();
+                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "DeliveryService", "cancel reservation");
 
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                    if (response.IsSuccessStatusCode)
+                        return CancelReservationResult.Success();
 
-            var errorResponse = JsonSerializer.Deserialize<DeliveryErrorResponse>(content, Options);
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
-            return CancelReservationResult.Failure(
-                ToDeliveryError(response.StatusCode, errorResponse));
+                    var errorResponse = JsonSerializer.Deserialize<DeliveryErrorResponse>(content, Options);
+
+                    return CancelReservationResult.Failure(
+                        ToDeliveryError(response.StatusCode, errorResponse));
+                });
         }
 
         public async Task<CreateReservationResult> CreateReservationAsync(
@@ -55,31 +62,38 @@ namespace OrderService.Infrastructure.Clients.Delivery
             Guid deliverySlotId,
             CancellationToken cancellationToken = default)
         {
-            var request = new CreateReservationRequest(orderId, userId, deliverySlotId);
+            return await HttpClientTechnicalFailureHandler.ExecuteAsync(
+                "DeliveryService",
+                async () =>
+                {
+                    var request = new CreateReservationRequest(orderId, userId, deliverySlotId);
 
-            var response = await _httpClient.PostAsJsonAsync(
-                CreateReservation,
-                request,
-                Options,
-                cancellationToken);
+                    var response = await _httpClient.PostAsJsonAsync(
+                        CreateReservation,
+                        request,
+                        Options,
+                        cancellationToken);
 
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "DeliveryService", "create reservation");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var createReservationResponse = JsonSerializer.Deserialize<CreateReservationResponse>(content, Options);
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                if (createReservationResponse is null)
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var createReservationResponse = JsonSerializer.Deserialize<CreateReservationResponse>(content, Options);
+
+                        if (createReservationResponse is null)
+                            return CreateReservationResult.Failure(
+                                new DeliveryClientError(DeliveryClientErrorCode.Unknown, "Delivery reservation empty response."));
+
+                        return CreateReservationResult.Success(createReservationResponse.ReservationId);
+                    }
+
+                    var errorResponse = JsonSerializer.Deserialize<DeliveryErrorResponse>(content, Options);
+
                     return CreateReservationResult.Failure(
-                        new DeliveryClientError(DeliveryClientErrorCode.Unknown, "Delivery reservation empty response."));
-
-                return CreateReservationResult.Success(createReservationResponse.ReservationId);
-            }
-
-            var errorResponse = JsonSerializer.Deserialize<DeliveryErrorResponse>(content, Options);
-
-            return CreateReservationResult.Failure(
-                ToDeliveryError(response.StatusCode, errorResponse));
+                        ToDeliveryError(response.StatusCode, errorResponse));
+                });
         }
 
         private static DeliveryClientError ToDeliveryError(

@@ -8,7 +8,7 @@ namespace OrderService.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<OrderItem> builder)
         {
-            builder.ToTable("orders");
+            builder.ToTable("order_items");
 
             builder.HasKey(x => x.Id);
 

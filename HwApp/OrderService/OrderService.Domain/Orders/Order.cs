@@ -9,6 +9,8 @@ namespace OrderService.Domain.Orders
 
         private readonly List<OrderItem> _items = [];
 
+        private static DateTime Now => DateTime.UtcNow;
+
         public Guid Id { get; private set; }
 
         public Guid UserId { get; private set; }
@@ -55,7 +57,7 @@ namespace OrderService.Domain.Orders
 
         public static Order Create(Guid userId, Guid deliverySlotId, decimal totalAmount)
         {
-            var now = DateTime.UtcNow;
+            var now = Now;
 
             return new Order
             {
@@ -87,9 +89,33 @@ namespace OrderService.Domain.Orders
                 totalPrice));
         }
 
+        public void MarkAsPaymentAuthorized(Guid paymetnId)
+        {
+            Status = OrderStatus.Processing;
+            SagaStep = OrderSagaStep.PaymentAuthorized;
+            UpdatedAt = Now;
+            PaymentId = paymetnId;
+        }
+
+        public void MarkAsStockReserved(Guid stockReservationId)
+        {
+            Status = OrderStatus.Processing;
+            SagaStep = OrderSagaStep.StockReserved;
+            UpdatedAt = Now;
+            StockReservationId = stockReservationId;
+        }
+
+        public void MarkAsDeliveryReserved(Guid deliveryReservationId)
+        {
+            Status = OrderStatus.Processing;
+            SagaStep = OrderSagaStep.DeliveryReserved;
+            UpdatedAt = Now;
+            DeliveryReservationId = deliveryReservationId;
+        }
+
         public void MarkAsConfirmed()
         {
-            var now = DateTime.UtcNow;
+            var now = Now;
 
             Status = OrderStatus.Confirmed;
             SagaStep = OrderSagaStep.Completed;
@@ -103,15 +129,24 @@ namespace OrderService.Domain.Orders
                 _items));
         }
 
-        public void MarkAsRejected(OrderFailureReason failureReason)
+        public void MarkAsCompensating(OrderFailureReason failureReason, string failureDetails)
         {
-            var now = DateTime.UtcNow;
+            Status = OrderStatus.Processing;
+            SagaStep = OrderSagaStep.Compensating;
+            UpdatedAt = Now;
+            FailureReason = failureReason;
+            FailureDetails = failureDetails;
+        }
+
+        public void MarkAsRejected(OrderFailureReason failureReason, string failureDetails)
+        {
+            var now = Now;
 
             Status = OrderStatus.Rejected;
-            SagaStep = OrderSagaStep.Compensating;
             UpdatedAt = now;
             RejectedAt = now;
             FailureReason = failureReason;
+            FailureDetails = failureDetails;
             AddEvent(new OrderRejectedEvent(
                 Id,
                 UserId,
@@ -121,6 +156,48 @@ namespace OrderService.Domain.Orders
                 FailureDetails,
                 _items));
         }
+
+        public void MarkAsCompensated()
+        {
+            var now = Now;
+
+            Status = OrderStatus.Rejected;
+            SagaStep = OrderSagaStep.Compensated;
+            UpdatedAt = now;
+            RejectedAt = now;
+            AddEvent(new OrderRejectedEvent(
+                Id,
+                UserId,
+                DeliverySlotId,
+                TotalAmount,
+                FailureReason.ToString(),
+                FailureDetails,
+                _items));
+        }
+
+        public void MarkAsCompensationFailed(string details)
+        {
+            Status = OrderStatus.CompensationFailed;
+            SagaStep = OrderSagaStep.CompensationFailed;
+            FailureDetails = details;
+            UpdatedAt = Now;
+        }
+
+        public void ReleaseLock()
+        {
+            LockedBy = null;
+            LockedUntil = null;
+
+            RetryCount = 0;
+            NextRetryAt = null;
+        }
+
+        public void ScheduleRetry(string failureDetails, TimeSpan nextRetryAt)
+        {
+            RetryCount = RetryCount++;
+            NextRetryAt = Now.Add(nextRetryAt);
+        }
+
 
         public void AddEvent(IDomainEvent domainEvent)
             => _events.Add(domainEvent);
