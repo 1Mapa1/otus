@@ -316,6 +316,13 @@ orderService:
     authUrlOverride: ""
     msBillingBaseUrlOverride: ""
     msBillingTimeout: "00:00:10"
+    msWarehouseBaseUrlOverride: ""
+    msWarehouseTimeout: "00:00:10"
+    msDeliveryBaseUrlOverride: ""
+    msDeliveryTimeout: "00:00:10"
+    orderSagaBatchSize: 10
+    orderSagaLockDuration: "00:01:00"
+    orderSagaPollingInterval: "00:00:05"
     kafkaAcks: "All"
     kafkaEnableIdempotence: true
 

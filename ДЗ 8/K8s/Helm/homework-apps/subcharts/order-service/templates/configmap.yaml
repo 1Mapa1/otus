@@ -16,6 +16,13 @@ data:
   Auth__Url: {{ default (include "order-service.authServiceUrl" .) .Values.config.authUrlOverride | quote }}
   Ms__Billing__BaseUrl: {{ default (include "order-service.billingServiceUrl" .) .Values.config.msBillingBaseUrlOverride | quote }}
   Ms__Billing__Timeout: {{ .Values.config.msBillingTimeout | quote }}
+  Ms__Warehouse__BaseUrl: {{ default (include "order-service.warehouseServiceUrl" .) .Values.config.msWarehouseBaseUrlOverride | quote }}
+  Ms__Warehouse__Timeout: {{ .Values.config.msWarehouseTimeout | quote }}
+  Ms__Delivery__BaseUrl: {{ default (include "order-service.deliveryServiceUrl" .) .Values.config.msDeliveryBaseUrlOverride | quote }}
+  Ms__Delivery__Timeout: {{ .Values.config.msDeliveryTimeout | quote }}
+  OrderSaga__BatchSize: {{ .Values.config.orderSagaBatchSize | quote }}
+  OrderSaga__LockDuration: {{ .Values.config.orderSagaLockDuration | quote }}
+  OrderSaga__PollingInterval: {{ .Values.config.orderSagaPollingInterval | quote }}
   Kafka__BootstrapServers: {{ default (include "order-service.kafkaBootstrapServersDefault" .) .Values.global.kafkaBootstrapServers | quote }}
   Kafka__Acks: {{ .Values.config.kafkaAcks | quote }}
   Kafka__EnableIdempotence: {{ .Values.config.kafkaEnableIdempotence | quote }}

@@ -42,6 +42,18 @@ app.kubernetes.io/component: {{ .Values.name }}
 {{- printf "http://%s.%s.svc.%s" $host .Release.Namespace (default "cluster.local" .Values.global.clusterDomain) -}}
 {{- end }}
 
+{{- define "order-service.warehouseServiceUrl" -}}
+{{- $peer := default "warehouse" .Values.global.peerWarehouseName -}}
+{{- $host := printf "%s-%s" (include "order-service.releaseBase" .) $peer | trunc 63 | trimSuffix "-" -}}
+{{- printf "http://%s.%s.svc.%s" $host .Release.Namespace (default "cluster.local" .Values.global.clusterDomain) -}}
+{{- end }}
+
+{{- define "order-service.deliveryServiceUrl" -}}
+{{- $peer := default "delivery" .Values.global.peerDeliveryName -}}
+{{- $host := printf "%s-%s" (include "order-service.releaseBase" .) $peer | trunc 63 | trimSuffix "-" -}}
+{{- printf "http://%s.%s.svc.%s" $host .Release.Namespace (default "cluster.local" .Values.global.clusterDomain) -}}
+{{- end }}
+
 {{- define "order-service.kafkaBootstrapServersDefault" -}}
 {{- $kafkaRelease := .Values.global.kafkaClusterReleaseName | default "kafka" -}}
 {{- printf "%s-controller-headless.%s.svc.%s:9092" $kafkaRelease .Release.Namespace (default "cluster.local" .Values.global.clusterDomain) -}}

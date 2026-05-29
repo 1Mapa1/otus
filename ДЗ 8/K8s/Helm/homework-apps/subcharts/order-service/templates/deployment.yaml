@@ -76,6 +76,41 @@ spec:
                 configMapKeyRef:
                   name: {{ include "order-service.fullname" . }}
                   key: Ms__Billing__Timeout
+            - name: Ms__Warehouse__BaseUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Ms__Warehouse__BaseUrl
+            - name: Ms__Warehouse__Timeout
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Ms__Warehouse__Timeout
+            - name: Ms__Delivery__BaseUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Ms__Delivery__BaseUrl
+            - name: Ms__Delivery__Timeout
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Ms__Delivery__Timeout
+            - name: OrderSaga__BatchSize
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: OrderSaga__BatchSize
+            - name: OrderSaga__LockDuration
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: OrderSaga__LockDuration
+            - name: OrderSaga__PollingInterval
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: OrderSaga__PollingInterval
             - name: Kafka__BootstrapServers
               valueFrom:
                 configMapKeyRef:
