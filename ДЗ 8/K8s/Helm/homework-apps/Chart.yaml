@@ -4,9 +4,9 @@ description: Umbrella chart for Auth, Customer, Billing, Warehouse, Delivery, No
 
 type: application
 
-version: 0.1.0
+version: 0.2.0
 
-appVersion: "2.0.0"
+appVersion: "8.0"
 
 dependencies:
   - name: auth-service
