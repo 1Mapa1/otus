@@ -17,7 +17,7 @@ dbName: notification_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-notification-service
-  imageTag: "8.0"
+  imageTag: "8.4"
   replicaCount: 2
   maxSurge: 1
   maxUnavailable: 1

@@ -181,7 +181,7 @@ notificationService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-notification-service
-    imageTag: "8.0"
+    imageTag: "8.4"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -279,7 +279,7 @@ orderService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-order-service
-    imageTag: "8.0"
+    imageTag: "8.3"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -337,7 +337,7 @@ warehouseService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-warehouse-service
-    imageTag: "8.0"
+    imageTag: "8.1"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -368,7 +368,7 @@ warehouseService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-warehouse-migration
-    imageTag: "8.0"
+    imageTag: "8.1"
 
   config:
     authUrlOverride: ""
@@ -384,7 +384,7 @@ deliveryService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-delivery-service
-    imageTag: "8.0"
+    imageTag: "8.2"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1

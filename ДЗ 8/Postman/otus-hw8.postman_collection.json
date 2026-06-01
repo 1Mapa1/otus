@@ -1,0 +1,3330 @@
+{
+  "info": {
+    "_postman_id": "04dabf78-3136-44c4-bee5-e55cb483b787",
+    "name": "otus-hw8",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49328604",
+    "_collection_link": "https://go.postman.co/collection/49328604-04dabf78-3136-44c4-bee5-e55cb483b787?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "00 Start",
+      "item": [
+        {
+          "name": "Init data",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const suffix = `${Date.now()}_${Math.floor(Math.random() * 100000)}`;\r",
+                  "\r",
+                  "pm.environment.set(\"suffix\", suffix);\r",
+                  "\r",
+                  "pm.environment.set(\"userLogin\", `user_${suffix}`);\r",
+                  "pm.environment.set(\"userPassword\", `Pass_${suffix}`);\r",
+                  "pm.environment.set(\"userName\", `User ${suffix}`);\r",
+                  "pm.environment.set(\"userEmail\", `${suffix}@test.com`);\r",
+                  "\r",
+                  "// Happy path\r",
+                  "pm.environment.set(\"happyProductName\", `Happy Product ${suffix}`);\r",
+                  "pm.environment.set(\"happyProductPrice\", \"100\");\r",
+                  "pm.environment.set(\"happyProductStock\", \"10\");\r",
+                  "pm.environment.set(\"happyOrderQuantity\", \"2\");\r",
+                  "pm.environment.set(\"happyOrderTotalAmount\", \"200\");\r",
+                  "\r",
+                  "// Insufficient funds\r",
+                  "pm.environment.set(\"insufficientProductName\", `Insufficient Product ${suffix}`);\r",
+                  "pm.environment.set(\"insufficientProductPrice\", \"1000\");\r",
+                  "pm.environment.set(\"insufficientProductStock\", \"10\");\r",
+                  "pm.environment.set(\"insufficientOrderQuantity\", \"1\");\r",
+                  "pm.environment.set(\"insufficientOrderTotalAmount\", \"1000\");\r",
+                  "\r",
+                  "// Stock not available\r",
+                  "pm.environment.set(\"stockProductName\", `Stock Product ${suffix}`);\r",
+                  "pm.environment.set(\"stockProductPrice\", \"100\");\r",
+                  "pm.environment.set(\"stockProductStock\", \"1\");\r",
+                  "pm.environment.set(\"stockOrderQuantity\", \"2\");\r",
+                  "\r",
+                  "// Delivery slot unavailable\r",
+                  "pm.environment.set(\"deliveryProductName\", `Delivery Product ${suffix}`);\r",
+                  "pm.environment.set(\"deliveryProductPrice\", \"100\");\r",
+                  "pm.environment.set(\"deliveryProductStock\", \"10\");\r",
+                  "pm.environment.set(\"deliveryOrderQuantity\", \"2\");\r",
+                  "pm.environment.set(\"deliveryOrderTotalAmount\", \"200\");\r",
+                  "\r",
+                  "// Polling counters\r",
+                  "pm.environment.unset(\"happyPollAttempts\");\r",
+                  "pm.environment.unset(\"insufficientPollAttempts\");\r",
+                  "pm.environment.unset(\"stockPollAttempts\");\r",
+                  "pm.environment.unset(\"deliveryFirstPollAttempts\");\r",
+                  "pm.environment.unset(\"deliverySecondPollAttempts\");\r",
+                  "\r",
+                  "console.log(\"Generated test data:\");\r",
+                  "console.log({\r",
+                  "    baseUrl: pm.environment.get(\"baseUrl\"),\r",
+                  "    suffix,\r",
+                  "    userLogin: pm.environment.get(\"userLogin\"),\r",
+                  "    userEmail: pm.environment.get(\"userEmail\")\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Health check is successful\", function () {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Random test data initialized\", function () {\r",
+                  "    pm.expect(pm.environment.get(\"suffix\")).to.exist;\r",
+                  "    pm.expect(pm.environment.get(\"userLogin\")).to.exist;\r",
+                  "    pm.expect(pm.environment.get(\"userPassword\")).to.exist;\r",
+                  "    pm.expect(pm.environment.get(\"userEmail\")).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Base URL uses arch.homework\", function () {\r",
+                  "    pm.expect(pm.environment.get(\"baseUrl\")).to.include(\"arch.homework\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/health/live",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health",
+                "live"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Register user - status is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Register response is not empty\", function () {\r",
+                  "    pm.expect(pm.response.text()).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "console.log(\"Registered user:\");\r",
+                  "console.log({\r",
+                  "    login: pm.environment.get(\"userLogin\"),\r",
+                  "    email: pm.environment.get(\"userEmail\")\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"login\": \"{{userLogin}}\",\r\n  \"password\": \"{{userPassword}}\",\r\n  \"name\": \"{{userName}}\",\r\n  \"email\": \"{{userEmail}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login user - status is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Access token exists\", function () {\r",
+                  "    pm.expect(json.accessToken).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"userToken\", json.accessToken);\r",
+                  "\r",
+                  "console.log(\"User token saved\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"login\": \"{{userLogin}}\",\r\n  \"password\": \"{{userPassword}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 Happy Path",
+      "item": [
+        {
+          "name": "Deposit enough money",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Deposit completed\", function () {\r",
+                  "    pm.response.to.have.status(204);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"amount\": 1000\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check billing after deposit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Billing account response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Balance is 1000 after deposit\", function () {\r",
+                  "    pm.expect(json.balance).to.eql(1000);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Held amount is 0 after deposit\", function () {\r",
+                  "    pm.expect(json.heldAmount).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available balance is 1000 after deposit\", function () {\r",
+                  "    pm.expect(json.availableBalance).to.eql(1000);\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"happyBalanceBeforeOrder\", json.balance);\r",
+                  "pm.environment.set(\"happyHeldBeforeOrder\", json.heldAmount);\r",
+                  "pm.environment.set(\"happyAvailableBeforeOrder\", json.availableBalance);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/accounts/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "accounts",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create product response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Product id exists\", function () {\r",
+                  "    pm.expect(json.productId).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product has correct name\", function () {\r",
+                  "    pm.expect(json.name).to.eql(pm.environment.get(\"happyProductName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product has correct unit price\", function () {\r",
+                  "    pm.expect(json.unitPrice).to.eql(Number(pm.environment.get(\"happyProductPrice\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"happyProductId\", json.productId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"{{happyProductName}}\",\r\n  \"unitPrice\": {{happyProductPrice}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add product stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Add product stock response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Product id is correct\", function () {\r",
+                  "    pm.expect(json.productId).to.eql(pm.environment.get(\"happyProductId\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available quantity is correct\", function () {\r",
+                  "    pm.expect(json.availableQuantity).to.eql(Number(pm.environment.get(\"happyProductStock\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reserved quantity is zero before order\", function () {\r",
+                  "    pm.expect(json.reservedQuantity).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Free quantity equals available quantity before order\", function () {\r",
+                  "    pm.expect(json.freeQuantity).to.eql(Number(pm.environment.get(\"happyProductStock\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"happyAvailableQuantityBeforeOrder\", json.availableQuantity);\r",
+                  "pm.environment.set(\"happyReservedQuantityBeforeOrder\", json.reservedQuantity);\r",
+                  "pm.environment.set(\"happyFreeQuantityBeforeOrder\", json.freeQuantity);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"quantity\": {{happyProductStock}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products/{{happyProductId}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products",
+                "{{happyProductId}}",
+                "stock"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create delivery slot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create delivery slot response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Delivery slot id exists\", function () {\r",
+                  "    pm.expect(json.slotId).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot timeFrom exists\", function () {\r",
+                  "    pm.expect(json.timeFrom).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot timeTo exists\", function () {\r",
+                  "    pm.expect(json.timeTo).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot is available\", function () {\r",
+                  "    pm.expect(json.status).to.eql(\"Available\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"happyDeliverySlotId\", json.slotId);\r",
+                  "pm.environment.set(\"happyDeliverySlotTimeFrom\", json.timeFrom);\r",
+                  "pm.environment.set(\"happyDeliverySlotTimeTo\", json.timeTo);\r",
+                  "pm.environment.set(\"happyDeliverySlotStatusBeforeOrder\", json.status);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"timeFrom\": \"2026-06-01T10:00:00Z\",\r\n  \"timeTo\": \"2026-06-01T12:00:00Z\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delivery",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create order accepted\", function () {\r",
+                  "    pm.response.to.have.status(202);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Order id exists\", function () {\r",
+                  "    pm.expect(json.id).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Order starts in Processing\", function () {\r",
+                  "    pm.expect(json.status).to.eql(\"Processing\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"happyOrderId\", json.id);\r",
+                  "pm.environment.unset(\"happyPollAttempts\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"{{happyProductId}}\",\r\n      \"quantity\": {{happyOrderQuantity}}\r\n    }\r\n  ],\r\n  \"deliverySlotId\": \"{{happyDeliverySlotId}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Poll order until Confirmed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Get order response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Order id is correct\", function () {\r",
+                  "    pm.expect(json.id).to.eql(pm.environment.get(\"happyOrderId\"));\r",
+                  "});\r",
+                  "\r",
+                  "console.log(\"Happy order current state:\");\r",
+                  "console.log(json);\r",
+                  "\r",
+                  "if (json.status === \"Processing\") {\r",
+                  "    const attempts = Number(pm.environment.get(\"happyPollAttempts\") || 0);\r",
+                  "\r",
+                  "    if (attempts < 20) {\r",
+                  "        pm.environment.set(\"happyPollAttempts\", attempts + 1);\r",
+                  "        postman.setNextRequest(pm.info.requestName);\r",
+                  "    } else {\r",
+                  "        pm.environment.unset(\"happyPollAttempts\");\r",
+                  "\r",
+                  "        pm.test(\"Order should not stay Processing forever\", function () {\r",
+                  "            pm.expect(json.status).to.not.eql(\"Processing\");\r",
+                  "        });\r",
+                  "    }\r",
+                  "} else {\r",
+                  "    pm.environment.unset(\"happyPollAttempts\");\r",
+                  "\r",
+                  "    pm.test(\"Order is confirmed\", function () {\r",
+                  "        pm.expect(json.status).to.eql(\"Confirmed\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Saga is completed\", function () {\r",
+                  "        pm.expect(json.sagaStep).to.eql(\"Completed\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Total amount is correct\", function () {\r",
+                  "        pm.expect(json.totalAmount).to.eql(Number(pm.environment.get(\"happyOrderTotalAmount\")));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Delivery slot id is correct\", function () {\r",
+                  "        pm.expect(json.deliverySlotId).to.eql(pm.environment.get(\"happyDeliverySlotId\"));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Failure reason is null\", function () {\r",
+                  "        pm.expect(json.failureReason).to.be.null;\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Order details contains one item\", function () {\r",
+                  "        pm.expect(json.orderDetails).to.be.an(\"array\").with.lengthOf(1);\r",
+                  "    });\r",
+                  "\r",
+                  "    const item = json.orderDetails[0];\r",
+                  "\r",
+                  "    pm.test(\"Order item product id is correct\", function () {\r",
+                  "        pm.expect(item.productId).to.eql(pm.environment.get(\"happyProductId\"));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Order item name is correct\", function () {\r",
+                  "        pm.expect(item.name).to.eql(pm.environment.get(\"happyProductName\"));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Order item unit price is correct\", function () {\r",
+                  "        pm.expect(item.unitPrice).to.eql(Number(pm.environment.get(\"happyProductPrice\")));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Order item quantity is correct\", function () {\r",
+                  "        pm.expect(item.quantity).to.eql(Number(pm.environment.get(\"happyOrderQuantity\")));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Order item total price is correct\", function () {\r",
+                  "        pm.expect(item.totalPrice).to.eql(Number(pm.environment.get(\"happyOrderTotalAmount\")));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.environment.set(\"happyConfirmedOrderTotalAmount\", json.totalAmount);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{happyOrderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{happyOrderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check billing after confirmed order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Billing account response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"User id exists\", function () {\r",
+                  "    pm.expect(json.userId).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "const balanceBeforeOrder = Number(pm.environment.get(\"happyBalanceBeforeOrder\"));\r",
+                  "const orderTotalAmount = Number(pm.environment.get(\"happyOrderTotalAmount\"));\r",
+                  "const expectedBalance = balanceBeforeOrder - orderTotalAmount;\r",
+                  "\r",
+                  "pm.test(\"Balance decreased by order amount\", function () {\r",
+                  "    pm.expect(json.balance).to.eql(expectedBalance);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Held amount is zero after capture\", function () {\r",
+                  "    pm.expect(json.heldAmount).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available balance equals balance after capture\", function () {\r",
+                  "    pm.expect(json.availableBalance).to.eql(json.balance);\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"happyBalanceAfterConfirmedOrder\", json.balance);\r",
+                  "pm.environment.set(\"happyHeldAfterConfirmedOrder\", json.heldAmount);\r",
+                  "pm.environment.set(\"happyAvailableAfterConfirmedOrder\", json.availableBalance);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/accounts/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "accounts",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check warehouse after confirmed order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Warehouse products response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Products response contains items\", function () {\r",
+                  "    pm.expect(json.items).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const product = json.items.find(x =>\r",
+                  "    x.productId === pm.environment.get(\"happyProductId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Happy product exists in products list\", function () {\r",
+                  "    pm.expect(product).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "const initialStock = Number(pm.environment.get(\"happyProductStock\"));\r",
+                  "const orderedQuantity = Number(pm.environment.get(\"happyOrderQuantity\"));\r",
+                  "\r",
+                  "pm.test(\"Product name is correct\", function () {\r",
+                  "    pm.expect(product.name).to.eql(pm.environment.get(\"happyProductName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product unit price is correct\", function () {\r",
+                  "    pm.expect(product.unitPrice).to.eql(Number(pm.environment.get(\"happyProductPrice\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available quantity did not decrease\", function () {\r",
+                  "    pm.expect(product.availableQuantity).to.eql(initialStock);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reserved quantity increased by ordered quantity\", function () {\r",
+                  "    pm.expect(product.reservedQuantity).to.eql(orderedQuantity);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Free quantity decreased by ordered quantity\", function () {\r",
+                  "    pm.expect(product.freeQuantity).to.eql(initialStock - orderedQuantity);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check delivery slot after confirmed order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Delivery slots response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Delivery slots response contains deliverySlots\", function () {\r",
+                  "    pm.expect(json.deliverySlots).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const slot = json.deliverySlots.find(x =>\r",
+                  "    x.slotId === pm.environment.get(\"happyDeliverySlotId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Happy delivery slot exists\", function () {\r",
+                  "    pm.expect(slot).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot timeFrom is correct\", function () {\r",
+                  "    pm.expect(slot.timeFrom).to.eql(pm.environment.get(\"happyDeliverySlotTimeFrom\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot timeTo is correct\", function () {\r",
+                  "    pm.expect(slot.timeTo).to.eql(pm.environment.get(\"happyDeliverySlotTimeTo\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot is reserved after confirmed order\", function () {\r",
+                  "    pm.expect(slot.status).to.eql(\"Reserved\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delivery",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check OrderConfirmed notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Notifications list response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const notifications = pm.response.json();\r",
+                  "const orderId = pm.environment.get(\"happyOrderId\");\r",
+                  "\r",
+                  "pm.test(\"Notifications response is array\", function () {\r",
+                  "    pm.expect(notifications).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const notification = notifications.find(x =>\r",
+                  "    x.orderId === orderId &&\r",
+                  "    x.type === \"OrderConfirmed\"\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"OrderConfirmed notification exists\", function () {\r",
+                  "    pm.expect(notification, `Notification for order ${orderId}`).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"OrderConfirmed notification id exists\", function () {\r",
+                  "    pm.expect(notification.id).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"OrderConfirmed notification subject exists\", function () {\r",
+                  "    pm.expect(notification.subject).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"OrderConfirmed notification createdAt exists\", function () {\r",
+                  "    pm.expect(notification.createdAt).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"happyConfirmedNotificationId\", notification.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 Failure - InsufficientFunds",
+      "item": [
+        {
+          "name": "Create product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create product response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Product id exists\", function () {\r",
+                  "    pm.expect(json.productId).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product has correct name\", function () {\r",
+                  "    pm.expect(json.name).to.eql(pm.environment.get(\"insufficientProductName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product has correct unit price\", function () {\r",
+                  "    pm.expect(json.unitPrice).to.eql(Number(pm.environment.get(\"insufficientProductPrice\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"insufficientProductId\", json.productId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"{{insufficientProductName}}\",\r\n  \"unitPrice\": {{insufficientProductPrice}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add product stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Add product stock response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Product id is correct\", function () {\r",
+                  "    pm.expect(json.productId).to.eql(pm.environment.get(\"insufficientProductId\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available quantity is correct\", function () {\r",
+                  "    pm.expect(json.availableQuantity).to.eql(Number(pm.environment.get(\"insufficientProductStock\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reserved quantity is zero before order\", function () {\r",
+                  "    pm.expect(json.reservedQuantity).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Free quantity equals available quantity before order\", function () {\r",
+                  "    pm.expect(json.freeQuantity).to.eql(Number(pm.environment.get(\"insufficientProductStock\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"insufficientAvailableQuantityBeforeOrder\", json.availableQuantity);\r",
+                  "pm.environment.set(\"insufficientReservedQuantityBeforeOrder\", json.reservedQuantity);\r",
+                  "pm.environment.set(\"insufficientFreeQuantityBeforeOrder\", json.freeQuantity);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"quantity\": {{insufficientProductStock}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products/{{insufficientProductId}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products",
+                "{{insufficientProductId}}",
+                "stock"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create delivery slot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create delivery slot response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Delivery slot id exists\", function () {\r",
+                  "    pm.expect(json.slotId).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot is available\", function () {\r",
+                  "    pm.expect(json.status).to.eql(\"Available\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"insufficientDeliverySlotId\", json.slotId);\r",
+                  "pm.environment.set(\"insufficientDeliverySlotTimeFrom\", json.timeFrom);\r",
+                  "pm.environment.set(\"insufficientDeliverySlotTimeTo\", json.timeTo);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"timeFrom\": \"2026-06-01T13:00:00Z\",\r\n  \"timeTo\": \"2026-06-01T15:00:00Z\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delivery",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create order accepted\", function () {\r",
+                  "    pm.response.to.have.status(202);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Order id exists\", function () {\r",
+                  "    pm.expect(json.id).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Order starts in Processing\", function () {\r",
+                  "    pm.expect(json.status).to.eql(\"Processing\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"insufficientOrderId\", json.id);\r",
+                  "pm.environment.unset(\"insufficientPollAttempts\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"{{insufficientProductId}}\",\r\n      \"quantity\": {{insufficientOrderQuantity}}\r\n    }\r\n  ],\r\n  \"deliverySlotId\": \"{{insufficientDeliverySlotId}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Poll insufficient funds order until Rejected",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Get order response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Order id is correct\", function () {\r",
+                  "    pm.expect(json.id).to.eql(pm.environment.get(\"insufficientOrderId\"));\r",
+                  "});\r",
+                  "\r",
+                  "console.log(\"Insufficient funds order current state:\");\r",
+                  "console.log(json);\r",
+                  "\r",
+                  "if (json.status === \"Processing\") {\r",
+                  "    const attempts = Number(pm.environment.get(\"insufficientPollAttempts\") || 0);\r",
+                  "\r",
+                  "    if (attempts < 20) {\r",
+                  "        pm.environment.set(\"insufficientPollAttempts\", attempts + 1);\r",
+                  "        postman.setNextRequest(pm.info.requestName);\r",
+                  "    } else {\r",
+                  "        pm.environment.unset(\"insufficientPollAttempts\");\r",
+                  "\r",
+                  "        pm.test(\"Order should not stay Processing forever\", function () {\r",
+                  "            pm.expect(json.status).to.not.eql(\"Processing\");\r",
+                  "        });\r",
+                  "    }\r",
+                  "} else {\r",
+                  "    pm.environment.unset(\"insufficientPollAttempts\");\r",
+                  "\r",
+                  "    pm.test(\"Order is rejected\", function () {\r",
+                  "        pm.expect(json.status).to.eql(\"Rejected\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Failure reason is InsufficientFunds\", function () {\r",
+                  "        pm.expect(json.failureReason).to.eql(\"InsufficientFunds\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Total amount is correct\", function () {\r",
+                  "        pm.expect(json.totalAmount).to.eql(Number(pm.environment.get(\"insufficientOrderTotalAmount\")));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Delivery slot id is correct\", function () {\r",
+                  "        pm.expect(json.deliverySlotId).to.eql(pm.environment.get(\"insufficientDeliverySlotId\"));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Order details contains one item\", function () {\r",
+                  "        pm.expect(json.orderDetails).to.be.an(\"array\").with.lengthOf(1);\r",
+                  "    });\r",
+                  "\r",
+                  "    const item = json.orderDetails[0];\r",
+                  "\r",
+                  "    pm.test(\"Order item product id is correct\", function () {\r",
+                  "        pm.expect(item.productId).to.eql(pm.environment.get(\"insufficientProductId\"));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Order item quantity is correct\", function () {\r",
+                  "        pm.expect(item.quantity).to.eql(Number(pm.environment.get(\"insufficientOrderQuantity\")));\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{insufficientOrderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{insufficientOrderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check billing after rejected order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Billing account response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "const expectedBalance = Number(pm.environment.get(\"happyBalanceAfterConfirmedOrder\"));\r",
+                  "\r",
+                  "pm.test(\"Balance did not change after insufficient funds order\", function () {\r",
+                  "    pm.expect(json.balance).to.eql(expectedBalance);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Held amount is zero after insufficient funds order\", function () {\r",
+                  "    pm.expect(json.heldAmount).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available balance equals balance after insufficient funds order\", function () {\r",
+                  "    pm.expect(json.availableBalance).to.eql(json.balance);\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"balanceAfterInsufficientFundsOrder\", json.balance);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/accounts/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "accounts",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check warehouse after rejected order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Warehouse products response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Products response contains items\", function () {\r",
+                  "    pm.expect(json.items).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const product = json.items.find(x =>\r",
+                  "    x.productId === pm.environment.get(\"insufficientProductId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Insufficient funds product exists in products list\", function () {\r",
+                  "    pm.expect(product).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "const stock = Number(pm.environment.get(\"insufficientProductStock\"));\r",
+                  "\r",
+                  "pm.test(\"Available quantity did not change\", function () {\r",
+                  "    pm.expect(product.availableQuantity).to.eql(stock);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reserved quantity is still zero\", function () {\r",
+                  "    pm.expect(product.reservedQuantity).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Free quantity did not change\", function () {\r",
+                  "    pm.expect(product.freeQuantity).to.eql(stock);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check delivery slot after rejected order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Delivery slots response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Delivery slots response contains deliverySlots\", function () {\r",
+                  "    pm.expect(json.deliverySlots).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const slot = json.deliverySlots.find(x =>\r",
+                  "    x.slotId === pm.environment.get(\"insufficientDeliverySlotId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Insufficient funds delivery slot exists\", function () {\r",
+                  "    pm.expect(slot).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot is still available\", function () {\r",
+                  "    pm.expect(slot.status).to.eql(\"Available\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delivery",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check OrderRejected notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Notifications list response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const notifications = pm.response.json();\r",
+                  "const orderId = pm.environment.get(\"insufficientOrderId\");\r",
+                  "\r",
+                  "pm.test(\"Notifications response is array\", function () {\r",
+                  "    pm.expect(notifications).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const notification = notifications.find(x =>\r",
+                  "    x.orderId === orderId &&\r",
+                  "    x.type === \"OrderRejected\"\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"OrderRejected notification exists\", function () {\r",
+                  "    pm.expect(notification, `Notification for order ${orderId}`).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"OrderRejected notification id exists\", function () {\r",
+                  "    pm.expect(notification.id).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"OrderRejected notification subject exists\", function () {\r",
+                  "    pm.expect(notification.subject).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"OrderRejected notification createdAt exists\", function () {\r",
+                  "    pm.expect(notification.createdAt).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"insufficientRejectedNotificationId\", notification.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 Failure - StockNotAvailable",
+      "item": [
+        {
+          "name": "Check billing before stock failure order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Billing account response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Balance is enough for stock failure scenario\", function () {\r",
+                  "    pm.expect(json.availableBalance).to.be.at.least(\r",
+                  "        Number(pm.environment.get(\"stockProductPrice\")) *\r",
+                  "        Number(pm.environment.get(\"stockOrderQuantity\"))\r",
+                  "    );\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Held amount is zero before stock failure order\", function () {\r",
+                  "    pm.expect(json.heldAmount).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"stockBalanceBeforeOrder\", json.balance);\r",
+                  "pm.environment.set(\"stockHeldBeforeOrder\", json.heldAmount);\r",
+                  "pm.environment.set(\"stockAvailableBeforeOrder\", json.availableBalance);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/accounts/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "accounts",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create product response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Product id exists\", function () {\r",
+                  "    pm.expect(json.productId).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product has correct name\", function () {\r",
+                  "    pm.expect(json.name).to.eql(pm.environment.get(\"stockProductName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product has correct unit price\", function () {\r",
+                  "    pm.expect(json.unitPrice).to.eql(Number(pm.environment.get(\"stockProductPrice\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"stockProductId\", json.productId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"{{stockProductName}}\",\r\n  \"unitPrice\": {{stockProductPrice}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add not enough product stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Add product stock response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Product id is correct\", function () {\r",
+                  "    pm.expect(json.productId).to.eql(pm.environment.get(\"stockProductId\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available quantity is intentionally less than requested quantity\", function () {\r",
+                  "    pm.expect(json.availableQuantity).to.eql(Number(pm.environment.get(\"stockProductStock\")));\r",
+                  "    pm.expect(json.availableQuantity).to.be.below(Number(pm.environment.get(\"stockOrderQuantity\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reserved quantity is zero before order\", function () {\r",
+                  "    pm.expect(json.reservedQuantity).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Free quantity equals available quantity before order\", function () {\r",
+                  "    pm.expect(json.freeQuantity).to.eql(Number(pm.environment.get(\"stockProductStock\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"stockAvailableQuantityBeforeOrder\", json.availableQuantity);\r",
+                  "pm.environment.set(\"stockReservedQuantityBeforeOrder\", json.reservedQuantity);\r",
+                  "pm.environment.set(\"stockFreeQuantityBeforeOrder\", json.freeQuantity);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"quantity\": {{stockProductStock}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products/{{stockProductId}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products",
+                "{{stockProductId}}",
+                "stock"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create delivery slot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create delivery slot response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Delivery slot id exists\", function () {\r",
+                  "    pm.expect(json.slotId).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot is available\", function () {\r",
+                  "    pm.expect(json.status).to.eql(\"Available\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"stockDeliverySlotId\", json.slotId);\r",
+                  "pm.environment.set(\"stockDeliverySlotTimeFrom\", json.timeFrom);\r",
+                  "pm.environment.set(\"stockDeliverySlotTimeTo\", json.timeTo);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"timeFrom\": \"2026-06-01T16:00:00Z\",\r\n  \"timeTo\": \"2026-06-01T18:00:00Z\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delivery",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create order returns accepted response\", function () {\r",
+                  "    pm.response.to.have.status(202);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Order is rejected immediately\", function () {\r",
+                  "    pm.expect(json.status).to.eql(\"Rejected\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Failure reason is StockNotAvailable\", function () {\r",
+                  "    pm.expect(json.failureReason).to.include(\"StockNotAvailable\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Order was not persisted\", function () {\r",
+                  "    pm.expect(json.id).to.eql(\"00000000-0000-0000-0000-000000000000\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"stockOrderId\", json.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"{{stockProductId}}\",\r\n      \"quantity\": {{stockOrderQuantity}}\r\n    }\r\n  ],\r\n  \"deliverySlotId\": \"{{stockDeliverySlotId}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check billing compensation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Billing account response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "const balanceBeforeOrder = Number(pm.environment.get(\"stockBalanceBeforeOrder\"));\r",
+                  "const heldBeforeOrder = Number(pm.environment.get(\"stockHeldBeforeOrder\"));\r",
+                  "const availableBeforeOrder = Number(pm.environment.get(\"stockAvailableBeforeOrder\"));\r",
+                  "\r",
+                  "pm.test(\"Balance did not change after stock pre-check rejection\", function () {\r",
+                  "    pm.expect(json.balance).to.eql(balanceBeforeOrder);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Held amount did not change after stock pre-check rejection\", function () {\r",
+                  "    pm.expect(json.heldAmount).to.eql(heldBeforeOrder);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available balance did not change after stock pre-check rejection\", function () {\r",
+                  "    pm.expect(json.availableBalance).to.eql(availableBeforeOrder);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/accounts/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "accounts",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check warehouse after rejected order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Warehouse products response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Products response contains items\", function () {\r",
+                  "    pm.expect(json.items).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const product = json.items.find(x =>\r",
+                  "    x.productId === pm.environment.get(\"stockProductId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Stock failure product exists in products list\", function () {\r",
+                  "    pm.expect(product).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "const stock = Number(pm.environment.get(\"stockProductStock\"));\r",
+                  "\r",
+                  "pm.test(\"Available quantity did not change after failed create order\", function () {\r",
+                  "    pm.expect(product.availableQuantity).to.eql(stock);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reserved quantity is still zero\", function () {\r",
+                  "    pm.expect(product.reservedQuantity).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Free quantity did not change after failed create order\", function () {\r",
+                  "    pm.expect(product.freeQuantity).to.eql(stock);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check delivery slot after rejected order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Delivery slots response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Delivery slots response contains deliverySlots\", function () {\r",
+                  "    pm.expect(json.deliverySlots).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const slot = json.deliverySlots.find(x =>\r",
+                  "    x.slotId === pm.environment.get(\"stockDeliverySlotId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Stock failure delivery slot exists\", function () {\r",
+                  "    pm.expect(slot).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot is still available\", function () {\r",
+                  "    pm.expect(slot.status).to.eql(\"Available\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delivery",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 Failure - DeliverySlotUnavailable",
+      "item": [
+        {
+          "name": "Deposit enough money",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Deposit completed\", function () {\r",
+                  "    pm.response.to.have.status(204);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"amount\": 1000\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/accounts/deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "accounts",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check billing before delivery failure scenario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Billing account response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Held amount is zero before delivery failure scenario\", function () {\r",
+                  "    pm.expect(json.heldAmount).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available balance is enough for two delivery orders\", function () {\r",
+                  "    const oneOrderAmount = Number(pm.environment.get(\"deliveryOrderTotalAmount\"));\r",
+                  "    pm.expect(json.availableBalance).to.be.at.least(oneOrderAmount * 2);\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"deliveryBalanceBeforeScenario\", json.balance);\r",
+                  "pm.environment.set(\"deliveryHeldBeforeScenario\", json.heldAmount);\r",
+                  "pm.environment.set(\"deliveryAvailableBeforeScenario\", json.availableBalance);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/accounts/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "accounts",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create product response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Product id exists\", function () {\r",
+                  "    pm.expect(json.productId).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product has correct name\", function () {\r",
+                  "    pm.expect(json.name).to.eql(pm.environment.get(\"deliveryProductName\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Product has correct unit price\", function () {\r",
+                  "    pm.expect(json.unitPrice).to.eql(Number(pm.environment.get(\"deliveryProductPrice\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"deliveryProductId\", json.productId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"{{deliveryProductName}}\",\r\n  \"unitPrice\": {{deliveryProductPrice}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add product stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Add product stock response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Product id is correct\", function () {\r",
+                  "    pm.expect(json.productId).to.eql(pm.environment.get(\"deliveryProductId\"));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available quantity is correct\", function () {\r",
+                  "    pm.expect(json.availableQuantity).to.eql(Number(pm.environment.get(\"deliveryProductStock\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reserved quantity is zero before delivery scenario\", function () {\r",
+                  "    pm.expect(json.reservedQuantity).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Free quantity equals available quantity before delivery scenario\", function () {\r",
+                  "    pm.expect(json.freeQuantity).to.eql(Number(pm.environment.get(\"deliveryProductStock\")));\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"deliveryAvailableQuantityBeforeScenario\", json.availableQuantity);\r",
+                  "pm.environment.set(\"deliveryReservedQuantityBeforeScenario\", json.reservedQuantity);\r",
+                  "pm.environment.set(\"deliveryFreeQuantityBeforeScenario\", json.freeQuantity);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"quantity\": {{deliveryProductStock}}\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products/{{deliveryProductId}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products",
+                "{{deliveryProductId}}",
+                "stock"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create delivery slot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create delivery slot response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Delivery slot id exists\", function () {\r",
+                  "    pm.expect(json.slotId).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot is available\", function () {\r",
+                  "    pm.expect(json.status).to.eql(\"Available\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"deliverySlotId\", json.slotId);\r",
+                  "pm.environment.set(\"deliverySlotTimeFrom\", json.timeFrom);\r",
+                  "pm.environment.set(\"deliverySlotTimeTo\", json.timeTo);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"timeFrom\": \"2026-06-01T19:00:00Z\",\r\n  \"timeTo\": \"2026-06-01T21:00:00Z\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delivery",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create first order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create first order accepted\", function () {\r",
+                  "    pm.response.to.have.status(202);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"First order id exists\", function () {\r",
+                  "    pm.expect(json.id).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"First order starts in Processing\", function () {\r",
+                  "    pm.expect(json.status).to.eql(\"Processing\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"deliveryFirstOrderId\", json.id);\r",
+                  "pm.environment.unset(\"deliveryFirstPollAttempts\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"{{deliveryProductId}}\",\r\n      \"quantity\": {{deliveryOrderQuantity}}\r\n    }\r\n  ],\r\n  \"deliverySlotId\": \"{{deliverySlotId}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Poll first delivery order until Confirmed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Get first order response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"First order id is correct\", function () {\r",
+                  "    pm.expect(json.id).to.eql(pm.environment.get(\"deliveryFirstOrderId\"));\r",
+                  "});\r",
+                  "\r",
+                  "console.log(\"Delivery scenario first order current state:\");\r",
+                  "console.log(json);\r",
+                  "\r",
+                  "if (json.status === \"Processing\") {\r",
+                  "    const attempts = Number(pm.environment.get(\"deliveryFirstPollAttempts\") || 0);\r",
+                  "\r",
+                  "    if (attempts < 20) {\r",
+                  "        pm.environment.set(\"deliveryFirstPollAttempts\", attempts + 1);\r",
+                  "        postman.setNextRequest(pm.info.requestName);\r",
+                  "    } else {\r",
+                  "        pm.environment.unset(\"deliveryFirstPollAttempts\");\r",
+                  "\r",
+                  "        pm.test(\"First order should not stay Processing forever\", function () {\r",
+                  "            pm.expect(json.status).to.not.eql(\"Processing\");\r",
+                  "        });\r",
+                  "    }\r",
+                  "} else {\r",
+                  "    pm.environment.unset(\"deliveryFirstPollAttempts\");\r",
+                  "\r",
+                  "    pm.test(\"First order is confirmed\", function () {\r",
+                  "        pm.expect(json.status).to.eql(\"Confirmed\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"First order saga is completed\", function () {\r",
+                  "        pm.expect(json.sagaStep).to.eql(\"Completed\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"First order failure reason is null\", function () {\r",
+                  "        pm.expect(json.failureReason).to.be.null;\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"First order total amount is correct\", function () {\r",
+                  "        pm.expect(json.totalAmount).to.eql(Number(pm.environment.get(\"deliveryOrderTotalAmount\")));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"First order delivery slot id is correct\", function () {\r",
+                  "        pm.expect(json.deliverySlotId).to.eql(pm.environment.get(\"deliverySlotId\"));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"First order details contains one item\", function () {\r",
+                  "        pm.expect(json.orderDetails).to.be.an(\"array\").with.lengthOf(1);\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{deliveryFirstOrderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{deliveryFirstOrderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check warehouse after first confirmed order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Warehouse products response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Products response contains items\", function () {\r",
+                  "    pm.expect(json.items).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const product = json.items.find(x =>\r",
+                  "    x.productId === pm.environment.get(\"deliveryProductId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Delivery scenario product exists in products list\", function () {\r",
+                  "    pm.expect(product).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "const initialStock = Number(pm.environment.get(\"deliveryProductStock\"));\r",
+                  "const orderedQuantity = Number(pm.environment.get(\"deliveryOrderQuantity\"));\r",
+                  "\r",
+                  "pm.test(\"Available quantity did not decrease after first order\", function () {\r",
+                  "    pm.expect(product.availableQuantity).to.eql(initialStock);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reserved quantity increased by first order quantity\", function () {\r",
+                  "    pm.expect(product.reservedQuantity).to.eql(orderedQuantity);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Free quantity decreased by first order quantity\", function () {\r",
+                  "    pm.expect(product.freeQuantity).to.eql(initialStock - orderedQuantity);\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"deliveryReservedQuantityAfterFirstOrder\", product.reservedQuantity);\r",
+                  "pm.environment.set(\"deliveryFreeQuantityAfterFirstOrder\", product.freeQuantity);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check delivery slot after first confirmed order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Delivery slots response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Delivery slots response contains deliverySlots\", function () {\r",
+                  "    pm.expect(json.deliverySlots).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const slot = json.deliverySlots.find(x =>\r",
+                  "    x.slotId === pm.environment.get(\"deliverySlotId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Delivery scenario slot exists\", function () {\r",
+                  "    pm.expect(slot).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot is reserved after first order\", function () {\r",
+                  "    pm.expect(slot.status).to.eql(\"Reserved\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delivery",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create second order with same delivery slot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create second order accepted\", function () {\r",
+                  "    pm.response.to.have.status(202);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Second order id exists\", function () {\r",
+                  "    pm.expect(json.id).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Second order starts in Processing\", function () {\r",
+                  "    pm.expect(json.status).to.eql(\"Processing\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"deliverySecondOrderId\", json.id);\r",
+                  "pm.environment.unset(\"deliverySecondPollAttempts\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"productId\": \"{{deliveryProductId}}\",\r\n      \"quantity\": {{deliveryOrderQuantity}}\r\n    }\r\n  ],\r\n  \"deliverySlotId\": \"{{deliverySlotId}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Poll second delivery  order until Rejected",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Get second order response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Second order id is correct\", function () {\r",
+                  "    pm.expect(json.id).to.eql(pm.environment.get(\"deliverySecondOrderId\"));\r",
+                  "});\r",
+                  "\r",
+                  "console.log(\"Delivery scenario second order current state:\");\r",
+                  "console.log(json);\r",
+                  "\r",
+                  "if (json.status === \"Processing\") {\r",
+                  "    const attempts = Number(pm.environment.get(\"deliverySecondPollAttempts\") || 0);\r",
+                  "\r",
+                  "    if (attempts < 20) {\r",
+                  "        pm.environment.set(\"deliverySecondPollAttempts\", attempts + 1);\r",
+                  "        postman.setNextRequest(pm.info.requestName);\r",
+                  "    } else {\r",
+                  "        pm.environment.unset(\"deliverySecondPollAttempts\");\r",
+                  "\r",
+                  "        pm.test(\"Second order should not stay Processing forever\", function () {\r",
+                  "            pm.expect(json.status).to.not.eql(\"Processing\");\r",
+                  "        });\r",
+                  "    }\r",
+                  "} else {\r",
+                  "    pm.environment.unset(\"deliverySecondPollAttempts\");\r",
+                  "\r",
+                  "    pm.test(\"Second order is rejected\", function () {\r",
+                  "        pm.expect(json.status).to.eql(\"Rejected\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Second order saga is compensated\", function () {\r",
+                  "        pm.expect(json.sagaStep).to.eql(\"Compensated\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Second order failure reason is DeliverySlotUnavailable\", function () {\r",
+                  "        pm.expect(json.failureReason).to.eql(\"DeliverySlotUnavailable\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Second order total amount is correct\", function () {\r",
+                  "        pm.expect(json.totalAmount).to.eql(Number(pm.environment.get(\"deliveryOrderTotalAmount\")));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Second order delivery slot id is correct\", function () {\r",
+                  "        pm.expect(json.deliverySlotId).to.eql(pm.environment.get(\"deliverySlotId\"));\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"Second order details contains one item\", function () {\r",
+                  "        pm.expect(json.orderDetails).to.be.an(\"array\").with.lengthOf(1);\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{deliverySecondOrderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{deliverySecondOrderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check billing compensation after second order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Billing account response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "const balanceBeforeScenario = Number(pm.environment.get(\"deliveryBalanceBeforeScenario\"));\r",
+                  "const oneOrderAmount = Number(pm.environment.get(\"deliveryOrderTotalAmount\"));\r",
+                  "const expectedBalance = balanceBeforeScenario - oneOrderAmount;\r",
+                  "\r",
+                  "pm.test(\"Balance decreased only by first confirmed order\", function () {\r",
+                  "    pm.expect(json.balance).to.eql(expectedBalance);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Held amount was released after second rejected order\", function () {\r",
+                  "    pm.expect(json.heldAmount).to.eql(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Available balance equals balance after delivery compensation\", function () {\r",
+                  "    pm.expect(json.availableBalance).to.eql(json.balance);\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"deliveryBalanceAfterSecondRejectedOrder\", json.balance);\r",
+                  "pm.environment.set(\"deliveryHeldAfterSecondRejectedOrder\", json.heldAmount);\r",
+                  "pm.environment.set(\"deliveryAvailableAfterSecondRejectedOrder\", json.availableBalance);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/accounts/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "accounts",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check warehouse compensation after second order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Warehouse products response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Products response contains items\", function () {\r",
+                  "    pm.expect(json.items).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const product = json.items.find(x =>\r",
+                  "    x.productId === pm.environment.get(\"deliveryProductId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Delivery scenario product exists in products list\", function () {\r",
+                  "    pm.expect(product).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "const initialStock = Number(pm.environment.get(\"deliveryProductStock\"));\r",
+                  "const orderedQuantity = Number(pm.environment.get(\"deliveryOrderQuantity\"));\r",
+                  "\r",
+                  "pm.test(\"Available quantity did not decrease\", function () {\r",
+                  "    pm.expect(product.availableQuantity).to.eql(initialStock);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Reserved quantity contains only first confirmed order\", function () {\r",
+                  "    pm.expect(product.reservedQuantity).to.eql(orderedQuantity);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Free quantity returned after second order compensation\", function () {\r",
+                  "    pm.expect(product.freeQuantity).to.eql(initialStock - orderedQuantity);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/warehouse/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "warehouse",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check delivery slot after second rejected order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Delivery slots response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Delivery slots response contains deliverySlots\", function () {\r",
+                  "    pm.expect(json.deliverySlots).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const slot = json.deliverySlots.find(x =>\r",
+                  "    x.slotId === pm.environment.get(\"deliverySlotId\")\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"Delivery scenario slot exists\", function () {\r",
+                  "    pm.expect(slot).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Delivery slot is still reserved by first order\", function () {\r",
+                  "    pm.expect(slot.status).to.eql(\"Reserved\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/delivery/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "delivery",
+                "slots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check OrderRejected notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Notifications list response is OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const notifications = pm.response.json();\r",
+                  "const orderId = pm.environment.get(\"deliverySecondOrderId\");\r",
+                  "\r",
+                  "pm.test(\"Notifications response is array\", function () {\r",
+                  "    pm.expect(notifications).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "const notification = notifications.find(x =>\r",
+                  "    x.orderId === orderId &&\r",
+                  "    x.type === \"OrderRejected\"\r",
+                  ");\r",
+                  "\r",
+                  "pm.test(\"OrderRejected notification exists for second order\", function () {\r",
+                  "    pm.expect(notification, `Notification for order ${orderId}`).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"OrderRejected notification id exists\", function () {\r",
+                  "    pm.expect(notification.id).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"OrderRejected notification subject exists\", function () {\r",
+                  "    pm.expect(notification.subject).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"OrderRejected notification createdAt exists\", function () {\r",
+                  "    pm.expect(notification.createdAt).to.be.a(\"string\").and.not.empty;\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"deliveryRejectedNotificationId\", notification.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -14,7 +14,7 @@ dbName: warehouse_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-warehouse-service
-  imageTag: "8.0"
+  imageTag: "8.1"
   replicaCount: 2
   maxSurge: 1
   maxUnavailable: 1
@@ -45,7 +45,7 @@ migrationJob:
   ttlSecondsAfterFinished: 100
   backoffLimit: 3
   imageRepository: maslovdeveloper/hwapp-warehouse-migration
-  imageTag: "8.0"
+  imageTag: "8.1"
 
 config:
   authUrlOverride: ""

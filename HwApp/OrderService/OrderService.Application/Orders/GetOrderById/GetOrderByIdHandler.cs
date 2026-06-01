@@ -23,7 +23,7 @@ namespace OrderService.Application.Orders.GetOrderById
                 order.SagaStep.ToString(),
                 order.TotalAmount,
                 order.Items.Select(i => new OrderItemDetailsDto(
-                    i.Id,
+                    i.ProductId,
                     i.Name,
                     i.UnitPrice,
                     i.Quantity,

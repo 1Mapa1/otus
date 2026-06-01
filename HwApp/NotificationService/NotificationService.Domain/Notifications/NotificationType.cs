@@ -4,5 +4,6 @@
     {
         OrderPaid = 0,
         OrderRejected = 1,
+        OrderConfirmed = 2,
     }
 }

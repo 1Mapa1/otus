@@ -6,5 +6,5 @@ namespace DeliveryService.Application.Slots.CreateDeliverySlot
         Guid SlotId,
         DateTime TimeFrom,
         DateTime TimeTo,
-        DeliverySlotStatus Status);
+        String Status);
 }

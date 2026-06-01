@@ -16,7 +16,7 @@ namespace OrderService.Application.Orders.Saga.Steps
 
         public async Task HandleAsync(Order order, CancellationToken cancellationToken)
         {
-            var result = await _billingClient.AuthorizePaymentAsync(order.Id, order.UserId, order.TotalAmount, cancellationToken);
+            var result = await _billingClient.AuthorizePaymentAsync(order.UserId, order.Id, order.TotalAmount, cancellationToken);
 
             if (!result.IsSuccess)
             {

@@ -20,7 +20,7 @@ namespace DeliveryService.Application.Slots.GetDeliverySlots
                 slot.Id,
                 slot.TimeFrom,
                 slot.TimeTo,
-                slot.Status)).ToList();
+                slot.Status.ToString())).ToList();
 
             return Result<GetDeliverySlotsResult>.Success(new GetDeliverySlotsResult(deliverySlotDtos));
         }

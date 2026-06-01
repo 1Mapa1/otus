@@ -14,7 +14,7 @@ dbName: delivery_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-delivery-service
-  imageTag: "8.0"
+  imageTag: "8.2"
   replicaCount: 2
   maxSurge: 1
   maxUnavailable: 1

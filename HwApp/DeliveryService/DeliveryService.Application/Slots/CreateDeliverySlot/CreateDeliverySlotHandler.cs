@@ -33,7 +33,7 @@ namespace DeliveryService.Application.Slots.CreateDeliverySlot
                 deliverySlot.Id,
                 deliverySlot.TimeFrom,
                 deliverySlot.TimeTo,
-                deliverySlot.Status));
+                deliverySlot.Status.ToString()));
         }
     }
 }

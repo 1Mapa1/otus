@@ -47,7 +47,7 @@ namespace WarehouseService.Application.Products.ResolveProducts
                     product.Id,
                     product.Name,
                     product.UnitPrice,
-                    product.FreeQuantity,
+                    item.Quantity,
                     product.UnitPrice * item.Quantity
                 ));
             }

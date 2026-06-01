@@ -3,7 +3,7 @@ namespace OrderService.Api
     namespace Contracts
     {
         public sealed record CreateOrderResponse(
-            Guid OrderId,
+            Guid Id,
             string Status,
             string? FailureReason);
     }

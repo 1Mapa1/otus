@@ -50,6 +50,21 @@
                 $"Your order {orderId} has been paid successfully. Amount: {price}.",
                 DateTime.UtcNow);
         }
+        public static Notification CreateOrderConfirmed(
+            Guid userId,
+            Guid orderId,
+            decimal totalAmount)
+        {
+            return new Notification(
+                Guid.NewGuid(),
+                userId,
+                orderId,
+                NotificationType.OrderConfirmed,
+                "Order confirmed",
+                $"Your order {orderId} has been confirmed successfully. Amount: {totalAmount}.",
+                DateTime.UtcNow);
+        }
+
 
         public static Notification CreateOrderRejected(
             Guid userId,

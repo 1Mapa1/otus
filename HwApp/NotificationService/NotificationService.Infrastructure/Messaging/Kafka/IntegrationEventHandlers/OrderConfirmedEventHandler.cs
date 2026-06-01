@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using NotificationService.Application.Notifications.CreateOrderConfirmedNotification;
 using NotificationService.Application.Notifications.CreateOrderPaidNotification;
 using NotificationService.Infrastructure.Messaging.Kafka.IntegrationEvents;
 
@@ -19,7 +20,7 @@ namespace NotificationService.Infrastructure.Messaging.Kafka.IntegrationEventHan
             CancellationToken cancellationToken)
         {
             return _sender.Send(
-                new CreateOrderPaidNotificationCommand(
+                new CreateOrderConfirmedNotificationCommand(
                     integrationEvent.OrderId,
                     integrationEvent.UserId,
                     integrationEvent.TotalAmount),
