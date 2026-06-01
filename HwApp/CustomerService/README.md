@@ -13,7 +13,7 @@ REST API для управления клиентами (CRUD). Операции
 
 ## API
 
-Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 7 / K8s](../../ДЗ%207/K8s/README.md)).
+Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md)).
 
 ### CRUD
 
@@ -58,4 +58,4 @@ docker build --platform linux/amd64 -f Dockerfile.Migration .
 
 ## Развёртывание
 
-Helm и маршрут Ingress `/api/customers`: [ДЗ 7 / K8s](../../ДЗ%207/K8s/README.md). Общий указатель по репозиторию: [HwApp/README.md](../README.md).
+Helm и маршрут Ingress `/api/customers`: [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md). Общий указатель по репозиторию: [HwApp/README.md](../README.md).

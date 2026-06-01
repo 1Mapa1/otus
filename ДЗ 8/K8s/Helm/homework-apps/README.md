@@ -11,7 +11,7 @@ Umbrella chart: общий Ingress родителя и подчарты **auth-s
 - **billing-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API (`/api/billing/...`).
 - **warehouse-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API склада (`/api/warehouse/...`, `/api/internal/warehouse/...`).
 - **delivery-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API доставки (`/api/delivery/...`, `/api/internal/delivery/...`).
-- **order-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API заказов (`/api/orders`), JWT, Billing, Kafka.
+- **order-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API заказов (`/api/orders`), JWT, **сага заказа** (фоновый воркер), HTTP-клиенты **Billing** / **Warehouse** / **Delivery**, Kafka (outbox).
 
 ## Требования
 

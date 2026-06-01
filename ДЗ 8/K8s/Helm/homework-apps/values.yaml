@@ -439,12 +439,8 @@ ingress:
       service: notificationService
     - path: /api/billing
       service: billingService
-    - path: /api/internal/warehouse
-      service: warehouseService
     - path: /api/warehouse
       service: warehouseService
-    - path: /api/internal/delivery
-      service: deliveryService
     - path: /api/delivery
       service: deliveryService
     - path: /api/orders

@@ -1,6 +1,6 @@
 # Kubernetes
 
-Helm chart и значения для развёртывания приложений (Auth, Customer, Billing, Notification, **Order**), общий **PostgreSQL**, **Kafka** (для OrderService и NotificationService) и **Ingress**.
+Helm chart и значения для развёртывания приложений (**Auth**, **Customer**, **Billing**, **Warehouse**, **Delivery**, **Notification**, **Order**), общий **PostgreSQL**, **Kafka** (для OrderService и NotificationService) и **Ingress**.
 
 ## Требования
 
@@ -11,7 +11,7 @@ Helm chart и значения для развёртывания приложе�
 
 ## Makefile (быстрая установка)
 
-Из каталога **`ДЗ 7/K8s`** (рядом с `Helm/`): `make help`. Типовой сценарий: **`make install`** — репозитории Helm, namespace для ingress (`m` по умолчанию), **ingress-nginx**, namespace приложений (**`homework`** по умолчанию), Postgres, Kafka, chart **`homework-apps`**. Опционально: **`make kafka-ui`**. Свой namespace: `make install NS=my-namespace`. Снятие релизов Helm: **`make uninstall`**; при необходимости затем **`make purge-ns`** (удалит namespace `NS` целиком). Namespace ingress (`INGRESS_NS`) `purge-ns` не трогает.
+Из каталога **`ДЗ 8/K8s`** (рядом с `Helm/`): `make help`. Типовой сценарий: **`make install`** — репозитории Helm, namespace для ingress (`m` по умолчанию), **ingress-nginx**, namespace приложений (**`homework`** по умолчанию), Postgres, Kafka, один релиз umbrella **`homework-apps`** (все сервисы приложения ставятся вместе). Опционально: **`make kafka-ui`**. Свой namespace: `make install NS=my-namespace`. Снятие релизов Helm: **`make uninstall`**; при необходимости затем **`make purge-ns`** (удалит namespace `NS` целиком). Namespace ingress (`INGRESS_NS`) `purge-ns` не трогает.
 
 Нужны **GNU Make** и shell как в WSL / Git Bash / Linux (на чистом `cmd.exe` без `make` этот файл не используется).
 
@@ -30,14 +30,14 @@ helm install nginx ingress-nginx/ingress-nginx \
 
 ## Namespace
 
-В командах ниже везде стоит **`homework`** — это просто **короткий placeholder**: подставьте **свой** namespace (`-n <ваш>`) во всех шагах одинаково (Postgres, Kafka, `homework-apps`). Какой namespace выбрать — **на ваше усмотрение**; вариант `customer-service` в репозитории не «рекомендация», а **пример**, как автор гонял стенд локально.
+В командах ниже везде стоит **`homework`** — это **короткий placeholder**: подставьте **свой** namespace (`-n <ваш>`) во всех шагах одинаково (Postgres, Kafka, `homework-apps`). Какой namespace выбрать — **на ваше усмотрение**.
 
 При пустом `global.kafkaBootstrapServers` в `homework-apps` bootstrap по умолчанию:  
 `<релиз-kafka>-controller-headless.<ваш-namespace>.svc.cluster.local:9092` (см. `global.kafkaClusterReleaseName`, обычно релиз **`kafka`**).
 
 ## PostgreSQL
 
-Один релиз Bitnami PostgreSQL с init-скриптом: пользователи и БД для сервисов (см. `Helm/postgres-values.yaml`).
+Один релиз Bitnami PostgreSQL с init-скриптом: пользователи и БД для сервисов, включая **warehouse** и **delivery** (см. `Helm/postgres-values.yaml`).
 
 ```bash
 kubectl create namespace homework
@@ -54,9 +54,9 @@ helm install postgres bitnami/postgresql \
 
 Нужен для **OrderService** (outbox → продюсер) и **NotificationService** (consumer). Ставьте в **тот же namespace**, что и `homework-apps` и Postgres.
 
-Из каталога **`ДЗ 7/K8s`** (рядом лежат `Helm/kafka-values.yaml`, `Helm/kafka-ui-values.yaml`). Если команды запускаете из **`ДЗ 7/K8s/Helm`**, укажите `-f kafka-values.yaml` и `-f kafka-ui-values.yaml`.
+Из каталога **`ДЗ 8/K8s`** (рядом лежат `Helm/kafka-values.yaml`, `Helm/kafka-ui-values.yaml`). Если команды запускаете из **`ДЗ 8/K8s/Helm`**, укажите `-f kafka-values.yaml` и `-f kafka-ui-values.yaml`.
 
-Репозиторий Bitnami нужен для `helm search` / привычки; сам Kafka ставится **OCI-чартом** `bitnamicharts/kafka` (как в рабочем стенде):
+Репозиторий Bitnami нужен для `helm search` / привычки; сам Kafka ставится **OCI-чартом** `bitnamicharts/kafka`:
 
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -85,7 +85,7 @@ helm upgrade --install kafka-ui kafka-ui/kafka-ui \
 
 ## Приложения (Helm chart `homework-apps`)
 
-Chart: [Helm/homework-apps](./Helm/homework-apps/README.md) — umbrella chart с подчартами в `subcharts/` (**auth**, **customer**, **billing**, **notification**, **order**).
+Chart: [Helm/homework-apps](./Helm/homework-apps/README.md) — umbrella chart с подчартами в `subcharts/` (**auth**, **customer**, **billing**, **warehouse**, **delivery**, **notification**, **order**). Все подчарты ставятся **одним** `helm upgrade --install` родителя (включение/выключение — через `values.yaml` и `enabled`).
 
 ```bash
 cd Helm/homework-apps
@@ -97,16 +97,19 @@ helm upgrade --install homework-apps . \
   --create-namespace
 ```
 
-Либо одной командой: добавьте **`--dependency-update`** к `helm upgrade --install`, если не вызывали `helm dependency update` вручную.
+Либо одной командой из **`ДЗ 8/K8s`**: **`make apps`** или добавьте **`--dependency-update`** к `helm upgrade --install`, если не вызывали `helm dependency update` вручную.
 
-При установке создаются ресурсы для подключённых сервисов (ConfigMap, Secret, Job миграций, Deployment, Service), Ingress с маршрутами:
+При установке создаются ресурсы для подключённых сервисов (ConfigMap, Secret, Job миграций, Deployment, Service), Ingress с маршрутами (см. `templates/ingress.yaml` и `values.yaml`):
 
 - `/api/auth`, `/.well-known` → AuthService
 - `/api/customers` → CustomerService
 - `/api/notifications` → NotificationService
-- `/api/billing` — BillingService
-- `/api/internal/billing` — внутреннее API BillingService
-- `/api/orders` — OrderService (Swagger: `.../api/orders/swagger/...`)
+- `/api/billing` → BillingService
+- `/api/warehouse` → WarehouseService
+- `/api/delivery` → DeliveryService
+- `/api/orders` → OrderService (Swagger: `.../api/orders/swagger/...`)
+
+**OrderService** получает in-cluster URL сервисов Billing, Warehouse и Delivery через переменные окружения `Ms__Billing__*`, `Ms__Warehouse__*`, `Ms__Delivery__*` и настройки саги `OrderSaga__*` (см. `homework-apps/values.yaml` → `orderService.config`).
 
 ## Проверка
 
