@@ -1,6 +1,6 @@
 ﻿using OrderService.Domain.Orders;
 
-namespace OrderService.Application.Orders
+namespace OrderService.Application.Abstractions.Persistence
 {
     public interface IOrderRepository
     {

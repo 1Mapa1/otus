@@ -2,15 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using OrderService.Application.Abstractions;
 using OrderService.Application.Abstractions.Clients.Billing;
 using OrderService.Application.Abstractions.Clients.Delivery;
 using OrderService.Application.Abstractions.Clients.Warehouse;
-using OrderService.Application.Orders;
-using OrderService.Domain.Orders;
+using OrderService.Application.Abstractions.Idempotency;
+using OrderService.Application.Abstractions.Persistence;
 using OrderService.Infrastructure.Clients.Billing;
 using OrderService.Infrastructure.Clients.Delivery;
 using OrderService.Infrastructure.Clients.Warehouse;
+using OrderService.Infrastructure.Idempotency;
 using OrderService.Infrastructure.Messaging.Kafka;
 using OrderService.Infrastructure.Options;
 using OrderService.Infrastructure.Persistence;
@@ -43,6 +43,8 @@ namespace OrderService.Infrastructure
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
+            services.AddScoped<IRequestHashCalculator, RequestHashCalculator>();
 
             services.AddHostedService<OutboxPublisher>();
 

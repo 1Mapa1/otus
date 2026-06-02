@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using OrderService.Application.Orders;
+using OrderService.Application.Abstractions.Persistence;
 using OrderService.Domain.Orders;
 
 namespace OrderService.Infrastructure.Persistence.Repositories
