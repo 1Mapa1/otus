@@ -109,7 +109,7 @@ helm upgrade --install homework-apps . \
 - `/api/delivery` → DeliveryService
 - `/api/orders` → OrderService (Swagger: `.../api/orders/swagger/...`)
 
-**OrderService** получает in-cluster URL сервисов Billing, Warehouse и Delivery через переменные окружения `Ms__Billing__*`, `Ms__Warehouse__*`, `Ms__Delivery__*` и настройки саги `OrderSaga__*` (см. `homework-apps/values.yaml` → `orderService.config`).
+**OrderService** получает in-cluster URL сервисов Billing, Warehouse и Delivery через переменные окружения `Ms__Billing__*`, `Ms__Warehouse__*`, `Ms__Delivery__*`, настройки саги `OrderSaga__*` и **идемпотентности** `Idempotency__*` (см. `homework-apps/values.yaml` → `orderService.config`).
 
 ## Проверка
 

@@ -323,6 +323,8 @@ orderService:
     orderSagaBatchSize: 10
     orderSagaLockDuration: "00:01:00"
     orderSagaPollingInterval: "00:00:05"
+    idempotencyProcessingLockTtl: "00:00:30"
+    idempotencyRecordTtl: "24:00:00"
     kafkaAcks: "All"
     kafkaEnableIdempotence: true
 

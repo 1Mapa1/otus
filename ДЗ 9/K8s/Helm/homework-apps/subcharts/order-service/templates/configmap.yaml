@@ -23,6 +23,8 @@ data:
   OrderSaga__BatchSize: {{ .Values.config.orderSagaBatchSize | quote }}
   OrderSaga__LockDuration: {{ .Values.config.orderSagaLockDuration | quote }}
   OrderSaga__PollingInterval: {{ .Values.config.orderSagaPollingInterval | quote }}
+  Idempotency__ProcessingLockTtl: {{ .Values.config.idempotencyProcessingLockTtl | quote }}
+  Idempotency__RecordTtl: {{ .Values.config.idempotencyRecordTtl | quote }}
   Kafka__BootstrapServers: {{ default (include "order-service.kafkaBootstrapServersDefault" .) .Values.global.kafkaBootstrapServers | quote }}
   Kafka__Acks: {{ .Values.config.kafkaAcks | quote }}
   Kafka__EnableIdempotence: {{ .Values.config.kafkaEnableIdempotence | quote }}

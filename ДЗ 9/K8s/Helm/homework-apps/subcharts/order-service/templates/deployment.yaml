@@ -111,6 +111,16 @@ spec:
                 configMapKeyRef:
                   name: {{ include "order-service.fullname" . }}
                   key: OrderSaga__PollingInterval
+            - name: Idempotency__ProcessingLockTtl
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Idempotency__ProcessingLockTtl
+            - name: Idempotency__RecordTtl
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Idempotency__RecordTtl
             - name: Kafka__BootstrapServers
               valueFrom:
                 configMapKeyRef:
