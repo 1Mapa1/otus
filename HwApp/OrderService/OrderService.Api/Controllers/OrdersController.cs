@@ -47,7 +47,7 @@ namespace OrderService.Api
                     CreateOrderResultStatus.Success => Accepted(new
                     {
                         id = result.OrderId,
-                        status = result.OrderStatus
+                        status = result.OrderStatus.ToString()
                     }),
 
                     CreateOrderResultStatus.IdempotencyKeyConflict => Conflict(new

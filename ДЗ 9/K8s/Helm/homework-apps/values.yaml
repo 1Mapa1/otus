@@ -279,7 +279,7 @@ orderService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-order-service
-    imageTag: "8.3"
+    imageTag: "9.1"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -310,7 +310,7 @@ orderService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-order-migration
-    imageTag: "8.0"
+    imageTag: "9.0"
 
   config:
     authUrlOverride: ""
