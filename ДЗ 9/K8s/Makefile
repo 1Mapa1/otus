@@ -1,5 +1,5 @@
-# Установка стенда ДЗ 8 (Helm + kubectl).
-# Запускайте из каталога K8s:  cd "…/ДЗ 8/K8s" && make help
+# Установка стенда ДЗ 9 (Helm + kubectl).
+# Запускайте из каталога K8s:  cd "…/ДЗ 9/K8s" && make help
 # Нужны: kubectl, helm 3, GNU Make и POSIX shell (WSL, Git Bash, Linux, macOS).
 
 NS           ?= homework
@@ -9,7 +9,7 @@ CHART_APPS   := Helm/homework-apps
 
 .PHONY: help
 help:
-	@echo "ДЗ 8 / K8s — типовые цели (namespace приложений: NS=$(NS), ingress: INGRESS_NS=$(INGRESS_NS))."
+	@echo "ДЗ 9 / K8s — типовые цели (namespace приложений: NS=$(NS), ingress: INGRESS_NS=$(INGRESS_NS))."
 	@echo ""
 	@echo "  make repos            helm repo add (bitnami, ingress-nginx, kafka-ui) + helm repo update"
 	@echo "  make ingress-ns       kubectl: namespace для ingress ($(INGRESS_NS))"

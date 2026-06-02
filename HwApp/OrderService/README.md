@@ -1,6 +1,6 @@
 # OrderService
 
-Создание заказа с **распределённой транзакцией (сага)**: авторизация платежа в **Billing**, резерв товара в **Warehouse**, резерв слота в **Delivery**, затем **capture** платежа; при сбое на шагах после оплаты — **компенсации** (отмена доставки → склада → авторизации). Доменные события уходят в **Kafka** через паттерн **outbox**.
+Создание заказа с **распределённой транзакцией (сага)**: авторизация платежа в **Billing**, резерв товара в **Warehouse**, резерв слота в **Delivery**, затем **capture** платежа; при сбое на шагах после оплаты — **компенсации** (отмена доставки → склада → авторизации). Доменные события уходят в **Kafka** через паттерн **outbox**. **Идемпотентность** `POST /api/orders`: заголовок **`Idempotency-Key`** (UUID), запись в БД и повтор того же ответа — см. [ДЗ 9 / Архитектура](../../ДЗ%209/Архитектура/Архитектура.md).
 
 ## Архитектура
 
@@ -13,18 +13,19 @@
 ## Конфигурация
 
 - **`Ms:*`** — базовые URL и таймауты Billing, Warehouse, Delivery (Helm: `Ms__Billing__*`, `Ms__Warehouse__*`, `Ms__Delivery__*`).
+- **`Idempotency`** — TTL блокировки обработки и TTL записи (`Idempotency__ProcessingLockTtl`, `Idempotency__RecordTtl` в Helm).
 - **`OrderSaga`** — размер пачки, длительность блокировки, интервал опроса (`OrderSaga__*` в Helm).
 - **`Kafka`**, **`Auth`** — как в остальных сервисах стенда.
 
 ## API
 
-Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md)).
+Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md), [ДЗ 9 / K8s](../../ДЗ%209/K8s/README.md) — идемпотентность и переменные `Idempotency__*`).
 
 Префикс: **`/api/orders`**, JWT обязателен.
 
 | Метод | Путь | Описание |
 |-------|------|----------|
-| POST | `/api/orders` | Создание заказа (`deliverySlotId`, позиции); ответ **202 Accepted** — дальнейшая обработка сагой |
+| POST | `/api/orders` | Создание заказа (`deliverySlotId`, позиции); заголовок **`Idempotency-Key`** обязателен; ответ **202 Accepted** — дальнейшая обработка сагой |
 | GET | `/api/orders/me` | Список заказов текущего пользователя |
 | GET | `/api/orders/{id}` | Детали заказа по идентификатору |
 
@@ -51,4 +52,4 @@ docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/h
 
 ## Развёртывание
 
-Postgres, Kafka, Ingress `/api/orders`: [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md). Общий указатель: [HwApp/README.md](../README.md).
+Postgres, Kafka, Ingress `/api/orders`: [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md), [ДЗ 9 / K8s](../../ДЗ%209/K8s/README.md). Общий указатель: [HwApp/README.md](../README.md).

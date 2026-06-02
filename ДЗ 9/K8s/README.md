@@ -11,7 +11,7 @@ Helm chart и значения для развёртывания приложе�
 
 ## Makefile (быстрая установка)
 
-Из каталога **`ДЗ 8/K8s`** (рядом с `Helm/`): `make help`. Типовой сценарий: **`make install`** — репозитории Helm, namespace для ingress (`m` по умолчанию), **ingress-nginx**, namespace приложений (**`homework`** по умолчанию), Postgres, Kafka, один релиз umbrella **`homework-apps`** (все сервисы приложения ставятся вместе). Опционально: **`make kafka-ui`**. Свой namespace: `make install NS=my-namespace`. Снятие релизов Helm: **`make uninstall`**; при необходимости затем **`make purge-ns`** (удалит namespace `NS` целиком). Namespace ingress (`INGRESS_NS`) `purge-ns` не трогает.
+Из каталога **`ДЗ 9/K8s`** (рядом с `Helm/`): `make help`. Типовой сценарий: **`make install`** — репозитории Helm, namespace для ingress (`m` по умолчанию), **ingress-nginx**, namespace приложений (**`homework`** по умолчанию), Postgres, Kafka, один релиз umbrella **`homework-apps`** (все сервисы приложения ставятся вместе). Опционально: **`make kafka-ui`**. Свой namespace: `make install NS=my-namespace`. Снятие релизов Helm: **`make uninstall`**; при необходимости затем **`make purge-ns`** (удалит namespace `NS` целиком). Namespace ingress (`INGRESS_NS`) `purge-ns` не трогает.
 
 Нужны **GNU Make** и shell как в WSL / Git Bash / Linux (на чистом `cmd.exe` без `make` этот файл не используется).
 
@@ -54,7 +54,7 @@ helm install postgres bitnami/postgresql \
 
 Нужен для **OrderService** (outbox → продюсер) и **NotificationService** (consumer). Ставьте в **тот же namespace**, что и `homework-apps` и Postgres.
 
-Из каталога **`ДЗ 8/K8s`** (рядом лежат `Helm/kafka-values.yaml`, `Helm/kafka-ui-values.yaml`). Если команды запускаете из **`ДЗ 8/K8s/Helm`**, укажите `-f kafka-values.yaml` и `-f kafka-ui-values.yaml`.
+Из каталога **`ДЗ 9/K8s`** (рядом лежат `Helm/kafka-values.yaml`, `Helm/kafka-ui-values.yaml`). Если команды запускаете из **`ДЗ 9/K8s/Helm`**, укажите `-f kafka-values.yaml` и `-f kafka-ui-values.yaml`.
 
 Репозиторий Bitnami нужен для `helm search` / привычки; сам Kafka ставится **OCI-чартом** `bitnamicharts/kafka`:
 
@@ -97,7 +97,7 @@ helm upgrade --install homework-apps . \
   --create-namespace
 ```
 
-Либо одной командой из **`ДЗ 8/K8s`**: **`make apps`** или добавьте **`--dependency-update`** к `helm upgrade --install`, если не вызывали `helm dependency update` вручную.
+Либо одной командой из **`ДЗ 9/K8s`**: **`make apps`** или добавьте **`--dependency-update`** к `helm upgrade --install`, если не вызывали `helm dependency update` вручную.
 
 При установке создаются ресурсы для подключённых сервисов (ConfigMap, Secret, Job миграций, Deployment, Service), Ingress с маршрутами (см. `templates/ingress.yaml` и `values.yaml`):
 
