@@ -1,4 +1,18 @@
-Для распределённой транзакции используется паттерн Saga Orchestration. Оркестратором выступает OrderService. Каждый участник Saga выполняет локальную транзакцию и предоставляет компенсирующую операцию. Команды между сервисами выполняются синхронно по HTTP.
+**См. также:** [оглавление](./README.md) · [виды реализации (обзор вариантов)](./Виды%20реализации%20распределенной%20транзакции.md) · [аргументация выбора](./Аргументация%20выбора%20Saga%20Orchestration%20через%20background%20worker%20и%20HTTP-команды.md)
+
+---
+
+Для распределённой транзакции используется паттерн Saga Orchestration. Каждый участник Saga выполняет локальную транзакцию и предоставляет компенсирующую операцию. Команды между сервисами выполняются синхронно по HTTP.
+
+### Участники Saga
+
+| Сервис              | Роль                 | Основные действия                                         | Компенсации           |
+| ------------------- | -------------------- | --------------------------------------------------------- | --------------------- |
+| OrderService        | Оркестратор          | создаёт заказ, хранит состояние Saga, вызывает участников | запускает компенсации |
+| BillingService      | Участник Saga        | authorize payment, capture payment                        | cancel-authorization  |
+| WarehouseService    | Участник Saga        | resolve products, reserve products                        | cancel reservation    |
+| DeliveryService     | Участник Saga        | reserve delivery slot                                     | cancel reservation    |
+| NotificationService | Подписчик на события | получает `OrderConfirmed` / `OrderRejected`               | не участвует в Saga   |
 
 Все внутренние команды Saga являются идемпотентными по orderId. Повторный вызов authorize/reserve/capture/cancel для того же orderId не должен создавать повторные списания, резервы или отмены.
 
@@ -207,6 +221,7 @@ sequenceDiagram
 ```
 
 #### IDL
+
 ##### authorize payment. POST /api/internal/billing/payments/authorize
 ```IDL
 Request:
@@ -305,6 +320,17 @@ Payload:
     occurredAt: datetime
 }
 ```
+#### Состояния Saga
+
+| SagaStep | Значение | Следующее действие |
+|---|---|---|
+| Created | Заказ создан, Saga ещё не выполнила ни одного бизнес-шагa | authorize payment |
+| PaymentAuthorized | Платёж авторизован, сумма захолдирована | reserve products |
+| StockReserved | Товары зарезервированы | reserve delivery slot |
+| DeliveryReserved | Слот доставки зарезервирован | capture payment |
+| Completed | Все шаги успешно выполнены | финальное состояние |
+| Compensating | Выполняется компенсация уже выполненных шагов | cancel completed steps |
+| Compensated | Компенсация завершена | финальное состояние |
 
 ### Работа Background worker. Неудачное создание заказа
 
@@ -489,3 +515,21 @@ Payload:
 	failureReason: "InsufficientFunds" | "StockNotAvailable" | "DeliverySlotUnavailable"
 }
 ```
+
+#### Правила компенсации
+
+| Где произошла бизнес-ошибка | Уже выполнено                                            | Компенсация                                                                      | Финальный статус |
+| --------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------- |
+| `authorize payment`         | ничего                                                   | не требуется                                                                     | `Rejected`       |
+| `reserve products`          | payment authorized                                       | `cancel-authorization`                                                           | `Rejected`       |
+| `reserve delivery slot`     | payment authorized, products reserved                    | `cancel reservation` в WarehouseService, `cancel-authorization` в BillingService | `Rejected`       |
+| `capture payment`           | payment authorized, products reserved, delivery reserved | не переводить заказ в `Rejected`, повторить `capture` позже                      | `Processing`     |
+|                             |                                                          |                                                                                  |                  |
+#### Обработка ошибок
+
+| Тип ошибки | Пример | Действие |
+|---|---|---|
+| Бизнес-ошибка | `409 InsufficientFunds` | перевести заказ в `Rejected`, компенсация не требуется |
+| Бизнес-ошибка | `409 StockNotAvailable` | отменить авторизацию платежа, перевести заказ в `Rejected` |
+| Бизнес-ошибка | `409 DeliverySlotUnavailable` | отменить резерв товара, отменить авторизацию платежа, перевести заказ в `Rejected` |
+| Техническая ошибка | `5xx`, timeout, network error | оставить заказ в `Processing`, повторить текущий шаг позже |
