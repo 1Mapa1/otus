@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using OrderService.Application.Orders;
+using OrderService.Application.Abstractions.Persistence;
 using OrderService.Domain.Orders;
 
 namespace OrderService.Infrastructure.Persistence.Repositories
@@ -14,7 +14,7 @@ namespace OrderService.Infrastructure.Persistence.Repositories
         }
 
         public async Task<Order?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            await _db.Orders.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+            await _db.Orders.AsNoTracking().Include(x => x.Items).FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         public async Task<IReadOnlyList<Order>> GetByUserIdAsync(
             Guid userId,

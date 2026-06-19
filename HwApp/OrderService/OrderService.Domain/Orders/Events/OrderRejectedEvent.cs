@@ -5,8 +5,11 @@ namespace OrderService.Domain.Orders.Events
     public sealed record OrderRejectedEvent(
             Guid OrderId,
             Guid UserId,
-            decimal Price,
-            string FailureReason
+            Guid DeliverySlotId,
+            decimal TotalAmount,
+            string? FailureReason,
+            string? FailureDetails,
+            IReadOnlyCollection<OrderItem> Items
         ) : IDomainEvent
     {
         public string Key => OrderId.ToString();

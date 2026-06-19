@@ -3,8 +3,8 @@ namespace OrderService.Domain.Orders
     public enum OrderFailureReason
     {
         InsufficientFunds = 1,
-        InvalidAmount = 2,
-        AccountNotFound = 3,
+        StockNotAvailable = 2,
+        DeliverySlotUnavailable = 3,
         UnknownError = 4,
     }
 }

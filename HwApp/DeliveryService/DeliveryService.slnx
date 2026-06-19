@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="DeliveryService.Application/DeliveryService.Application.csproj" />
+  <Project Path="DeliveryService.DbMigrator/DeliveryService.DbMigrator.csproj" />
+  <Project Path="DeliveryService.Domain/DeliveryService.Domain.csproj" />
+  <Project Path="DeliveryService.Infrastructure/DeliveryService.Infrastructure.csproj" />
+  <Project Path="DeliveryService.Api/DeliveryService.Api.csproj" />
+</Solution>

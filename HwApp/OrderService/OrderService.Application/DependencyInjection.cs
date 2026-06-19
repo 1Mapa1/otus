@@ -1,12 +1,32 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OrderService.Application.Idempotency;
+using OrderService.Application.Orders.Saga;
+using OrderService.Application.Orders.Saga.Steps;
 
 namespace OrderService.Application
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddApplication(this IServiceCollection services)
+        public static IServiceCollection AddApplication(this IServiceCollection services,
+            IConfiguration configuration)
         {
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+
+            services.AddScoped<IOrderSagaProcessor, OrderSagaProcessor>();
+
+            services.AddScoped<IOrderSagaStepHandler, AuthorizePaymentStepHandler>();
+            services.AddScoped<IOrderSagaStepHandler, ReserveStockStepHandler>();
+            services.AddScoped<IOrderSagaStepHandler, ReserveDeliveryStepHandler>();
+            services.AddScoped<IOrderSagaStepHandler, CapturePaymentStepHandler>();
+            services.AddScoped<IOrderSagaStepHandler, CompensatingStepHandler>();
+
+            services
+                .AddOptions<IdempotencyOptions>()
+                .Bind(configuration.GetSection(IdempotencyOptions.SectionName))
+                .ValidateOnStart();
+
+            services.AddScoped<IIdempotencyService, IdempotencyService>();
 
             return services;
         }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrderService.Domain.Events;
+using OrderService.Domain.IdempotencyRecords;
 using OrderService.Domain.Orders;
 using OrderService.Infrastructure.Persistence.Outbox;
 using System.Text.Json;
@@ -19,7 +20,11 @@ namespace OrderService.Infrastructure.Persistence
 
         public DbSet<Order> Orders => Set<Order>();
 
+        public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+
         public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
+        public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

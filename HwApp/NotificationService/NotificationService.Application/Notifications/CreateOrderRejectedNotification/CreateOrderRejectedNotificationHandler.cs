@@ -20,8 +20,9 @@ namespace NotificationService.Application.Notifications.CreateOrderRejectedNotif
             var notification = Notification.CreateOrderRejected(
                  request.UserId,
                  request.OrderId,
-                 request.Price,
-                 request.FailureReason);
+                 request.TotalAmount,
+                 request.FailureReason,
+                 request.FailureDetails);
 
             await _notificationRepository.AddAsync(notification, ct);
             await _unitOfWork.SaveChangesAsync(ct);

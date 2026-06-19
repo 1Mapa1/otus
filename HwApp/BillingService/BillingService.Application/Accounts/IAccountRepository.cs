@@ -9,7 +9,5 @@ namespace BillingService.Application.Accounts
         Task<DepositOperationResult> DepositAsync(Guid userId, decimal amount, CancellationToken cancellationToken);
 
         Task<Account?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
-
-        Task<WithdrawOperationResult> TryWithdrawAsync(Guid userId, Guid orderId, decimal amount, CancellationToken cancellationToken);
     }
 }

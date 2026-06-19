@@ -8,8 +8,8 @@ namespace OrderService.Infrastructure.Persistence.Outbox
         private static readonly IReadOnlyDictionary<Type, (string Topic, string EventType)> Mapping =
            new Dictionary<Type, (string Topic, string EventType)>
            {
-               [typeof(OrderPaidEvent)] = ("orders", "order.paid.v1"),
-               [typeof(OrderRejectedEvent)] = ("orders", "order.rejected.v1")
+               [typeof(OrderConfirmedEvent)] = ("orders", "order.confirmed.v1"),
+               [typeof(OrderRejectedEvent)] = ("orders", "order.rejected.v2")
            };
 
         public EventMetadata Resolve(IDomainEvent domainEvent)

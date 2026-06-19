@@ -2,5 +2,7 @@
 {
     public sealed record GetMyAccountResponse(
         Guid UserId,
-        decimal Balance);
+        decimal Balance,
+        decimal HeldAmount,
+        decimal AvailableBalance);
 }

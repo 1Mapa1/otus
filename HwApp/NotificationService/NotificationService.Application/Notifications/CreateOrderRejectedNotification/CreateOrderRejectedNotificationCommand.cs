@@ -5,6 +5,7 @@ namespace NotificationService.Application.Notifications.CreateOrderRejectedNotif
     public sealed record CreateOrderRejectedNotificationCommand(
         Guid OrderId,
         Guid UserId,
-        decimal Price,
-        string FailureReason) : IRequest;
+        decimal TotalAmount,
+        string FailureReason,
+        string? FailureDetails) : IRequest;
 }

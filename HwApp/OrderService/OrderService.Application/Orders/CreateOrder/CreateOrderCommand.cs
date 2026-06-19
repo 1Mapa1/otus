@@ -4,5 +4,7 @@ namespace OrderService.Application.Orders.CreateOrder
 {
     public sealed record CreateOrderCommand(
         Guid UserId,
-        decimal Price) : IRequest<CreateOrderResult>;
+        Guid DeliverySlotId,
+        IReadOnlyList<CreateOrderItem> Items,
+        Guid IdempotencyKey) : IRequest<CreateOrderResult>;
 }

@@ -50,12 +50,28 @@
                 $"Your order {orderId} has been paid successfully. Amount: {price}.",
                 DateTime.UtcNow);
         }
+        public static Notification CreateOrderConfirmed(
+            Guid userId,
+            Guid orderId,
+            decimal totalAmount)
+        {
+            return new Notification(
+                Guid.NewGuid(),
+                userId,
+                orderId,
+                NotificationType.OrderConfirmed,
+                "Order confirmed",
+                $"Your order {orderId} has been confirmed successfully. Amount: {totalAmount}.",
+                DateTime.UtcNow);
+        }
+
 
         public static Notification CreateOrderRejected(
             Guid userId,
             Guid orderId,
             decimal price,
-            string failureReason)
+            string failureReason,
+            string? failureDetails)
         {
             return new Notification(
                 Guid.NewGuid(),
@@ -63,7 +79,7 @@
                 orderId,
                 NotificationType.OrderRejected,
                 "Order rejected",
-                $"Your order {orderId} was rejected. Amount: {price}. Reason: {failureReason}.",
+                $"Your order {orderId} was rejected. Amount: {price}. Reason: {failureReason}. Details: {failureDetails}.",
                 DateTime.UtcNow);
         }
     }

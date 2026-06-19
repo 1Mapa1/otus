@@ -44,4 +44,4 @@ docker build --platform linux/amd64 -f Dockerfile.Migration .
 
 ## Развёртывание
 
-Теги образов и Ingress: [ДЗ 7 / K8s](../../ДЗ%207/K8s/README.md) (актуальный umbrella `homework-apps`). Ранние варианты стенда: [ДЗ 6 / K8s](../../ДЗ%206/K8s/README.md).
+Теги образов и Ingress: [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md) (umbrella `homework-apps`). Ранние варианты стенда: [ДЗ 7 / K8s](../../ДЗ%207/K8s/README.md), [ДЗ 6 / K8s](../../ДЗ%206/K8s/README.md).

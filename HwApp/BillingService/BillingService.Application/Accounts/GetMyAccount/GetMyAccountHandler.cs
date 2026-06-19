@@ -18,7 +18,7 @@ namespace BillingService.Application.Accounts.GetMyAccount
             if (account is null)
                 return null;
 
-            return new AccountDto(account.UserId, account.Balance, account.CreatedAt);
+            return new AccountDto(account.UserId, account.Balance, account.HeldAmount, account.AvailableBalance);
         }
     }
 }

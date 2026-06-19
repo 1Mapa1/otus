@@ -31,9 +31,43 @@ namespace OrderService.Api
                 if (!TryGetCurrentUserId(out var userId))
                     return Unauthorized();
 
-                var result = await _sender.Send(new CreateOrderCommand(userId, request.Price), cancellationToken);
+                if (!Request.Headers.TryGetValue("Idempotency-Key", out var idempotencyKeyValues) ||
+                    !Guid.TryParse(idempotencyKeyValues.FirstOrDefault(), out var idempotencyKey))
+                {
+                    return BadRequest(new
+                    {
+                        errorCode = "IdempotencyKeyRequired"
+                    });
+                }
 
-                return Ok(new CreateOrderResponse(result.OrderId, result.Status.ToString(), result.FailureReason.ToString()));
+                var result = await _sender.Send(new CreateOrderCommand(userId, request.DeliverySlotId, request.Items, idempotencyKey), cancellationToken);
+
+                return result.ResultStatus switch
+                {
+                    CreateOrderResultStatus.Success => Accepted(new
+                    {
+                        id = result.OrderId,
+                        status = result.OrderStatus.ToString()
+                    }),
+
+                    CreateOrderResultStatus.IdempotencyKeyConflict => Conflict(new
+                    {
+                        errorCode = "IdempotencyKeyConflict"
+                    }),
+
+                    CreateOrderResultStatus.RequestAlreadyProcessing => Conflict(new
+                    {
+                        errorCode = "RequestAlreadyProcessing"
+                    }),
+
+                    CreateOrderResultStatus.WarehouseResolveFailed => BadRequest(new
+                    {
+                        errorCode = "WarehouseResolveFailed",
+                        message = result.FailureReason
+                    }),
+
+                    _ => StatusCode(StatusCodes.Status500InternalServerError)
+                };
             }
 
             [HttpGet("{id:guid}")]
