@@ -1,4 +1,4 @@
-﻿using OrderService.Application.Abstractions;
+﻿using OrderService.Application.Abstractions.Persistence;
 
 namespace OrderService.Infrastructure.Persistence
 {

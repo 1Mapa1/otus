@@ -1,4 +1,5 @@
 using MediatR;
+using OrderService.Application.Abstractions.Persistence;
 using OrderService.Domain.Orders;
 
 namespace OrderService.Application.Orders.GetMyOrders

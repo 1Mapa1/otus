@@ -1,4 +1,5 @@
 using MediatR;
+using OrderService.Application.Abstractions.Persistence;
 
 namespace OrderService.Application.Orders.GetOrderById
 {

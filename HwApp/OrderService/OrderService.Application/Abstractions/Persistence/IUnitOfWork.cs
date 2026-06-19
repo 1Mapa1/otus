@@ -1,4 +1,4 @@
-﻿namespace OrderService.Application.Abstractions
+﻿namespace OrderService.Application.Abstractions.Persistence
 {
     public interface IUnitOfWork
     {
