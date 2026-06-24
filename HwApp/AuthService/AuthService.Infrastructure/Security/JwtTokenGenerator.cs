@@ -24,6 +24,9 @@ namespace AuthService.Infrastructure.Security
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(ClaimTypes.Name, user.Login),
+                new(ClaimTypes.Role, user.Role.ToString().ToUpperInvariant()),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             var token = new JwtSecurityToken(

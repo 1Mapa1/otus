@@ -12,27 +12,24 @@ namespace AuthService.Domain.Entities
 
         public UserStatus Status { get; private set; }
 
+        public UserRole Role { get; private set; }
+
         public DateTime CreateAt { get; private set; }
 
         private User() { }
 
-        public User(string login, string passwordHash)
+        public User(string login, string passwordHash, UserRole role = UserRole.User)
         {
             Id = Guid.NewGuid();
             Login = login;
             PasswordHash = passwordHash;
             Status = UserStatus.Pending;
             CreateAt = DateTime.UtcNow;
+            Role = role;
         }
 
-        public void Activate()
-        {
-            Status = UserStatus.Active;
-        }
+        public void Activate() => Status = UserStatus.Active;
 
-        public void Blocked()
-        {
-            Status = UserStatus.Blocked;
-        }
+        public void Block() => Status = UserStatus.Blocked;
     }
 }
