@@ -11,6 +11,7 @@ namespace CustomerService.Api.Mapping
         {
             CreateMap<Customer, CustomerResponse>();
             CreateMap<CreateCustomerRequest, Customer>();
+            CreateMap<CustomerAddress, CustomerAddressResponse>();
         }
     }
 }

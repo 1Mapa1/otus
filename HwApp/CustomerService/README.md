@@ -1,55 +1,75 @@
 # CustomerService
 
-REST API для управления клиентами (CRUD). Операции с «текущим» профилем защищены JWT: валидация подписи по **JWKS AuthService** (кэш ключей с ленивой загрузкой, настройка через `CustomerService.Api/Authentication`).
+Сервис профиля клиента и адресной книги. `Customer.Id` совпадает с `User.Id` из AuthService — `customerId` для пользовательских endpoint'ов берётся из JWT claim `sub`.
 
-Внутренний контроллер **`POST /api/internal/customers`** вызывается **AuthService** при регистрации (создание клиента по `Id` пользователя). События домена уходят в **Kafka** через паттерн **outbox** (`OutboxPublisher`, см. `CustomerService.Infrastructure`).
+При регистрации **AuthService** вызывает internal API и создаёт профиль. Изменения профиля публикуются в **Kafka** через outbox.
 
-## Архитектура
+## Структура решения
 
 - `CustomerService.Api` — HTTP API (внешние и internal-контроллеры), AutoMapper, JWT, Swagger
-- `CustomerService.Domain` — сущность клиента, доменные события, контракт репозитория
-- `CustomerService.Infrastructure` — EF Core, репозитории, outbox, продюсер Kafka
+- `CustomerService.Domain` — сущности `Customer`, `CustomerAddress`, доменные события, контракты репозиториев
+- `CustomerService.Infrastructure` — EF Core, репозитории, outbox, Kafka producer
 - `CustomerService.DbMigrator` — миграции БД
+
+## Конфигурация
+
+В `appsettings` задаются:
+
+- `Auth:Url` — базовый URL AuthService для загрузки JWKS
+- `Kafka` — bootstrap servers и параметры producer (outbox publisher)
+- строка подключения к PostgreSQL
+
+См. также Helm values umbrella chart в [Проектная работа / K8s](../../Проектная%20работа/K8s/Helm/homework-apps).
 
 ## API
 
-Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md)).
+Базовый путь: `/api/customers`.
 
-### CRUD
+Пользовательские endpoint'ы требуют `Authorization: Bearer <token>`.
 
-| Метод | Путь |
-|-------|------|
-| POST | `/api/customers` |
-| GET | `/api/customers/{id}` |
-| PUT | `/api/customers/{id}` |
-| DELETE | `/api/customers/{id}` |
-
-### Профиль по JWT
-
-Заголовок `Authorization: Bearer <token>` (issuer — AuthService).
-
-| Метод | Путь |
-|-------|------|
-| GET | `/api/customers/me` |
-| PUT | `/api/customers/me` |
-
-### Внутренний API (для Auth)
+### Профиль
 
 | Метод | Путь | Описание |
 |-------|------|----------|
-| POST | `/api/internal/customers` | Идемпотентное создание клиента при регистрации |
+| GET | `/api/customers/me` | Получить свой профиль |
+| PUT | `/api/customers/me` | Обновить свой профиль |
 
-### Документация и служебные пути
+### Адресная книга
 
-- Swagger UI (Development): `/api/customers/swagger`
-- Метрики Prometheus (HTTP): **`/metrics`**
-- Health: `/health/live`, `/health/ready`, `/health/startup`
+Сохранённые адреса для checkout. Разовый адрес заказа может быть указан без сохранения в CustomerService.
+
+`customerId` не передаётся в route/body — только из JWT.
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| GET | `/api/customers/me/addresses` | Список активных адресов (`IsActive = true`) |
+| POST | `/api/customers/me/addresses` | Создать адрес |
+| PUT | `/api/customers/me/addresses/{addressId}` | Изменить свой активный адрес |
+| DELETE | `/api/customers/me/addresses/{addressId}` | Деактивировать адрес (soft delete, `IsActive = false`) |
+
+### Внутренний API
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| POST | `/api/internal/customers` | Идемпотентное создание профиля при регистрации (AuthService) |
+
+Swagger UI (в Development): `/api/customers/swagger`.
+
+Health: `/health/live`, `/health/ready`, `/health/startup`.
+
+## Kafka events
+
+Публикует (topic `customers`):
+
+- `customer.created.v1` — профиль создан при регистрации
+- `customer.updated.v1` — профиль обновлён
 
 ## Связанные сервисы
 
-- [AuthService](../AuthService/README.md) — JWT и регистрация
+- [AuthService](../AuthService/README.md) — JWT, регистрация, создание профиля
+- [NotificationService](../NotificationService/README.md) — потребляет события клиента
 
-## Сборка Docker-образов
+## Docker
 
 ```bash
 docker build --platform linux/amd64 -f Dockerfile.Api .
@@ -58,4 +78,4 @@ docker build --platform linux/amd64 -f Dockerfile.Migration .
 
 ## Развёртывание
 
-Helm и маршрут Ingress `/api/customers`: [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md). Общий указатель по репозиторию: [HwApp/README.md](../README.md).
+Helm chart: [Проектная работа / K8s / Helm](../../Проектная%20работа/K8s/Helm/homework-apps).

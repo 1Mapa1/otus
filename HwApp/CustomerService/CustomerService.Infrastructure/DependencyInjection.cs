@@ -27,6 +27,7 @@ namespace CustomerService.Infrastructure
                 .ValidateOnStart();
 
             services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
 
             services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
