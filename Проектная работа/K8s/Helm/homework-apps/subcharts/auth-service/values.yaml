@@ -4,12 +4,13 @@ global:
   kubernetesAppName: homework-apps
   peerAuthName: auth
   peerCustomerName: customer
-  peerBillingName: billing
   clusterDomain: cluster.local
   secretType: Opaque
   dbHost: postgres-postgresql
   dbPort: "5432"
   environment: Development
+  kafkaBootstrapServers: ""
+  kafkaClusterReleaseName: kafka
 
 enabled: true
 name: auth
@@ -64,8 +65,8 @@ migrationJob:
 config:
   msCustomerBaseUrlOverride: ""
   msCustomerTimeout: "00:00:10"
-  msBillingBaseUrlOverride: ""
-  msBillingTimeout: "00:00:10"
+  kafkaAcks: "All"
+  kafkaEnableIdempotence: true
   jwtIssuerOverride: ""
   jwtLifetimeMinutes: "60"
 

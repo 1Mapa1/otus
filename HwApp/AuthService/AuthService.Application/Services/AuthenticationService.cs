@@ -14,17 +14,20 @@ namespace AuthService.Application.Services
         private readonly ICustomerServiceClient _customerClient;
         private readonly IPasswordHasherService _hasherService;
         private readonly IJwtTokenGenerator _tokenGenerator;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AuthenticationService(
             IUserRepository userRepository,
             ICustomerServiceClient customerServiceClient,
             IPasswordHasherService hasherService,
-            IJwtTokenGenerator tokenGenerator)
+            IJwtTokenGenerator tokenGenerator,
+            IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
             _customerClient = customerServiceClient;
             _hasherService = hasherService;
             _tokenGenerator = tokenGenerator;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task RegisterAsync(RegisterRequest request, CancellationToken ct)
@@ -39,11 +42,14 @@ namespace AuthService.Application.Services
                 user = new User(request.Login, _hasherService.Hash(request.Password));
 
                 await _userRepository.AddAsync(user, ct);
+                await _unitOfWork.SaveChangesAsync(ct);
             }
 
             await _customerClient.CreateAsync(user.Id, request.Name, request.Email, ct);
 
-            await _userRepository.UpdateStatusToActiveAsync(user.Id, ct);
+            user.Activate();
+
+            await _unitOfWork.SaveChangesAsync(ct);
         }
 
         public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken ct)

@@ -75,8 +75,8 @@ authService:
     # Optional override. Empty value means auto-resolve in-cluster URL.
     msCustomerBaseUrlOverride: ""
     msCustomerTimeout: "00:00:10"
-    msBillingBaseUrlOverride: ""
-    msBillingTimeout: "00:00:10"
+    kafkaAcks: "All"
+    kafkaEnableIdempotence: true
     # Optional override. Empty value means use AuthService in-cluster URL.
     jwtIssuerOverride: ""
     jwtLifetimeMinutes: "60"

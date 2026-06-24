@@ -1,9 +1,14 @@
 ﻿using AuthService.Application.Interfaces;
 using AuthService.Domain.Interfaces;
 using AuthService.Infrastructure.Clients.CustomerService;
+using AuthService.Infrastructure.Messaging.Kafka;
+using AuthService.Infrastructure.Options;
 using AuthService.Infrastructure.Rersistence;
+using AuthService.Infrastructure.Persistence;
+using AuthService.Infrastructure.Persistence.Outbox;
 using AuthService.Infrastructure.Rersistence.Repositories;
 using AuthService.Infrastructure.Security;
+using AuthService.Infrastructure.Workers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,9 +26,22 @@ namespace AuthService.Infrastructure
 
             services.AddScoped<IUserRepository, UserRepository>();
 
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+
             services.AddInfrastructureOptions(configuration);
 
             services.AddInfrastructureHttpClients();
+
+            services.AddOptions<KafkaOptions>()
+                .Bind(configuration.GetSection(KafkaOptions.SectionName))
+                .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "BootstrapServers must be provided.")
+                .Validate(options => !string.IsNullOrEmpty(options.Acks), "Acks must be provided.")
+                .Validate(options => options.Acks == "All" || options.Acks == "Leader" || options.Acks == "None", "Acks must be 'All', 'Leader', or 'None'.")
+                .ValidateOnStart();
+
+            services.AddSingleton<IKafkaProducer, KafkaProducer>();
+
+            services.AddHostedService<OutboxPublisher>();
 
             services.AddSingleton<RsaJwtSigningKeyProvider>();
             services.AddSingleton<IJwksProvider, JwksProvider>();
@@ -49,6 +67,8 @@ namespace AuthService.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            services.AddSingleton<IIntegrationEventMapping, IntegrationEventMapping>();
+
             var connectionString = configuration.GetConnectionStringLocal();
 
             services.AddDbContext<AuthDbContext>(options =>

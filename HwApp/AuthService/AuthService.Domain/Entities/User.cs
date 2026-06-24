@@ -1,9 +1,13 @@
 ﻿using AuthService.Domain.Enums;
+using AuthService.Domain.Events;
+using AuthService.Domain.Interfaces;
 
 namespace AuthService.Domain.Entities
 {
-    public sealed class User
+    public sealed class User : IHasDomainEvents
     {
+        private readonly List<IDomainEvent> _events = [];
+
         public Guid Id { get; private set; }
 
         public string Login { get; private set; } = string.Empty;
@@ -15,6 +19,8 @@ namespace AuthService.Domain.Entities
         public UserRole Role { get; private set; }
 
         public DateTime CreateAt { get; private set; }
+
+        public IReadOnlyCollection<IDomainEvent> Events => _events;
 
         private User() { }
 
@@ -28,8 +34,18 @@ namespace AuthService.Domain.Entities
             Role = role;
         }
 
-        public void Activate() => Status = UserStatus.Active;
+        public void Activate()
+        {
+            Status = UserStatus.Active;
+            AddEvent(new UserActivatedEvent(Id));
+        }
 
         public void Block() => Status = UserStatus.Blocked;
+
+        public void AddEvent(IDomainEvent domainEvent)
+            => _events.Add(domainEvent);
+
+        public void ClearEvents()
+            => _events.Clear();
     }
 }
