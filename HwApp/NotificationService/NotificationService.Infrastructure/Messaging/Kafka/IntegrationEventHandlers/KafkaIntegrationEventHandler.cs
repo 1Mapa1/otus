@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using NotificationService.Infrastructure.Messaging.Kafka;
 using System.Text.Json;
 
 namespace NotificationService.Infrastructure.Messaging.Kafka.IntegrationEventHandlers
@@ -24,11 +25,22 @@ namespace NotificationService.Infrastructure.Messaging.Kafka.IntegrationEventHan
          JsonElement data,
          CancellationToken cancellationToken)
         {
-            var integrationEvent = data.Deserialize<TEvent>(JsonOptions);
+            TEvent? integrationEvent;
+
+            try
+            {
+                integrationEvent = data.Deserialize<TEvent>(JsonOptions);
+            }
+            catch (JsonException ex)
+            {
+                throw new DeadLetterMessageException(
+                    $"Cannot deserialize Kafka event data to {typeof(TEvent).Name}.",
+                    ex);
+            }
 
             if (integrationEvent is null)
             {
-                throw new InvalidOperationException(
+                throw new DeadLetterMessageException(
                     $"Cannot deserialize Kafka event data to {typeof(TEvent).Name}.");
             }
 

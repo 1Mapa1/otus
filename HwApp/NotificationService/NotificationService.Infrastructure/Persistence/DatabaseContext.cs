@@ -13,6 +13,7 @@ namespace NotificationService.Infrastructure.Persistence
 
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<NotificationCustomer> NotificationCustomers => Set<NotificationCustomer>();
+        public DbSet<Entities.InboxMessage> InboxMessages => Set<Entities.InboxMessage>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
