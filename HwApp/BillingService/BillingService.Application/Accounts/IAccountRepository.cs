@@ -4,7 +4,7 @@ namespace BillingService.Application.Accounts
 {
     public interface IAccountRepository
     {
-        Task AddAsync(Account account, CancellationToken cancellationToken);
+        Task EnsureAccountAsync(Guid userId, CancellationToken cancellationToken);
 
         Task<DepositOperationResult> DepositAsync(Guid userId, decimal amount, CancellationToken cancellationToken);
 
