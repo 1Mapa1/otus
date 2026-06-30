@@ -38,6 +38,7 @@ namespace DeliveryService.Api.Authentication
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKeyResolver = (_, _, kid, _) => _jwksCache.GetIssuerSigningKeys(kid),
                 NameClaimType = "sub",
+                RoleClaimType = "role",
             };
 
             options.Events = new JwtBearerEvents

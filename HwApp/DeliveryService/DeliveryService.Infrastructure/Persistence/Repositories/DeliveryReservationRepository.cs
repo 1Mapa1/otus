@@ -1,7 +1,6 @@
 using DeliveryService.Application.Reservations;
 using DeliveryService.Application.Reservations.Operations;
-using DeliveryService.Domain.Reservations;
-using DeliveryService.Domain.Slots;
+using DeliveryService.Domain.Reservations;using DeliveryService.Domain.Slots;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -16,14 +15,18 @@ namespace DeliveryService.Infrastructure.Persistence.Repositories
             _databaseContext = databaseContext;
         }
 
-        public async Task<CancelReservationOperationResult> CancelAsync(Guid orderId, CancellationToken cancellationToken)
+        public async Task<CancelReservationOperationResult> CancelAsync(
+            Guid orderId,
+            CancellationToken cancellationToken)
         {
-            using var transaction = await _databaseContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _databaseContext.Database
+                .BeginTransactionAsync(cancellationToken);
 
-            var reservation = await _databaseContext.DeliveryReservations.FirstOrDefaultAsync(r => r.OrderId == orderId, cancellationToken);
+            var reservation = await _databaseContext.DeliveryReservations
+                .FirstOrDefaultAsync(r => r.OrderId == orderId, cancellationToken);
 
             if (reservation is null)
-            {                 
+            {
                 await transaction.CommitAsync(cancellationToken);
                 return CancelReservationOperationResult.ReservationNotFound;
             }
@@ -34,40 +37,57 @@ namespace DeliveryService.Infrastructure.Persistence.Repositories
                 return CancelReservationOperationResult.Success;
             }
 
-            var reservationUpdateResult =
-                await _databaseContext.DeliveryReservations
-                .Where(r => r.Id == reservation.Id && 
+            var utcNow = DateTime.UtcNow;
+
+            var reservationUpdateResult = await _databaseContext.DeliveryReservations
+                .Where(r => r.Id == reservation.Id &&
                             r.Status == DeliveryReservationStatus.Reserved)
                 .ExecuteUpdateAsync(updates => updates
                     .SetProperty(r => r.Status, DeliveryReservationStatus.Canceled)
-                    .SetProperty(r => r.CanceledAt, DateTime.UtcNow), cancellationToken);
+                    .SetProperty(r => r.CanceledAt, utcNow),
+                    cancellationToken);
 
             if (reservationUpdateResult == 0)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 return CancelReservationOperationResult.Success;
             }
 
-            await _databaseContext.DeliverySlots
-                .Where(ds => ds.Id == reservation.DeliverySlotId &&
-                             ds.Status == DeliverySlotStatus.Reserved)
+            var slotUpdateResult = await _databaseContext.DeliverySlots
+                .Where(slot =>
+                    slot.Id == reservation.DeliverySlotId &&
+                    slot.ReservedCount > 0)
                 .ExecuteUpdateAsync(updates => updates
-                    .SetProperty(ds => ds.Status, DeliverySlotStatus.Available)
-                    .SetProperty(ds => ds.UpdatedAt, DateTime.UtcNow),
+                    .SetProperty(slot => slot.ReservedCount, slot => slot.ReservedCount - 1)
+                    .SetProperty(slot => slot.UpdatedAt, utcNow),
                     cancellationToken);
+
+            if (slotUpdateResult == 0)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return CancelReservationOperationResult.SlotStateConflict;
+            }
 
             await transaction.CommitAsync(cancellationToken);
 
             return CancelReservationOperationResult.Success;
         }
 
-        public async Task<ReserveDeliverySlotOperationResult> ReserveAsync(Guid orderId, Guid userId, Guid deliverySlotId, CancellationToken cancellationToken)
+        public async Task<ReserveDeliverySlotOperationResult> ReserveAsync(
+            Guid orderId,
+            Guid customerId,
+            Guid deliverySlotId,
+            DeliveryAddress address,
+            CancellationToken cancellationToken)
         {
-            using var transaction = await _databaseContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _databaseContext.Database
+                .BeginTransactionAsync(cancellationToken);
 
             try
-            { 
-                var existingReservation = await _databaseContext.DeliveryReservations.FirstOrDefaultAsync(r => r.OrderId == orderId, cancellationToken);
+            {
+                var existingReservation = await _databaseContext.DeliveryReservations
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.OrderId == orderId, cancellationToken);
 
                 if (existingReservation is not null)
                 {
@@ -79,13 +99,21 @@ namespace DeliveryService.Infrastructure.Persistence.Repositories
                     return ReserveDeliverySlotOperationResult.Success(existingReservation.Id);
                 }
 
-                var deliverySlotUpdateResult =
-                    await _databaseContext.DeliverySlots
-                    .Where(ds => ds.Id == deliverySlotId &&
-                                 ds.Status == DeliverySlotStatus.Available)
+                var normalizedCity = address.City.Trim();
+                var utcNow = DateTime.UtcNow;
+
+                var deliverySlotUpdateResult = await _databaseContext.DeliverySlots
+                    .Where(slot =>
+                        slot.Id == deliverySlotId &&
+                        slot.Status == DeliverySlotStatus.Open &&
+                        slot.TimeFrom > utcNow &&
+                        slot.ReservedCount < slot.Capacity &&
+                        slot.Zone.IsActive &&
+                        EF.Functions.ILike(slot.Zone.City, normalizedCity))
                     .ExecuteUpdateAsync(updates => updates
-                        .SetProperty(ds => ds.Status, DeliverySlotStatus.Reserved)
-                        .SetProperty(ds => ds.UpdatedAt, DateTime.UtcNow), cancellationToken);
+                        .SetProperty(slot => slot.ReservedCount, slot => slot.ReservedCount + 1)
+                        .SetProperty(slot => slot.UpdatedAt, utcNow),
+                        cancellationToken);
 
                 if (deliverySlotUpdateResult == 0)
                 {
@@ -93,7 +121,18 @@ namespace DeliveryService.Infrastructure.Persistence.Repositories
                     return ReserveDeliverySlotOperationResult.SlotNotAvailable();
                 }
 
-                var reservation = DeliveryReservation.Create(orderId, userId, deliverySlotId);
+                var slot = await _databaseContext.DeliverySlots
+                    .AsNoTracking()
+                    .Where(s => s.Id == deliverySlotId)
+                    .Select(s => new { s.ZoneId })
+                    .SingleAsync(cancellationToken);
+
+                var reservation = DeliveryReservation.Create(
+                    orderId,
+                    customerId,
+                    deliverySlotId,
+                    slot.ZoneId,
+                    address.ToSnapshot());
 
                 await _databaseContext.DeliveryReservations.AddAsync(reservation, cancellationToken);
 
@@ -103,10 +142,12 @@ namespace DeliveryService.Infrastructure.Persistence.Repositories
 
                 return ReserveDeliverySlotOperationResult.Success(reservation.Id);
             }
-            catch (DbUpdateException ex) when(ex.InnerException is PostgresException postgresException
-               && postgresException.SqlState == PostgresErrorCodes.UniqueViolation)
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException postgresException
+                                               && postgresException.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 await transaction.RollbackAsync(cancellationToken);
+
+                _databaseContext.ChangeTracker.Clear();
 
                 var reservation = await _databaseContext.DeliveryReservations
                     .AsNoTracking()

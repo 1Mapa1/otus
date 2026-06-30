@@ -4,6 +4,8 @@ using MediatR;
 namespace DeliveryService.Application.Slots.CreateDeliverySlot
 {
     public sealed record CreateDeliverySlotCommand(
+        Guid ZoneId,
         DateTime TimeFrom,
-        DateTime TimeTo) : IRequest<Result<CreateDeliverySlotResult>>;
+        DateTime TimeTo,
+        int Capacity) : IRequest<Result<CreateDeliverySlotResult>>;
 }

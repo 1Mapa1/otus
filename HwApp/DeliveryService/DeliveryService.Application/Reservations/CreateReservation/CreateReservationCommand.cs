@@ -5,6 +5,10 @@ namespace DeliveryService.Application.Reservations.CreateReservation
 {
     public sealed record CreateReservationCommand(
         Guid OrderId,
-        Guid UserId,
-        Guid DeliverySlotId) : IRequest<Result<CreateReservationResult>>;
+        Guid CustomerId,
+        Guid DeliverySlotId,
+        string City,
+        string Street,
+        string House,
+        string? Apartment) : IRequest<Result<CreateReservationResult>>;
 }

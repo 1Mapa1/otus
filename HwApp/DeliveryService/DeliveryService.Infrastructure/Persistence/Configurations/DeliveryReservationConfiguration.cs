@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DeliveryService.Infrastructure.Persistence.Configurations
 {
-    internal class DeliveryReservationConfiguration : IEntityTypeConfiguration<DeliveryReservation>
+    internal sealed class DeliveryReservationConfiguration : IEntityTypeConfiguration<DeliveryReservation>
     {
         public void Configure(EntityTypeBuilder<DeliveryReservation> builder)
         {
@@ -22,18 +22,44 @@ namespace DeliveryService.Infrastructure.Persistence.Configurations
                 .HasColumnName("order_id")
                 .IsRequired();
 
-            builder.Property(x => x.UserId)
-                .HasColumnName("user_id")
+            builder.Property(x => x.CustomerId)
+                .HasColumnName("customer_id")
                 .IsRequired();
 
             builder.Property(x => x.DeliverySlotId)
                 .HasColumnName("delivery_slot_id")
                 .IsRequired();
 
+            builder.Property(x => x.ZoneId)
+                .HasColumnName("zone_id")
+                .IsRequired();
+
             builder.Property(x => x.Status)
                 .HasColumnName("status")
                 .HasConversion<string>()
                 .IsRequired();
+
+            builder.OwnsOne(x => x.DeliveryAddress, address =>
+            {
+                address.Property(a => a.City)
+                    .HasColumnName("address_city")
+                    .HasMaxLength(128)
+                    .IsRequired();
+
+                address.Property(a => a.Street)
+                    .HasColumnName("address_street")
+                    .HasMaxLength(256)
+                    .IsRequired();
+
+                address.Property(a => a.House)
+                    .HasColumnName("address_house")
+                    .HasMaxLength(32)
+                    .IsRequired();
+
+                address.Property(a => a.Apartment)
+                    .HasColumnName("address_apartment")
+                    .HasMaxLength(32);
+            });
 
             builder.Property(x => x.CreatedAt)
                 .HasColumnName("created_at")
@@ -43,9 +69,10 @@ namespace DeliveryService.Infrastructure.Persistence.Configurations
             builder.Property(x => x.CanceledAt)
                 .HasColumnName("canceled_at");
 
-            builder.HasIndex(x => x.UserId);
+            builder.HasIndex(x => x.CustomerId);
             builder.HasIndex(x => x.OrderId).IsUnique();
             builder.HasIndex(x => x.DeliverySlotId);
+            builder.HasIndex(x => x.ZoneId);
 
             builder.HasOne<DeliverySlot>()
                 .WithMany()

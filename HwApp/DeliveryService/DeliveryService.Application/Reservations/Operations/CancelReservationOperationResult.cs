@@ -4,5 +4,6 @@
     {
         Success = 0,
         ReservationNotFound = 1,
+        SlotStateConflict = 2,
     }
 }

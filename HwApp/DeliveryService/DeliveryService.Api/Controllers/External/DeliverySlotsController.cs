@@ -1,7 +1,6 @@
 using DeliveryService.Api.Contracts;
 using DeliveryService.Api.Extensions;
-using DeliveryService.Application.Slots.CreateDeliverySlot;
-using DeliveryService.Application.Slots.GetDeliverySlots;
+using DeliveryService.Application.Slots.GetAvailableDeliverySlots;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,20 +19,18 @@ namespace DeliveryService.Api.Controllers.External
             _sender = sender;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetSlots(CancellationToken cancellationToken)
-        {
-            var result = await _sender.Send(new GetDeliverySlotsQuery(), cancellationToken);
-
-            return result.ToActionResult();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateSlot(
-            [FromBody] CreateDeliverySlotRequest request,
+        [HttpPost("available")]
+        public async Task<IActionResult> GetAvailableSlots(
+            [FromBody] GetAvailableDeliverySlotsRequest request,
             CancellationToken cancellationToken)
         {
-            var result = await _sender.Send(new CreateDeliverySlotCommand(request.TimeFrom, request.TimeTo), cancellationToken);
+            var result = await _sender.Send(
+                new GetAvailableDeliverySlotsQuery(
+                    request.Address.City,
+                    request.Address.Street,
+                    request.Address.House,
+                    request.Address.Apartment),
+                cancellationToken);
 
             return result.ToActionResult();
         }

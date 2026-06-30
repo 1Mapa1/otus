@@ -23,7 +23,16 @@ namespace DeliveryService.Api.Controllers.Internal
             [FromBody] CreateReservationRequest request,
             CancellationToken cancellationToken)
         {
-            var result = await _sender.Send(new CreateReservationCommand(request.OrderId, request.UserId, request.DeliverySlotId), cancellationToken);
+            var result = await _sender.Send(
+                new CreateReservationCommand(
+                    request.OrderId,
+                    request.CustomerId,
+                    request.DeliverySlotId,
+                    request.Address.City,
+                    request.Address.Street,
+                    request.Address.House,
+                    request.Address.Apartment),
+                cancellationToken);
 
             return result.ToActionResult();
         }

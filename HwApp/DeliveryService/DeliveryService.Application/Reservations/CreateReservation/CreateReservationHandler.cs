@@ -1,12 +1,18 @@
 using DeliveryService.Application.Common;
+using DeliveryService.Application.Reservations;
 using DeliveryService.Application.Reservations.Operations;
+using DeliveryService.Domain.Reservations;
 using MediatR;
 
 namespace DeliveryService.Application.Reservations.CreateReservation
 {
-    internal sealed class CreateReservationHandler : IRequestHandler<CreateReservationCommand, Result<CreateReservationResult>>
+    internal sealed class CreateReservationHandler
+        : IRequestHandler<CreateReservationCommand, Result<CreateReservationResult>>
     {
-        private static readonly Error DeliverySlotUnavailable = new("DeliverySlotUnavailable", "The delivary slot unavailable", ErrorType.Conflict);
+        private static readonly Error ValidateCity = new("ValidateCity", "City is required.", ErrorType.Validation);
+        private static readonly Error ValidateStreet = new("ValidateStreet", "Street is required.", ErrorType.Validation);
+        private static readonly Error ValidateHouse = new("ValidateHouse", "House is required.", ErrorType.Validation);
+        private static readonly Error DeliverySlotUnavailable = new("DeliverySlotUnavailable", "The delivery slot is unavailable.", ErrorType.Conflict);
         private static readonly Error InvalidReservationState = new("InvalidReservationState", "The reservation is in an invalid state for this operation.", ErrorType.Conflict);
         private static readonly Error UnknownError = new("UnknownError", "An unknown error occurred while creating the reservation.", ErrorType.Failure);
 
@@ -17,28 +23,46 @@ namespace DeliveryService.Application.Reservations.CreateReservation
             _deliveryReservationRepository = deliveryReservationRepository;
         }
 
-        public async Task<Result<CreateReservationResult>> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
+        public async Task<Result<CreateReservationResult>> Handle(
+            CreateReservationCommand request,
+            CancellationToken cancellationToken)
         {
-            var result = await _deliveryReservationRepository.ReserveAsync(request.OrderId, request.UserId, request.DeliverySlotId, cancellationToken);
+            if (string.IsNullOrWhiteSpace(request.City))
+                return Result<CreateReservationResult>.Failure(ValidateCity);
 
-            switch (result.Status)
+            if (string.IsNullOrWhiteSpace(request.Street))
+                return Result<CreateReservationResult>.Failure(ValidateStreet);
+
+            if (string.IsNullOrWhiteSpace(request.House))
+                return Result<CreateReservationResult>.Failure(ValidateHouse);
+
+            var address = DeliveryAddress.Create(
+                request.City,
+                request.Street,
+                request.House,
+                request.Apartment);
+
+            var result = await _deliveryReservationRepository.ReserveAsync(
+                request.OrderId,
+                request.CustomerId,
+                request.DeliverySlotId,
+                address,
+                cancellationToken);
+
+            return result.Status switch
             {
-                case ReserveDeliverySlotOperationStatus.Success:
+                ReserveDeliverySlotOperationStatus.Success =>
+                    Result<CreateReservationResult>.Success(
+                        new CreateReservationResult(result.ReservationId!.Value)),
 
-                    return Result<CreateReservationResult>.Success(
-                        new CreateReservationResult(result.ReservationId!.Value));
+                ReserveDeliverySlotOperationStatus.SlotNotAvailable =>
+                    Result<CreateReservationResult>.Failure(DeliverySlotUnavailable),
 
-                case ReserveDeliverySlotOperationStatus.SlotNotAvailable:
+                ReserveDeliverySlotOperationStatus.InvalidReservationState =>
+                    Result<CreateReservationResult>.Failure(InvalidReservationState),
 
-                    return Result<CreateReservationResult>.Failure(DeliverySlotUnavailable);
-
-                case ReserveDeliverySlotOperationStatus.InvalidReservationState:
-
-                    return Result<CreateReservationResult>.Failure(InvalidReservationState);
-
-                default:
-                    return Result<CreateReservationResult>.Failure(UnknownError);
-            }
+                _ => Result<CreateReservationResult>.Failure(UnknownError)
+            };
         }
     }
 }

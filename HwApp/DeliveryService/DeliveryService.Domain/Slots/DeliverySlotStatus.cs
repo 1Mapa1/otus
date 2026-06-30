@@ -2,7 +2,8 @@
 {
     public enum DeliverySlotStatus
     {
-        Available = 0,
-        Reserved = 1,
+        Draft = 0,
+        Open = 1,
+        Closed = 2
     }
 }
