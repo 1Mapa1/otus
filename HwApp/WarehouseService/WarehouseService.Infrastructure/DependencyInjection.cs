@@ -1,11 +1,14 @@
-using WarehouseService.Application.Abstractions;
-using WarehouseService.Application.Products;
-using WarehouseService.Application.Reservations;
-using WarehouseService.Infrastructure.Persistence;
-using WarehouseService.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using WarehouseService.Application.Abstractions;
+using WarehouseService.Application.Reservations;
+using WarehouseService.Application.Stocks;
+using WarehouseService.Infrastructure.Messaging;
+using WarehouseService.Infrastructure.Messaging.Kafka;
+using WarehouseService.Infrastructure.Persistence;
+using WarehouseService.Infrastructure.Persistence.Repositories;
+using WarehouseService.Infrastructure.Workers;
 
 namespace WarehouseService.Infrastructure
 {
@@ -17,6 +20,7 @@ namespace WarehouseService.Infrastructure
         {
             services.AddInfrastructureDatabaseContext(configuration);
             services.AddInfrastructureRepositories();
+            services.AddInfrastructureMessaging(configuration);
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;
@@ -49,8 +53,30 @@ namespace WarehouseService.Infrastructure
 
         private static IServiceCollection AddInfrastructureRepositories(this IServiceCollection services)
         {
-            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IStockItemRepository, StockItemRepository>();
+            services.AddScoped<IStockMovementRepository, StockMovementRepository>();
             services.AddScoped<IReservationRepository, ReservationRepository>();
+
+            return services;
+        }
+
+        private static IServiceCollection AddInfrastructureMessaging(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            services.AddOptions<KafkaOptions>()
+                .Bind(configuration.GetSection(KafkaOptions.SectionName))
+                .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "Kafka:BootstrapServers must be provided.")
+                .Validate(options => !string.IsNullOrEmpty(options.GroupId), "Kafka:GroupId must be provided.")
+                .Validate(options => options.Topics.Length > 0, "At least one Kafka topic must be configured.")
+                .Validate(options => !string.IsNullOrEmpty(options.WarehouseStockTopic), "Kafka:WarehouseStockTopic must be provided.")
+                .Validate(options => options.Acks == "All" || options.Acks == "Leader" || options.Acks == "None", "Kafka:Acks must be 'All', 'Leader', or 'None'.")
+                .ValidateOnStart();
+
+            services.AddSingleton<IKafkaProducer, KafkaProducer>();
+            services.AddScoped<ProductLifecycleProcessor>();
+            services.AddHostedService<KafkaConsumer>();
+            services.AddHostedService<OutboxPublisher>();
 
             return services;
         }

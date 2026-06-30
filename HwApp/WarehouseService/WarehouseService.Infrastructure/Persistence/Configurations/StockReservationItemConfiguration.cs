@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WarehouseService.Domain.Products;
 using WarehouseService.Domain.StockReservations;
+using WarehouseService.Domain.Stocks;
 
 namespace WarehouseService.Infrastructure.Persistence.Configurations
 {
@@ -38,10 +38,10 @@ namespace WarehouseService.Infrastructure.Persistence.Configurations
                 .HasForeignKey(x => x.ReservationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne<Product>()
+            builder.HasOne<StockItem>()
                 .WithMany()
                 .HasForeignKey(x => x.ProductId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

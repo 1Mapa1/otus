@@ -1,55 +1,98 @@
 # WarehouseService
 
-Сервис **склада и каталога товаров**: продукты, остатки, **резервирование** товара под заказ и отмена резерва. Внешнее API с JWT для администрирования каталога; внутренние ручки без пользовательского JWT вызывает **OrderService** при саге (resolve SKU → create/cancel reservation).
+Сервис **складских остатков** (`WarehouseMs`): `StockItem`, резервы под заказ, движения склада, публикация `StockChanged` в Kafka. **Товарной карточки** (name, price) в Warehouse **нет** — она в CatalogMs.
 
 ## Архитектура
 
-- `WarehouseService.Api` — HTTP API (external + internal), JWT на внешних ручках, Swagger
-- `WarehouseService.Application` — MediatR: продукты, остатки, resolve, резервы
-- `WarehouseService.Domain` — продукт, резерв, статусы
-- `WarehouseService.Infrastructure` — EF Core, репозитории, персистентность
+- `WarehouseService.Api` — HTTP API (admin stocks + internal reservations), JWT, Swagger
+- `WarehouseService.Application` — MediatR: stocks, income, movements, резервы
+- `WarehouseService.Domain` — `StockItem`, `StockReservation`, `StockMovement`
+- `WarehouseService.Infrastructure` — EF Core, `FOR UPDATE`, outbox, Kafka consumer/publisher
 - `WarehouseService.DbMigrator` — миграции БД
+
+## Модель остатков
+
+```text
+AvailableQuantity = свободно для нового резерва
+ReservedQuantity  = уже зарезервировано
+```
+
+Операции: `Income`, `Reserve`, `CancelReservation` — атомарно в транзакции с row lock.
 
 ## API
 
-Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md)).
+Пример хоста: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md)).
 
-### Внешний API (JWT)
+### Административный API (JWT, роль `ADMIN`)
 
-Префикс: **`/api/warehouse/products`**.
-
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/warehouse/products` | Список товаров |
-| POST | `/api/warehouse/products` | Создание товара |
-| POST | `/api/warehouse/products/{id}/stock` | Увеличение остатка (поступление на склад) |
-
-### Внутренний API
+Префикс: **`/api/warehouse/stocks`**. Claim роли: `role` = `ADMIN`.
 
 | Метод | Путь | Описание |
 |-------|------|----------|
-| POST | `/api/internal/warehouse/products/resolve` | Проверка/разрешение позиций (SKU, количество) для заказа |
-| POST | `/api/internal/warehouse/reservations` | Резерв под `orderId` + позиции |
-| POST | `/api/internal/warehouse/reservations/cancel` | Отмена резерва по `orderId` (компенсация саги) |
+| GET | `/api/warehouse/stocks` | Все складские записи (активные и архивные) |
+| GET | `/api/warehouse/stocks/{productId}` | Остаток по товару |
+| POST | `/api/warehouse/stocks/{productId}/income` | Поступление на склад |
+| GET | `/api/warehouse/stocks/{productId}/movements` | История движений (newest first) |
+
+### Внутренний API (Saga, без JWT)
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| POST | `/api/internal/warehouse/reservations` | Идемпотентный резерв |
+| POST | `/api/internal/warehouse/reservations/cancel` | Идемпотентная отмена |
+
+> **Примечание:** `POST /api/internal/warehouse/products/resolve` удалён. OrderService должен перейти на CatalogMs snapshot — отдельная задача.
 
 ### Документация и health
 
-- Swagger UI (Development): **`/api/warehouse/swagger`**
+- Swagger: **`/api/warehouse/swagger`**
 - Health: `/health/live`, `/health/ready`, `/health/startup`
+
+## Kafka
+
+**Потребляет** (topics из `Kafka:Topics`, envelope как Billing):
+
+- `ProductCreated` — создать `StockItem` с нулевым остатком (идемпотентно)
+- `ProductArchived` / `ProductRestored` — `IsActive` (без изменения quantities)
+
+**Публикует** (topic `Kafka:WarehouseStockTopic`, outbox):
+
+- `StockChanged` после Income / Reserve / Cancel
+
+Конфигурация (`appsettings` / env):
+
+```text
+Kafka:BootstrapServers
+Kafka:GroupId
+Kafka:Topics
+Kafka:WarehouseStockTopic
+Kafka:Acks
+```
+
+Inbox в Warehouse **не используется**.
 
 ## Связанные сервисы
 
-- [OrderService](../OrderService/README.md) — сага заказа (резерв / отмена)
+- [OrderService](../OrderService/README.md) — сага (резерв / отмена)
+- CatalogMs (вне репозитория) — lifecycle события и потребитель `StockChanged`
 
-## Сборка Docker-образов
-
-Из каталога `WarehouseService/`:
+## Сборка Docker
 
 ```bash
+cd HwApp/WarehouseService
 docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-warehouse-service:8.0 .
 docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-warehouse-migration:8.0 .
 ```
 
+## Миграции
+
+```bash
+cd HwApp/WarehouseService
+dotnet ef database update --project WarehouseService.Infrastructure/WarehouseService.Infrastructure.csproj --startup-project WarehouseService.Api/WarehouseService.Api.csproj
+```
+
+Миграция `ProductToStockItem`: `products` → `stock_items`, пересчёт `available_quantity`, новые таблицы `stock_movements` и `outbox_messages`.
+
 ## Развёртывание
 
-Helm, Ingress (`/api/warehouse`, `/api/internal/warehouse`): [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md). Общий указатель: [HwApp/README.md](../README.md).
+[ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md), [HwApp/README.md](../README.md).
