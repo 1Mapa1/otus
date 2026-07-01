@@ -17,7 +17,7 @@ namespace OrderService.Application.Orders.CreateOrder
         public static CreateOrderResult RequestAlreadyProcessing() =>
             new(CreateOrderResultStatus.RequestAlreadyProcessing, null, null, null);
 
-        public static CreateOrderResult WarehouseResolveFailed(string? reason) =>
-            new(CreateOrderResultStatus.WarehouseResolveFailed, null, null, reason);
+        public static CreateOrderResult CatalogSnapshotFailed(string? reason) =>
+            new(CreateOrderResultStatus.CatalogSnapshotFailed, null, null, reason);
     }
 }

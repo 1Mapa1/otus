@@ -31,6 +31,11 @@ namespace OrderService.Application.Orders.GetOrderById
                     i.TotalPrice
                 )).ToArray(),
                 order.DeliverySlotId,
+                new DeliveryAddressDetailsDto(
+                    order.DeliveryAddress.City,
+                    order.DeliveryAddress.Street,
+                    order.DeliveryAddress.House,
+                    order.DeliveryAddress.Apartment),
                 order.FailureReason?.ToString(),
                 order.CreatedAt);
         }

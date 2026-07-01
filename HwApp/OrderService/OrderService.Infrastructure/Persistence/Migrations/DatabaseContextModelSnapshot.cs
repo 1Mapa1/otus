@@ -192,6 +192,48 @@ namespace OrderService.Infrastructure.Persistence.Migrations
                     b.ToTable("orders", (string)null);
                 });
 
+            modelBuilder.Entity("OrderService.Domain.Orders.Order", b =>
+                {
+                    b.OwnsOne("OrderService.Domain.Orders.DeliveryAddressSnapshot", "DeliveryAddress", b1 =>
+                        {
+                            b1.Property<Guid>("OrderId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Apartment")
+                                .HasMaxLength(32)
+                                .HasColumnType("character varying(32)")
+                                .HasColumnName("delivery_apartment");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(128)
+                                .HasColumnType("character varying(128)")
+                                .HasColumnName("delivery_city");
+
+                            b1.Property<string>("House")
+                                .IsRequired()
+                                .HasMaxLength(32)
+                                .HasColumnType("character varying(32)")
+                                .HasColumnName("delivery_house");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("character varying(256)")
+                                .HasColumnName("delivery_street");
+
+                            b1.HasKey("OrderId");
+
+                            b1.ToTable("orders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId");
+                        });
+
+                    b.Navigation("DeliveryAddress")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("OrderService.Domain.Orders.OrderItem", b =>
                 {
                     b.Property<Guid>("Id")

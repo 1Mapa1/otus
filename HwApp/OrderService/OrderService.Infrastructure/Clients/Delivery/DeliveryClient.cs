@@ -1,6 +1,7 @@
 using OrderService.Application.Abstractions.Clients.Delivery;
 using OrderService.Application.Abstractions.Clients.Delivery.CancelReservation;
 using OrderService.Application.Abstractions.Clients.Delivery.CreateReservation;
+using OrderService.Domain.Orders;
 using OrderService.Infrastructure.Clients.Delivery.Requests;
 using OrderService.Infrastructure.Clients.Delivery.Responses;
 using System.Net;
@@ -42,7 +43,10 @@ namespace OrderService.Infrastructure.Clients.Delivery
                         Options,
                         cancellationToken);
 
-                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "DeliveryService", "cancel reservation");
+                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(
+                        response,
+                        "DeliveryService",
+                        "cancel reservation");
 
                     if (response.IsSuccessStatusCode)
                         return CancelReservationResult.Success();
@@ -58,15 +62,24 @@ namespace OrderService.Infrastructure.Clients.Delivery
 
         public async Task<CreateReservationResult> CreateReservationAsync(
             Guid orderId,
-            Guid userId,
+            Guid customerId,
             Guid deliverySlotId,
+            DeliveryAddressSnapshot deliveryAddress,
             CancellationToken cancellationToken = default)
         {
             return await HttpClientTechnicalFailureHandler.ExecuteAsync(
                 "DeliveryService",
                 async () =>
                 {
-                    var request = new CreateReservationRequest(orderId, userId, deliverySlotId);
+                    var request = new CreateReservationRequest(
+                        orderId,
+                        customerId,
+                        deliverySlotId,
+                        new DeliveryAddressRequest(
+                            deliveryAddress.City,
+                            deliveryAddress.Street,
+                            deliveryAddress.House,
+                            deliveryAddress.Apartment));
 
                     var response = await _httpClient.PostAsJsonAsync(
                         CreateReservation,
@@ -74,7 +87,10 @@ namespace OrderService.Infrastructure.Clients.Delivery
                         Options,
                         cancellationToken);
 
-                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "DeliveryService", "create reservation");
+                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(
+                        response,
+                        "DeliveryService",
+                        "create reservation");
 
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -83,8 +99,12 @@ namespace OrderService.Infrastructure.Clients.Delivery
                         var createReservationResponse = JsonSerializer.Deserialize<CreateReservationResponse>(content, Options);
 
                         if (createReservationResponse is null)
+                        {
                             return CreateReservationResult.Failure(
-                                new DeliveryClientError(DeliveryClientErrorCode.Unknown, "Delivery reservation empty response."));
+                                new DeliveryClientError(
+                                    DeliveryClientErrorCode.Unknown,
+                                    "Delivery reservation empty response."));
+                        }
 
                         return CreateReservationResult.Success(createReservationResponse.ReservationId);
                     }
@@ -116,7 +136,6 @@ namespace OrderService.Infrastructure.Clients.Delivery
                         new DeliveryClientError(DeliveryClientErrorCode.Unknown, message)
                 };
             }
-
 
             return new DeliveryClientError(DeliveryClientErrorCode.Unknown, message);
         }

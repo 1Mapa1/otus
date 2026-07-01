@@ -6,6 +6,7 @@ using OrderService.Application.Orders.CreateOrder;
 using OrderService.Application.Orders.GetMyOrders;
 using OrderService.Application.Orders.GetOrderById;
 using OrderService.Api.Contracts;
+using OrderService.Domain.Orders;
 
 namespace OrderService.Api
 {
@@ -40,7 +41,18 @@ namespace OrderService.Api
                     });
                 }
 
-                var result = await _sender.Send(new CreateOrderCommand(userId, request.DeliverySlotId, request.Items, idempotencyKey), cancellationToken);
+                var result = await _sender.Send(
+                    new CreateOrderCommand(
+                        userId,
+                        request.DeliverySlotId,
+                        DeliveryAddressSnapshot.Create(
+                            request.DeliveryAddress.City,
+                            request.DeliveryAddress.Street,
+                            request.DeliveryAddress.House,
+                            request.DeliveryAddress.Apartment),
+                        request.Items,
+                        idempotencyKey),
+                    cancellationToken);
 
                 return result.ResultStatus switch
                 {
@@ -60,9 +72,9 @@ namespace OrderService.Api
                         errorCode = "RequestAlreadyProcessing"
                     }),
 
-                    CreateOrderResultStatus.WarehouseResolveFailed => BadRequest(new
+                    CreateOrderResultStatus.CatalogSnapshotFailed => BadRequest(new
                     {
-                        errorCode = "WarehouseResolveFailed",
+                        errorCode = "CatalogSnapshotFailed",
                         message = result.FailureReason
                     }),
 

@@ -43,7 +43,7 @@
             };
         }
 
-        public void MarkAsCompleted(Guid orderId, string responseBody)
+        public void MarkAsCompleted(Guid? orderId, string responseBody)
         {
             Status = IdempotencyRecordStatus.Completed;
             OrderId = orderId;

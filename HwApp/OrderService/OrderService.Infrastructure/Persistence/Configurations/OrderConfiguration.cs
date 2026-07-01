@@ -25,6 +25,28 @@ namespace OrderService.Infrastructure.Persistence.Configurations
                 .HasColumnName("delivery_slot_id")
                 .IsRequired();
 
+            builder.OwnsOne(x => x.DeliveryAddress, address =>
+            {
+                address.Property(x => x.City)
+                    .HasColumnName("delivery_city")
+                    .HasMaxLength(128)
+                    .IsRequired();
+
+                address.Property(x => x.Street)
+                    .HasColumnName("delivery_street")
+                    .HasMaxLength(256)
+                    .IsRequired();
+
+                address.Property(x => x.House)
+                    .HasColumnName("delivery_house")
+                    .HasMaxLength(32)
+                    .IsRequired();
+
+                address.Property(x => x.Apartment)
+                    .HasColumnName("delivery_apartment")
+                    .HasMaxLength(32);
+            });
+
             builder.Property(x => x.TotalAmount)
                 .HasColumnName("total_amount")
                 .HasPrecision(18, 2)

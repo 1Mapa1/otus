@@ -3,11 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OrderService.Application.Abstractions.Clients.Billing;
+using OrderService.Application.Abstractions.Clients.Catalog;
 using OrderService.Application.Abstractions.Clients.Delivery;
 using OrderService.Application.Abstractions.Clients.Warehouse;
 using OrderService.Application.Abstractions.Idempotency;
 using OrderService.Application.Abstractions.Persistence;
 using OrderService.Infrastructure.Clients.Billing;
+using OrderService.Infrastructure.Clients.Catalog;
 using OrderService.Infrastructure.Clients.Delivery;
 using OrderService.Infrastructure.Clients.Warehouse;
 using OrderService.Infrastructure.Idempotency;
@@ -126,6 +128,24 @@ namespace OrderService.Infrastructure
             {
                 var options = sp
                     .GetRequiredService<IOptions<WarehouseOptions>>()
+                    .Value;
+
+                httpClient.BaseAddress = new Uri(options.BaseUrl);
+                httpClient.Timeout = options.Timeout;
+            });
+
+            services
+                .AddOptions<CatalogOptions>()
+                .Bind(configuration.GetSection(CatalogOptions.SectionName))
+                .Validate(
+                    o => Uri.TryCreate(o.BaseUrl, UriKind.Absolute, out _),
+                    $"{CatalogOptions.SectionName}:BaseUrl must be a valid absolute URI")
+                .ValidateOnStart();
+
+            services.AddHttpClient<ICatalogClient, CatalogClient>((sp, httpClient) =>
+            {
+                var options = sp
+                    .GetRequiredService<IOptions<CatalogOptions>>()
                     .Value;
 
                 httpClient.BaseAddress = new Uri(options.BaseUrl);

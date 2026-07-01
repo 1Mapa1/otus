@@ -7,12 +7,12 @@
 - `OrderService.Api` — HTTP API, JWT, Swagger
 - `OrderService.Application` — команды/запросы, **оркестрация саги** (`Orders/Saga/`, обработчики шагов в `Orders/Saga/Steps/`)
 - `OrderService.Domain` — заказ, позиции, статусы, шаги саги, причины отказа, доменные события
-- `OrderService.Infrastructure` — EF Core, HTTP-клиенты Billing / Warehouse / Delivery, Kafka producer, outbox, **`OrderSagaWorker`** (фоновая обработка заказов в работе)
+- `OrderService.Infrastructure` — EF Core, HTTP-клиенты Billing / Catalog / Warehouse / Delivery, Kafka producer, outbox, **`OrderSagaWorker`** (фоновая обработка заказов в работе)
 - `OrderService.DbMigrator` — миграции БД
 
 ## Конфигурация
 
-- **`Ms:*`** — базовые URL и таймауты Billing, Warehouse, Delivery (Helm: `Ms__Billing__*`, `Ms__Warehouse__*`, `Ms__Delivery__*`).
+- **`Ms:*`** — базовые URL и таймауты Billing, Catalog, Warehouse, Delivery (Helm: `Ms__Billing__*`, `Ms__Catalog__*`, `Ms__Warehouse__*`, `Ms__Delivery__*`).
 - **`Idempotency`** — TTL блокировки обработки и TTL записи (`Idempotency__ProcessingLockTtl`, `Idempotency__RecordTtl` в Helm).
 - **`OrderSaga`** — размер пачки, длительность блокировки, интервал опроса (`OrderSaga__*` в Helm).
 - **`Kafka`**, **`Auth`** — как в остальных сервисах стенда.
@@ -25,9 +25,9 @@
 
 | Метод | Путь | Описание |
 |-------|------|----------|
-| POST | `/api/orders` | Создание заказа (`deliverySlotId`, позиции); заголовок **`Idempotency-Key`** обязателен; ответ **202 Accepted** — дальнейшая обработка сагой |
+| POST | `/api/orders` | Создание заказа (`deliverySlotId`, `deliveryAddress`, позиции); снимок каталога через **Catalog**; заголовок **`Idempotency-Key`** обязателен; ответ **202 Accepted** — дальнейшая обработка сагой |
 | GET | `/api/orders/me` | Список заказов текущего пользователя |
-| GET | `/api/orders/{id}` | Детали заказа по идентификатору |
+| GET | `/api/orders/{id}` | Детали заказа по идентификатору (включая `deliveryAddress`) |
 
 ### Документация и health
 
@@ -37,8 +37,9 @@
 ## Связанные сервисы
 
 - [BillingService](../BillingService/README.md) — authorize / capture / cancel authorization
+- CatalogMs — снимок товаров при оформлении (`POST api/internal/catalog/products/snapshot`)
 - [WarehouseService](../WarehouseService/README.md) — резерв и отмена товара
-- [DeliveryService](../DeliveryService/README.md) — резерв и отмена слота
+- [DeliveryService](../DeliveryService/README.md) — резерв и отмена слота (адрес доставки из заказа)
 - [NotificationService](../NotificationService/README.md) — события в Kafka
 
 ## Сборка Docker-образов

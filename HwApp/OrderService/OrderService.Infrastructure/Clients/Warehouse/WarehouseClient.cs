@@ -1,9 +1,6 @@
-﻿using Confluent.Kafka;
-using OrderService.Application.Abstractions.Clients.Warehouse;
+﻿using OrderService.Application.Abstractions.Clients.Warehouse;
 using OrderService.Application.Abstractions.Clients.Warehouse.CancelReservation;
 using OrderService.Application.Abstractions.Clients.Warehouse.CreateReservation;
-using OrderService.Application.Abstractions.Clients.Warehouse.ResolveProducts;
-using OrderService.Application.Abstractions.Exceptions;
 using OrderService.Infrastructure.Clients.Warehouse.Dto;
 using OrderService.Infrastructure.Clients.Warehouse.Requests;
 using OrderService.Infrastructure.Clients.Warehouse.Responses;
@@ -15,7 +12,6 @@ namespace OrderService.Infrastructure.Clients.Warehouse
 {
     internal sealed class WarehouseClient : IWarehouseClient
     {
-        private const string ResolveProducts = "api/internal/warehouse/products/resolve";
         private const string CreateReservation = "api/internal/warehouse/reservations";
         private const string CancelReservation = "api/internal/warehouse/reservations/cancel";
 
@@ -31,7 +27,9 @@ namespace OrderService.Infrastructure.Clients.Warehouse
             _httpClient = httpClient;
         }
 
-        public async Task<CancelReservationResult> CancelReservationAsync(Guid orderId, CancellationToken cancellationToken = default)
+        public async Task<CancelReservationResult> CancelReservationAsync(
+            Guid orderId,
+            CancellationToken cancellationToken = default)
         {
             return await HttpClientTechnicalFailureHandler.ExecuteAsync(
                 "WarehouseService",
@@ -45,7 +43,10 @@ namespace OrderService.Infrastructure.Clients.Warehouse
                         Options,
                         cancellationToken);
 
-                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "WarehouseService", "cancel reservation");
+                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(
+                        response,
+                        "WarehouseService",
+                        "cancel reservation");
 
                     if (response.IsSuccessStatusCode)
                         return CancelReservationResult.Success();
@@ -55,17 +56,24 @@ namespace OrderService.Infrastructure.Clients.Warehouse
                     var errorResponse = JsonSerializer.Deserialize<WarehouseErrorResponse>(content, Options)!;
 
                     return CancelReservationResult.Failure(
-                        ToWarehouseError(response.StatusCode, errorResponse));
+                        ToWarehouseError(errorResponse));
                 });
         }
 
-        public async Task<CreateReservationResult> CreateReservationAsync(Guid orderId, Guid userId, IReadOnlyList<CreateReservationItem> products, CancellationToken cancellationToken = default)
+        public async Task<CreateReservationResult> CreateReservationAsync(
+            Guid orderId,
+            Guid userId,
+            IReadOnlyList<CreateReservationItem> products,
+            CancellationToken cancellationToken = default)
         {
             return await HttpClientTechnicalFailureHandler.ExecuteAsync(
                 "WarehouseService",
                 async () =>
                 {
-                    var request = new CreateReservationRequest(orderId, userId, products.Select(x => new ProductQuantityDto(x.ProductId, x.Quantity)));
+                    var request = new CreateReservationRequest(
+                        orderId,
+                        userId,
+                        products.Select(x => new ProductQuantityDto(x.ProductId, x.Quantity)));
 
                     var response = await _httpClient.PostAsJsonAsync(
                         CreateReservation,
@@ -73,18 +81,26 @@ namespace OrderService.Infrastructure.Clients.Warehouse
                         Options,
                         cancellationToken);
 
-                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "WarehouseService", "create reservation");
+                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(
+                        response,
+                        "WarehouseService",
+                        "create reservation");
 
                     var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var resolvedProducts = JsonSerializer.Deserialize<CreateReservationResponse>(content, Options);
+                        var reservationResponse = JsonSerializer.Deserialize<CreateReservationResponse>(content, Options);
 
-                        if (resolvedProducts is null)
-                            return CreateReservationResult.Failure(new WarehouseClientError(WarehouseClientErrorCode.Unknown, "Warehouse reservation empty response."));
+                        if (reservationResponse is null)
+                        {
+                            return CreateReservationResult.Failure(
+                                new WarehouseClientError(
+                                    WarehouseClientErrorCode.Unknown,
+                                    "Warehouse reservation empty response."));
+                        }
 
-                        return CreateReservationResult.Success(resolvedProducts.ReservationId);
+                        return CreateReservationResult.Success(reservationResponse.ReservationId);
                     }
 
                     var errorResponse = JsonSerializer.Deserialize<CreateReservationErrorResponses>(content, Options);
@@ -99,7 +115,11 @@ namespace OrderService.Infrastructure.Clients.Warehouse
                                         WarehouseClientErrorCode.StockNotAvailable,
                                         errorResponse?.ErrorMessage),
                                     errorResponse?.UnavailableItems?
-                                        .Select(x => new UnavailableProductItem(x.ProductId, x.RequestedQuantity, x.FreeQuantity)).ToList()),
+                                        .Select(x => new UnavailableProductItem(
+                                            x.ProductId,
+                                            x.RequestedQuantity,
+                                            x.FreeQuantity))
+                                        .ToList()),
 
                             "InvalidReservationState" =>
                                 CreateReservationResult.Failure(
@@ -109,74 +129,21 @@ namespace OrderService.Infrastructure.Clients.Warehouse
 
                             _ =>
                                 CreateReservationResult.Failure(
-                                    new WarehouseClientError(WarehouseClientErrorCode.Unknown, errorResponse?.ErrorMessage))
+                                    new WarehouseClientError(
+                                        WarehouseClientErrorCode.Unknown,
+                                        errorResponse?.ErrorMessage))
                         };
                     }
 
-                    return CreateReservationResult.Failure(
-                        ToWarehouseError(response.StatusCode, errorResponse));
+                    return CreateReservationResult.Failure(ToWarehouseError(errorResponse));
                 });
         }
 
-        public async Task<ResolveProductsResult> ResolveProductsAsync(IReadOnlyList<ResolveProductItem> products, CancellationToken cancellationToken = default)
+        private static WarehouseClientError ToWarehouseError(WarehouseErrorResponse? errorResponse)
         {
-       
-            return await HttpClientTechnicalFailureHandler.ExecuteAsync(
-                "WarehouseService",
-                async () =>
-                {
-                    var request = new ResolveProductsRequest(products.Select(x => new ProductQuantityDto(x.ProductId, x.Quantity)));
-
-                    var response = await _httpClient.PostAsJsonAsync(
-                        ResolveProducts,
-                        request,
-                        Options,
-                        cancellationToken);
-
-                    HttpClientTechnicalFailureHandler.ThrowIfTechnicalFailure(response, "WarehouseService", "resolve products");
-
-                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var resolvedProducts = JsonSerializer.Deserialize<ResolveProductsResponse>(content, Options);
-
-                        if (resolvedProducts is null)
-                            return ResolveProductsResult.Failure(new WarehouseClientError(WarehouseClientErrorCode.Unknown, "Warehouse resolve returned empty response."));
-
-                        var resultItems = resolvedProducts.Items
-                            .Select(x => new ResolvedProductItem(x.ProductId, x.Name, x.UnitPrice, x.Quantity, x.TotalPrice)).ToList();
-
-                        return ResolveProductsResult.Success(resultItems, resolvedProducts.TotalAmount);
-                    }
-
-                    var errorResponse = JsonSerializer.Deserialize<WarehouseErrorResponse>(content, Options);
-
-                    return ResolveProductsResult.Failure(
-                        ToWarehouseError(response.StatusCode, errorResponse));
-                });
-        }
-
-        private static WarehouseClientError ToWarehouseError(
-            HttpStatusCode statusCode,
-            WarehouseErrorResponse? errorResponse)
-        {
-            var message = errorResponse?.ErrorMessage;
-
-            return statusCode switch
-            {
-                HttpStatusCode.BadRequest =>
-                    new WarehouseClientError(WarehouseClientErrorCode.InvalidItems, message),
-
-                HttpStatusCode.NotFound =>
-                    new WarehouseClientError(WarehouseClientErrorCode.ProductNotFound, message),
-
-                HttpStatusCode.Conflict =>
-                    new WarehouseClientError(WarehouseClientErrorCode.StockNotAvailable, message),
-
-                _ =>
-                    new WarehouseClientError(WarehouseClientErrorCode.Unknown, message)
-            };
+            return new WarehouseClientError(
+                WarehouseClientErrorCode.Unknown,
+                errorResponse?.ErrorMessage);
         }
     }
 }

@@ -20,6 +20,7 @@ namespace OrderService.Application.Orders.Saga.Steps
                 order.Id,
                 order.UserId,
                 order.DeliverySlotId,
+                order.DeliveryAddress,
                 cancellationToken);
 
             if (!result.IsSuccess)
