@@ -7,6 +7,7 @@ using WarehouseService.Application.Stocks;
 using WarehouseService.Infrastructure.Messaging;
 using WarehouseService.Infrastructure.Messaging.Kafka;
 using WarehouseService.Infrastructure.Persistence;
+using WarehouseService.Infrastructure.Persistence.Outbox;
 using WarehouseService.Infrastructure.Persistence.Repositories;
 using WarehouseService.Infrastructure.Workers;
 
@@ -18,6 +19,8 @@ namespace WarehouseService.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            services.AddSingleton<IIntegrationEventMapping, IntegrationEventMapping>();
+
             services.AddInfrastructureDatabaseContext(configuration);
             services.AddInfrastructureRepositories();
             services.AddInfrastructureMessaging(configuration);

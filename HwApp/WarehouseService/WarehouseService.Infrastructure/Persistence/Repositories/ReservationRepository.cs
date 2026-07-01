@@ -1,27 +1,20 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Npgsql;
 using WarehouseService.Application.Reservations;
 using WarehouseService.Application.Reservations.Operations;
 using WarehouseService.Domain.StockReservations;
 using WarehouseService.Domain.Stocks;
-using WarehouseService.Infrastructure.Messaging;
-using WarehouseService.Infrastructure.Messaging.Kafka;
-using WarehouseService.Infrastructure.Persistence.Outbox;
+using WarehouseService.Infrastructure.Persistence;
 
 namespace WarehouseService.Infrastructure.Persistence.Repositories
 {
     internal sealed class ReservationRepository : IReservationRepository
     {
         private readonly DatabaseContext _databaseContext;
-        private readonly KafkaOptions _kafkaOptions;
 
-        public ReservationRepository(
-            DatabaseContext databaseContext,
-            IOptions<KafkaOptions> kafkaOptions)
+        public ReservationRepository(DatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
-            _kafkaOptions = kafkaOptions.Value;
         }
 
         public async Task<CancelReservationOperationResult> CancelAsync(
@@ -90,13 +83,6 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
                         reservationItem.ProductId,
                         reservationItem.Quantity,
                         orderId,
-                        utcNow),
-                    cancellationToken);
-
-                await _databaseContext.OutboxMessages.AddAsync(
-                    StockChangedOutboxFactory.Create(
-                        _kafkaOptions.WarehouseStockTopic,
-                        stockItem,
                         utcNow),
                     cancellationToken);
             }
@@ -240,13 +226,6 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
                             requestedItem.ProductId,
                             requestedItem.Quantity,
                             orderId,
-                            utcNow),
-                        cancellationToken);
-
-                    await _databaseContext.OutboxMessages.AddAsync(
-                        StockChangedOutboxFactory.Create(
-                            _kafkaOptions.WarehouseStockTopic,
-                            stockItem,
                             utcNow),
                         cancellationToken);
                 }

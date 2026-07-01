@@ -1,7 +1,12 @@
+using WarehouseService.Domain.Events;
+using WarehouseService.Domain.Stocks.Events;
+
 namespace WarehouseService.Domain.Stocks
 {
-    public sealed class StockItem
+    public sealed class StockItem : IHasDomainEvents
     {
+        private readonly List<IDomainEvent> _events = [];
+
         public Guid ProductId { get; private set; }
 
         public int AvailableQuantity { get; private set; }
@@ -13,6 +18,8 @@ namespace WarehouseService.Domain.Stocks
         public DateTime CreatedAt { get; private set; }
 
         public DateTime UpdatedAt { get; private set; }
+
+        public IReadOnlyCollection<IDomainEvent> Events => _events;
 
         private StockItem()
         {
@@ -42,6 +49,7 @@ namespace WarehouseService.Domain.Stocks
 
             AvailableQuantity += quantity;
             Touch();
+            RaiseStockChanged();
         }
 
         public void Reserve(int quantity)
@@ -57,6 +65,7 @@ namespace WarehouseService.Domain.Stocks
             AvailableQuantity -= quantity;
             ReservedQuantity += quantity;
             Touch();
+            RaiseStockChanged();
         }
 
         public void CancelReservation(int quantity)
@@ -69,6 +78,12 @@ namespace WarehouseService.Domain.Stocks
             ReservedQuantity -= quantity;
             AvailableQuantity += quantity;
             Touch();
+            RaiseStockChanged();
+        }
+
+        public void ClearEvents()
+        {
+            _events.Clear();
         }
 
         public void Archive()
@@ -86,6 +101,15 @@ namespace WarehouseService.Domain.Stocks
         private void Touch()
         {
             UpdatedAt = DateTime.UtcNow;
+        }
+
+        private void RaiseStockChanged()
+        {
+            _events.Add(new StockChangedEvent(
+                ProductId,
+                AvailableQuantity,
+                ReservedQuantity,
+                UpdatedAt));
         }
 
         private static void EnsurePositiveQuantity(int quantity)

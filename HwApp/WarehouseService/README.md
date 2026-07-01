@@ -74,7 +74,7 @@ Inbox в Warehouse **не используется**.
 ## Связанные сервисы
 
 - [OrderService](../OrderService/README.md) — сага (резерв / отмена)
-- CatalogMs (вне репозитория) — lifecycle события и потребитель `StockChanged`
+- [CatalogService](../CatalogService/README.md) — lifecycle события и потребитель `StockChanged`
 
 ## Сборка Docker
 

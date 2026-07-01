@@ -50,6 +50,8 @@ namespace WarehouseService.Infrastructure.Persistence.Configurations
                 .HasColumnName("updated_at")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .IsRequired();
+
+            builder.Ignore(x => x.Events);
         }
     }
 }
