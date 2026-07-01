@@ -55,13 +55,16 @@ namespace OrderService.Application.Orders.CreateOrder
 
             var snapshotResult = await _catalogClient.GetSnapshotAsync(
                 request.Items
-                    .Select(item => new GetProductSnapshotItem(item.ProductId, item.Quantity))
+                    .Select(item => new GetProductSnapshotItem(
+                        item.ProductId,
+                        item.Quantity,
+                        item.ExpectedUnitPrice))
                     .ToArray(),
                 cancellationToken);
 
             if (!snapshotResult.IsSuccess)
             {
-                var failureResult = CreateOrderResult.CatalogSnapshotFailed(snapshotResult.Error?.Message);
+                var failureResult = MapSnapshotFailure(snapshotResult.Error);
 
                 _idempotencyService.Complete(idempotency.Record!, null, failureResult);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -96,6 +99,24 @@ namespace OrderService.Application.Orders.CreateOrder
             return orderResult;
         }
 
+        private static CreateOrderResult MapSnapshotFailure(CatalogClientError? error)
+        {
+            if (error?.Code == CatalogClientErrorCode.PriceChanged)
+            {
+                var items = error.PriceChangedItems?
+                    .Select(item => new CreateOrderPriceChangedItem(
+                        item.ProductId,
+                        item.ExpectedUnitPrice,
+                        item.ActualUnitPrice))
+                    .ToList()
+                    ?? [];
+
+                return CreateOrderResult.PriceChanged(items);
+            }
+
+            return CreateOrderResult.CatalogSnapshotFailed(error?.Message);
+        }
+
         private static CreateOrderResult? ValidateRequest(CreateOrderCommand request)
         {
             if (request.Items is null || request.Items.Count == 0)
@@ -103,6 +124,9 @@ namespace OrderService.Application.Orders.CreateOrder
 
             if (request.Items.Any(item => item.ProductId == Guid.Empty || item.Quantity <= 0))
                 return CreateOrderResult.CatalogSnapshotFailed("Each order item must have a product and a positive quantity.");
+
+            if (request.Items.Any(item => item.ExpectedUnitPrice <= 0))
+                return CreateOrderResult.CatalogSnapshotFailed("Each order item must have a positive expected unit price.");
 
             if (string.IsNullOrWhiteSpace(request.DeliveryAddress.City))
                 return CreateOrderResult.CatalogSnapshotFailed("City is required.");

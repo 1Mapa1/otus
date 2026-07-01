@@ -32,7 +32,10 @@ namespace OrderService.Infrastructure.Clients.Catalog
                 async () =>
                 {
                     var request = new GetProductSnapshotRequest(
-                        items.Select(item => new ProductSnapshotItemDto(item.ProductId, item.Quantity)).ToList());
+                        items.Select(item => new ProductSnapshotItemDto(
+                            item.ProductId,
+                            item.Quantity,
+                            item.ExpectedUnitPrice)).ToList());
 
                     var response = await _httpClient.PostAsJsonAsync(
                         GetProductSnapshot,
@@ -83,6 +86,23 @@ namespace OrderService.Infrastructure.Clients.Catalog
             CatalogErrorResponse? errorResponse)
         {
             var message = errorResponse?.Message;
+            var errorCode = errorResponse?.Code ?? errorResponse?.ErrorCode;
+
+            if (string.Equals(errorCode, "PriceChanged", StringComparison.OrdinalIgnoreCase))
+            {
+                var items = errorResponse?.Items?
+                    .Select(item => new CatalogPriceChangedItem(
+                        item.ProductId,
+                        item.ExpectedUnitPrice,
+                        item.ActualUnitPrice))
+                    .ToList()
+                    ?? [];
+
+                return new CatalogClientError(
+                    CatalogClientErrorCode.PriceChanged,
+                    message,
+                    items);
+            }
 
             return statusCode switch
             {

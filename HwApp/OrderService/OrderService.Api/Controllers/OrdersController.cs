@@ -78,6 +78,18 @@ namespace OrderService.Api
                         message = result.FailureReason
                     }),
 
+                    CreateOrderResultStatus.PriceChanged => Conflict(new
+                    {
+                        code = "PriceChanged",
+                        message = "Product price has changed.",
+                        items = result.PriceChangedItems?.Select(item => new
+                        {
+                            productId = item.ProductId,
+                            expectedUnitPrice = item.ExpectedUnitPrice,
+                            actualUnitPrice = item.ActualUnitPrice
+                        })
+                    }),
+
                     _ => StatusCode(StatusCodes.Status500InternalServerError)
                 };
             }

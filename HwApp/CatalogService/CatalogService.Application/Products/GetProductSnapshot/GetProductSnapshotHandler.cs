@@ -34,22 +34,44 @@ namespace CatalogService.Application.Products.GetProductSnapshot
 
                 if (!product.IsActive)
                     return Result<GetProductSnapshotResult>.Failure(new Error("ProductInactive", "One or more products are inactive.", ErrorType.Conflict));
+            }
 
-                if (item.ExpectedUnitPrice is not null && item.ExpectedUnitPrice != product.Price)
-                {
-                    return Result<GetProductSnapshotResult>.Failure(new Error(
-                        "PriceChanged",
-                        "Product price has changed.",
-                        ErrorType.Conflict,
-                        new
+            var priceChangedItems = new List<PriceChangedItem>();
+            var reportedProductIds = new HashSet<Guid>();
+
+            foreach (var item in request.Items)
+            {
+                if (item.ExpectedUnitPrice is null)
+                    continue;
+
+                var product = productsById[item.ProductId];
+
+                if (item.ExpectedUnitPrice == product.Price || !reportedProductIds.Add(product.ProductId))
+                    continue;
+
+                priceChangedItems.Add(new PriceChangedItem(
+                    product.ProductId,
+                    item.ExpectedUnitPrice.Value,
+                    product.Price));
+            }
+
+            if (priceChangedItems.Count > 0)
+            {
+                return Result<GetProductSnapshotResult>.Failure(new Error(
+                    "PriceChanged",
+                    "Product price has changed.",
+                    ErrorType.Conflict,
+                    new
+                    {
+                        code = "PriceChanged",
+                        message = "Product price has changed.",
+                        items = priceChangedItems.Select(changedItem => new
                         {
-                            errorCode = "PriceChanged",
-                            message = "Product price has changed.",
-                            productId = product.ProductId,
-                            expectedUnitPrice = item.ExpectedUnitPrice,
-                            actualUnitPrice = product.Price
-                        }));
-                }
+                            productId = changedItem.ProductId,
+                            expectedUnitPrice = changedItem.ExpectedUnitPrice,
+                            actualUnitPrice = changedItem.ActualUnitPrice
+                        })
+                    }));
             }
 
             var responseItems = request.Items

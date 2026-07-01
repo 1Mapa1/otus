@@ -5,6 +5,7 @@
         Success = 0,
         IdempotencyKeyConflict = 1,
         RequestAlreadyProcessing = 2,
-        CatalogSnapshotFailed = 3
+        CatalogSnapshotFailed = 3,
+        PriceChanged = 4
     }
 }
