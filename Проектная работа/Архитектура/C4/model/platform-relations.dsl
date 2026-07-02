@@ -3,7 +3,7 @@ administrator -> onlineStore.reactSpa "Использует администра
 
 onlineStore.reactSpa -> onlineStore.apiGateway "Вызывает public API" "HTTPS/JSON"
 
-onlineStore.apiGateway -> onlineStore.authMs "Маршрутизирует /api/auth/*; получает JWKS" "HTTPS/JSON"
+onlineStore.apiGateway -> onlineStore.authMs "Маршрутизирует /api/auth/* и /.well-known/jwks.json" "HTTPS/JSON"
 onlineStore.apiGateway -> onlineStore.customerMs "Маршрутизирует /api/customers/*" "HTTPS/JSON"
 onlineStore.apiGateway -> onlineStore.catalogMs "Маршрутизирует /api/catalog/*" "HTTPS/JSON"
 onlineStore.apiGateway -> onlineStore.warehouseMs "Маршрутизирует /api/warehouse/*" "HTTPS/JSON"

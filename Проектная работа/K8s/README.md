@@ -1,12 +1,12 @@
 # Kubernetes
 
-Helm chart и значения для развёртывания приложений (**Auth**, **Customer**, **Catalog**, **Billing**, **Warehouse**, **Delivery**, **Notification**, **Order**), **PostgreSQL** (общий + отдельный для Catalog с read replica), **Redis**, **Kafka**, **Kafka UI** и **Ingress** (nginx).
+Helm chart и значения для развёртывания приложений (**Auth**, **Customer**, **Catalog**, **Billing**, **Warehouse**, **Delivery**, **Notification**, **Order**), **PostgreSQL** (общий + отдельный для Catalog с read replica), **Redis**, **Kafka**, **Kafka UI** и **API Gateway** (**Traefik**, HTTP без TLS).
 
 ## Требования
 
 - Kubernetes (minikube)
 - Helm 3
-- Ingress Controller (ingress-nginx через Helm)
+- Traefik (через Helm, namespace `m`)
 - В `hosts`: `<IP minikube> electronics.store`
 
 ## Makefile (быстрая установка)
@@ -16,7 +16,7 @@ Helm chart и значения для развёртывания приложе�
 **`make install`** — полный стенд:
 
 1. Helm repos
-2. ingress-nginx (namespace `m`)
+2. **Traefik** (namespace `m`, HTTP :80)
 3. namespace приложений **`electronics-store`**
 4. Postgres (7 MS)
 5. Postgres Catalog (primary + read replica)
@@ -29,7 +29,9 @@ Helm chart и значения для развёртывания приложе�
 
 Снятие: **`make uninstall`** → при необходимости **`make purge-ns`**.
 
-## Ingress
+## API Gateway (Traefik)
+
+Конфиг: `Helm/traefik-values.yaml`. Только **HTTP** (без TLS и redirect на HTTPS). Плагин `traefik-plugin-request-id` для `X-Request-ID`.
 
 Host по умолчанию: **`electronics.store`** (`homework-apps/values.yaml` → `ingress.host`).
 
@@ -46,7 +48,18 @@ Host по умолчанию: **`electronics.store`** (`homework-apps/values.yam
 | `/api/delivery` | Delivery |
 | `/api/orders` | Order |
 
-`/api/internal/*` в Ingress **не** публикуется — вызовы между MS идут in-cluster.
+`/api/internal/*` через Traefik **не** публикуется — вызовы между MS идут in-cluster.
+
+JWT валидируют **микросервисы**, не Traefik (см. `Архитектура/ApiGateway.md`).
+
+**Middleware Traefik** (CRD в `homework-apps`):
+
+| Middleware | Назначение |
+|------------|------------|
+| `*-request-id` | `X-Request-ID` (UUID, если заголовка нет) на все public routes |
+| `*-rate-limit-auth` | Rate limit только `POST /api/auth/login` и `POST /api/auth/register` |
+
+Параметры rate limit: `homework-apps/values.yaml` → `traefik.middlewares.rateLimitAuth` (по умолчанию 10 req/min, burst 20).
 
 Swagger: `/api/<service>/swagger` (если включён в образе).
 
@@ -54,6 +67,7 @@ Swagger: `/api/<service>/swagger` (если включён в образе).
 
 | Релиз Helm | Назначение |
 |------------|------------|
+| `traefik` | API Gateway (ingress controller) |
 | `postgres` | БД для Auth, Customer, Order, Billing, Warehouse, Delivery, Notification |
 | `postgres-catalog` | `catalog_db` на primary + streaming read replica |
 | `redis` | кэш Catalog (brands/categories/products list) |
@@ -90,6 +104,7 @@ make status
 # или
 kubectl get pods -n electronics-store
 kubectl get ingress -n electronics-store
+kubectl get pods -n m
 ```
 
 ```bash

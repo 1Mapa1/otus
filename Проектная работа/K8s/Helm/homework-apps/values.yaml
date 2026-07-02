@@ -502,10 +502,24 @@ deliveryService:
     dbUser: delivery_user
     dbPassword: delivery_pass
 
+traefik:
+  middlewares:
+    requestId:
+      enabled: true
+      headerName: X-Request-ID
+      sourceHeaders:
+        - X-Request-ID
+    rateLimitAuth:
+      enabled: true
+      average: 10
+      burst: 20
+      period: 1m
+
 ingress:
   enabled: true
-  className: nginx
+  className: traefik
   host: electronics.store
+  annotations: {}
   paths:
     - path: /api/auth
       service: authService

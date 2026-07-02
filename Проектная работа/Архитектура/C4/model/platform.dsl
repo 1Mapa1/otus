@@ -9,7 +9,7 @@ onlineStore = softwareSystem "Интернет-магазин электрони
         tags "Frontend,Planned"
     }
 
-    apiGateway = container "API Gateway" "Единая внешняя точка входа: маршрутизация, rate limiting, correlation-id и JWT validation." "Traefik" {
+    apiGateway = container "API Gateway" "Единая внешняя точка входа: маршрутизация public API, rate limiting, X-Request-ID и access logs. JWT не валидирует." "Traefik" {
         tags "Gateway"
     }
 

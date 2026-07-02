@@ -11,9 +11,9 @@ CHART_APPS   := Helm/homework-apps
 help:
 	@echo "K8s — типовые цели (namespace приложений: NS=$(NS), ingress: INGRESS_NS=$(INGRESS_NS))."
 	@echo ""
-	@echo "  make repos            helm repo add (bitnami, ingress-nginx, kafka-ui) + helm repo update"
+	@echo "  make repos            helm repo add (bitnami, traefik, kafka-ui) + helm repo update"
 	@echo "  make ingress-ns       kubectl: namespace для ingress ($(INGRESS_NS))"
-	@echo "  make ingress          ingress-nginx (после ingress-ns и repos)"
+	@echo "  make ingress          Traefik API Gateway (после ingress-ns и repos)"
 	@echo "  make apps-ns          kubectl: namespace для Postgres/Kafka/Redis/apps ($(NS))"
 	@echo "  make postgres         Bitnami PostgreSQL (7 MS)"
 	@echo "  make postgres-catalog Bitnami PostgreSQL для Catalog (primary + read replica)"
@@ -30,7 +30,7 @@ help:
 
 .PHONY: repos
 repos:
-	helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
+	helm repo add traefik https://traefik.github.io/charts || true
 	helm repo add bitnami https://charts.bitnami.com/bitnami || true
 	helm repo add kafka-ui https://provectus.github.io/kafka-ui-charts || true
 	helm repo update
@@ -41,9 +41,9 @@ ingress-ns:
 
 .PHONY: ingress
 ingress: repos ingress-ns
-	helm upgrade --install nginx ingress-nginx/ingress-nginx \
+	helm upgrade --install traefik traefik/traefik \
 		--namespace $(INGRESS_NS) \
-		-f Helm/nginx-ingress.yaml
+		-f Helm/traefik-values.yaml
 
 .PHONY: apps-ns
 apps-ns:
@@ -119,7 +119,7 @@ uninstall-postgres:
 
 .PHONY: uninstall-ingress
 uninstall-ingress:
-	helm uninstall nginx -n $(INGRESS_NS) --ignore-not-found
+	helm uninstall traefik -n $(INGRESS_NS) --ignore-not-found
 
 .PHONY: uninstall
 uninstall: uninstall-apps uninstall-kafka-ui uninstall-kafka uninstall-redis uninstall-postgres-catalog uninstall-postgres uninstall-ingress

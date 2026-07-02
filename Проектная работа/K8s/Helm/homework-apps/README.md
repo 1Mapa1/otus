@@ -41,3 +41,9 @@ helm upgrade --install homework-apps . -n electronics-store --create-namespace
 ```
 
 PostgreSQL, Redis, Kafka — отдельно, см. [README уровня K8s](../../README.md).
+
+## Traefik middleware
+
+- `templates/traefik-middleware.yaml` — `X-Request-ID`, rate limit auth
+- `templates/traefik-ingressroute-auth-rate-limit.yaml` — `POST /api/auth/login|register`
+- `values.yaml` → `traefik.middlewares.*`

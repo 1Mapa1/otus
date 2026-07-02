@@ -5,6 +5,14 @@ metadata:
   name: {{ include "homework-apps.fullname" . }}
   labels:
     {{- include "homework-apps.labels" . | nindent 4 }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    {{- if .Values.traefik.middlewares.requestId.enabled }}
+    traefik.ingress.kubernetes.io/router.middlewares: {{ include "homework-apps.traefikRequestIdMiddlewareRef" . }}
+    {{- end }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:

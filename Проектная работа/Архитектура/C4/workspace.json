@@ -72,7 +72,7 @@
         "tags" : "Element,Container,Frontend,Planned",
         "technology" : "React (planned)"
       }, {
-        "description" : "Единая внешняя точка входа: маршрутизация, rate limiting, correlation-id и JWT validation.",
+        "description" : "Единая внешняя точка входа: маршрутизация public API, rate limiting, X-Request-ID и access logs. JWT не валидирует.",
         "documentation" : { },
         "id" : "5",
         "name" : "API Gateway",
@@ -80,7 +80,7 @@
           "structurizr.dsl.identifier" : "onlineStore.apiGateway"
         },
         "relationships" : [ {
-          "description" : "Маршрутизирует /api/auth/*; получает JWKS",
+          "description" : "Маршрутизирует /api/auth/* и /.well-known/jwks.json",
           "destinationId" : "6",
           "id" : "53",
           "sourceId" : "5",

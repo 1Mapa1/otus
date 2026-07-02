@@ -9,11 +9,9 @@ Traefik является единственной публичной точко�
 ## Зона ответственности
 
 * маршрутизация публичных HTTP endpoint'ов;
-* TLS termination и redirect HTTP → HTTPS;
 * rate limiting для `login` и `registration`;
 * прокидывание `X-Request-ID`;
 * access logs;
-* CORS только для локальной разработки.
 
 ## Публичные маршруты
 
@@ -45,23 +43,6 @@ Endpoint'ы `/api/internal/**` не публикуются через Traefik и
 
 Внутренние вызовы выполняются напрямую через Kubernetes Service DNS. Traefik не участвует в HTTP-командах Saga.
 
-## TLS и CORS
-
-Traefik принимает внешний HTTPS-трафик на порту `443` и перенаправляет весь HTTP-трафик с порта `80` на HTTPS.
-
-TLS завершается на Traefik. Микросервисы принимают HTTP-трафик только во внутренней сети Kubernetes.
-
-В production Frontend и API публикуются через один origin:
-
-```text
-https://shop.example.com/       → Frontend
-https://shop.example.com/api/** → API через Traefik
-```
-
-Поэтому CORS в production не требуется.
-
-Для локальной разработки разрешается origin `http://localhost:5173`.
-
 ## Rate limiting и логи
 
 Rate limiting применяется только к:
@@ -90,7 +71,6 @@ AuthMs → выпускает JWT RS256 и публикует JWKS
 
 * API Gateway;
 * Ingress Controller;
-* TLS Termination;
 * Rate Limiting;
 * Correlation ID;
 * Centralized Access Logs.

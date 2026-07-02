@@ -19,4 +19,14 @@
 
 ## Развёртывание
 
-Сборка образов и выкладка в Kubernetes: [ДЗ 8 / K8s](../ДЗ%208/K8s/README.md) (полный стенд: заказ с сагой, склад, доставка, биллинг, Kafka и др.). Ранее: [ДЗ 7 / K8s](../ДЗ%207/K8s/README.md). Для более ранних заданий см. также [ДЗ 6 / K8s](../ДЗ%206/K8s/README.md).
+Сборка и push всех образов (16 шт., тег по умолчанию `10.0`):
+
+```powershell
+cd HwApp
+docker login
+.\build-push.ps1              # build + push
+.\build-push.ps1 -Action build  # только сборка
+.\build-push.ps1 -Service catalog  # один сервис
+```
+
+Сборка образов и выкладка в Kubernetes: [Проектная работа / K8s](../Проектная%20работа/K8s/README.md). Ранее: [ДЗ 8 / K8s](../ДЗ%208/K8s/README.md), [ДЗ 7 / K8s](../ДЗ%207/K8s/README.md).
