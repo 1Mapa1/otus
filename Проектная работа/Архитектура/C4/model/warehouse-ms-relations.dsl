@@ -12,11 +12,8 @@ onlineStore.warehouseMs.stockQueryHandlers -> onlineStore.warehouseDb "Чита�
 
 onlineStore.warehouseMs.reservationHandlers -> onlineStore.warehouseDb "Атомарно обновляет StockItem, StockReservation, StockMovement и outbox" "EF Core/PostgreSQL"
 
-onlineStore.kafka -> onlineStore.warehouseMs.productLifecycleConsumer "Доставляет ProductCreated / ProductUpdated / ProductArchived" "Kafka"
-onlineStore.warehouseMs.productLifecycleConsumer -> onlineStore.warehouseDb "Создаёт, обновляет или деактивирует StockItem" "EF Core/PostgreSQL"
-
-onlineStore.warehouseMs.reservationTtlWorker -> onlineStore.warehouseMs.reservationHandlers "Отменяет просроченные резервы" "In-process"
-onlineStore.warehouseMs.reservationTtlWorker -> onlineStore.warehouseDb "Находит просроченные активные резервы" "EF Core/PostgreSQL"
+onlineStore.kafka -> onlineStore.warehouseMs.productLifecycleConsumer "Доставляет product.created.v1 / product.archived.v1 / product.restored.v1 (topic products)" "Kafka"
+onlineStore.warehouseMs.productLifecycleConsumer -> onlineStore.warehouseDb "Создаёт, архивирует или восстанавливает StockItem" "EF Core/PostgreSQL"
 
 onlineStore.warehouseMs.outboxPublisher -> onlineStore.warehouseDb "Читает outbox и отмечает сообщения опубликованными" "EF Core/PostgreSQL"
-onlineStore.warehouseMs.outboxPublisher -> onlineStore.kafka "Публикует StockChanged" "Kafka"
+onlineStore.warehouseMs.outboxPublisher -> onlineStore.kafka "Публикует stock.changed.v1 (topic stocks)" "Kafka"

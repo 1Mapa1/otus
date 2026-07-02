@@ -6,7 +6,7 @@ internalReservationApi = component "Internal Reservation API" "Internal API дл
     tags "WarehouseComponent"
 }
 
-stockCommandHandlers = component "Stock Command Handlers" "Обрабатывают поступления товара, обновляют StockItem и создают StockMovement. Используют optimistic locking." "MediatR" {
+stockCommandHandlers = component "Stock Command Handlers" "Обрабатывают поступления товара, обновляют StockItem и создают StockMovement. Используют pessimistic locking (SELECT FOR UPDATE)." "MediatR" {
     tags "WarehouseComponent"
 }
 
@@ -18,14 +18,10 @@ reservationHandlers = component "Reservation Handlers" "Создают и отм
     tags "WarehouseComponent"
 }
 
-productLifecycleConsumer = component "Product Lifecycle Consumer" "Получает ProductCreated, ProductUpdated и ProductArchived из Kafka. Создаёт, обновляет или деактивирует локальный StockItem." "BackgroundService / Kafka Consumer" {
+productLifecycleConsumer = component "Product Lifecycle Consumer" "Получает product.created.v1, product.archived.v1 и product.restored.v1 (topic products) из Kafka. Создаёт, архивирует или восстанавливает локальный StockItem." "BackgroundService / Kafka Consumer" {
     tags "WarehouseComponent"
 }
 
-reservationTtlWorker = component "Reservation TTL Worker" "Находит просроченные активные резервы и запускает их отмену." "BackgroundService" {
-    tags "WarehouseComponent"
-}
-
-outboxPublisher = component "Outbox Publisher" "Публикует StockChanged из outbox в Kafka." "BackgroundService" {
+outboxPublisher = component "Outbox Publisher" "Публикует stock.changed.v1 (topic stocks) из outbox в Kafka." "BackgroundService" {
     tags "WarehouseComponent"
 }

@@ -1,25 +1,26 @@
 onlineStore.apiGateway -> onlineStore.catalogMs.catalogApi "Маршрутизирует /api/catalog/*" "HTTPS/JSON"
-onlineStore.orderMs -> onlineStore.catalogMs.catalogQueryHandlers "Запрашивает product snapshots для checkout" "HTTP/JSON"
+onlineStore.orderMs -> onlineStore.catalogMs.internalCatalogApi "Запрашивает product snapshot для checkout" "HTTP/JSON"
 
 onlineStore.catalogMs.catalogApi -> onlineStore.catalogMs.productCommandHandlers "Передаёт product commands" "MediatR"
+onlineStore.catalogMs.catalogApi -> onlineStore.catalogMs.referenceDataCommandHandlers "Передаёт brand/category commands" "MediatR"
 onlineStore.catalogMs.catalogApi -> onlineStore.catalogMs.catalogQueryHandlers "Передаёт catalog queries" "MediatR"
 onlineStore.catalogMs.catalogApi -> onlineStore.authMs "Получает signing keys из JWKS" "HTTPS/JWKS"
 
-onlineStore.catalogMs.productCommandHandlers -> onlineStore.catalogMs.productReadModelProjector "Обновляет ProductReadModel после изменения товара" "In-process"
-onlineStore.catalogMs.productCommandHandlers -> onlineStore.catalogMs.catalogCacheService "Инвалидирует cache entries товара и поиска" "In-process"
-onlineStore.catalogMs.productCommandHandlers -> onlineStore.catalogDb "Сохраняет Product и OutboxMessage" "EF Core/PostgreSQL"
+onlineStore.catalogMs.internalCatalogApi -> onlineStore.catalogDb "Читает актуальные цены и проверяет expectedUnitPrice" "EF Core/PostgreSQL"
 
-onlineStore.catalogMs.catalogQueryHandlers -> onlineStore.catalogMs.catalogCacheService "Запрашивает данные каталога" "In-process"
-onlineStore.catalogMs.catalogQueryHandlers -> onlineStore.catalogDb "Получает актуальные product snapshots для OrderMs" "EF Core/PostgreSQL"
+onlineStore.catalogMs.productCommandHandlers -> onlineStore.catalogDb "Сохраняет Product, ProductReadModel и OutboxMessage" "EF Core/PostgreSQL"
+
+onlineStore.catalogMs.referenceDataCommandHandlers -> onlineStore.catalogDb "Сохраняет Brand и Category" "EF Core/PostgreSQL"
+onlineStore.catalogMs.referenceDataCommandHandlers -> onlineStore.catalogMs.catalogCacheService "Обновляет cache брендов и категорий из primary" "In-process"
+
+onlineStore.catalogMs.catalogQueryHandlers -> onlineStore.catalogMs.catalogCacheService "Запрашивает кешированные read-данные" "In-process"
+onlineStore.catalogMs.catalogQueryHandlers -> onlineStore.catalogReadReplica "При cache miss читает ProductReadModel и справочники" "EF Core/PostgreSQL"
 
 onlineStore.catalogMs.catalogCacheService -> onlineStore.catalogRedis "Читает и записывает cache entries" "Redis protocol"
-onlineStore.catalogMs.catalogCacheService -> onlineStore.catalogReadReplica "При cache miss читает ProductReadModel" "EF Core/PostgreSQL"
+onlineStore.catalogMs.catalogCacheService -> onlineStore.catalogReadReplica "При cache miss читает с read replica" "EF Core/PostgreSQL"
 
-onlineStore.kafka -> onlineStore.catalogMs.stockChangedConsumer "Доставляет StockChanged" "Kafka"
-onlineStore.catalogMs.stockChangedConsumer -> onlineStore.catalogMs.productReadModelProjector "Передаёт изменение availability status" "In-process"
-
-onlineStore.catalogMs.productReadModelProjector -> onlineStore.catalogMs.catalogCacheService "Инвалидирует affected cache entries" "In-process"
-onlineStore.catalogMs.productReadModelProjector -> onlineStore.catalogDb "Обновляет ProductReadModel" "EF Core/PostgreSQL"
+onlineStore.kafka -> onlineStore.catalogMs.stockChangedConsumer "Доставляет stock.changed.v1 (topic stocks)" "Kafka"
+onlineStore.catalogMs.stockChangedConsumer -> onlineStore.catalogDb "Обновляет AvailabilityStatus в ProductReadModel" "EF Core/PostgreSQL"
 
 onlineStore.catalogMs.outboxPublisher -> onlineStore.catalogDb "Читает outbox и отмечает сообщения опубликованными" "EF Core/PostgreSQL"
-onlineStore.catalogMs.outboxPublisher -> onlineStore.kafka "Публикует ProductCreated / ProductUpdated / ProductArchived" "Kafka"
+onlineStore.catalogMs.outboxPublisher -> onlineStore.kafka "Публикует product.created.v1 / product.archived.v1 / product.restored.v1 (topic products)" "Kafka"

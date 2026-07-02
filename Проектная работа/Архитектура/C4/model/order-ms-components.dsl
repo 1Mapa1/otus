@@ -2,7 +2,7 @@ ordersApi = component "Orders API" "Public API для создания зака�
     tags "OrderComponent"
 }
 
-checkoutHandler = component "Checkout Command Handler" "Создаёт заказ в статусе Processing, сохраняет product snapshots и snapshot адреса, рассчитывает итоговую сумму." "MediatR" {
+checkoutHandler = component "Checkout Command Handler" "Snapshot из Catalog, проверка цен, создание Order (Processing) или PriceChanged." "MediatR" {
     tags "OrderComponent"
 }
 
@@ -26,6 +26,6 @@ integrationClients = component "Integration Clients" "HTTP-клиенты Catalo
     tags "OrderComponent"
 }
 
-outboxPublisher = component "Outbox Publisher" "Публикует непереданные OrderConfirmed и OrderRejected из outbox в Kafka." "BackgroundService" {
+outboxPublisher = component "Outbox Publisher" "Публикует непереданные order.confirmed.v1 и order.rejected.v2 (topic orders) из outbox в Kafka." "BackgroundService" {
     tags "OrderComponent"
 }

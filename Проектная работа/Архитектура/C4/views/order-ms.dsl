@@ -1,6 +1,6 @@
 component onlineStore.orderMs "OrderMsComponents" {
     title "C3. Компоненты — OrderMs"
-    description "Целевая внутренняя архитектура OrderMs: checkout, идемпотентность, Saga Orchestration, retry worker и outbox."
+    description "Внутренняя архитектура OrderMs: checkout с проверкой цен, идемпотентность, Saga Orchestration, retry worker и outbox."
 
     include *?
 

@@ -71,7 +71,7 @@ onlineStore = softwareSystem "Интернет-магазин электрони
         tags "Database"
     }
 
-    catalogRedis = container "CatalogMs Cache" "Cache-Aside кеширование результатов read-запросов." "Redis" {
+    catalogRedis = container "CatalogMs Cache" "Cache-aside: список товаров, бренды и категории." "Redis" {
         tags "Cache"
     }
 

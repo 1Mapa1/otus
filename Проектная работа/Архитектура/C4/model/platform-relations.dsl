@@ -32,39 +32,39 @@ onlineStore.orderMs -> onlineStore.deliveryMs "Создаёт и отменяе�
     tags "InternalHttp"
 }
 
-onlineStore.authMs -> onlineStore.kafka "Публикует UserActivated" "Kafka" {
+onlineStore.authMs -> onlineStore.kafka "Публикует user.activated.v1 (topic auth)" "Kafka" {
     tags "Async"
 }
 
-onlineStore.catalogMs -> onlineStore.kafka "Публикует ProductCreated, ProductUpdated, ProductArchived" "Kafka" {
+onlineStore.catalogMs -> onlineStore.kafka "Публикует product.created.v1, product.archived.v1, product.restored.v1 (topic products)" "Kafka" {
     tags "Async"
 }
 
-onlineStore.warehouseMs -> onlineStore.kafka "Публикует StockChanged" "Kafka" {
+onlineStore.warehouseMs -> onlineStore.kafka "Публикует stock.changed.v1 (topic stocks)" "Kafka" {
     tags "Async"
 }
 
-onlineStore.customerMs -> onlineStore.kafka "Публикует CustomerCreated, CustomerUpdated" "Kafka" {
+onlineStore.customerMs -> onlineStore.kafka "Публикует customer.created.v1, customer.updated.v1 (topic customers)" "Kafka" {
     tags "Async"
 }
 
-onlineStore.orderMs -> onlineStore.kafka "Публикует OrderConfirmed, OrderRejected" "Kafka" {
+onlineStore.orderMs -> onlineStore.kafka "Публикует order.confirmed.v1, order.rejected.v2 (topic orders)" "Kafka" {
     tags "Async"
 }
 
-onlineStore.kafka -> onlineStore.billingMs "Доставляет UserActivated" "Kafka" {
+onlineStore.kafka -> onlineStore.billingMs "Доставляет user.activated.v1 (topic auth)" "Kafka" {
     tags "Async"
 }
 
-onlineStore.kafka -> onlineStore.warehouseMs "Доставляет события жизненного цикла товара" "Kafka" {
+onlineStore.kafka -> onlineStore.warehouseMs "Доставляет product.created.v1, product.archived.v1, product.restored.v1 (topic products)" "Kafka" {
     tags "Async"
 }
 
-onlineStore.kafka -> onlineStore.catalogMs "Доставляет StockChanged" "Kafka" {
+onlineStore.kafka -> onlineStore.catalogMs "Доставляет stock.changed.v1 (topic stocks)" "Kafka" {
     tags "Async"
 }
 
-onlineStore.kafka -> onlineStore.notificationMs "Доставляет customer events и финальные события заказа" "Kafka" {
+onlineStore.kafka -> onlineStore.notificationMs "Доставляет customer.created.v1, customer.updated.v1, order.confirmed.v1, order.rejected.v2" "Kafka" {
     tags "Async"
 }
 

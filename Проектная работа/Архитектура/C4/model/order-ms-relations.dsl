@@ -5,7 +5,7 @@ onlineStore.orderMs.ordersApi -> onlineStore.orderMs.orderQueryHandlers "Пер�
 onlineStore.orderMs.ordersApi -> onlineStore.authMs "Получает signing keys из JWKS" "HTTPS/JWKS"
 
 onlineStore.orderMs.checkoutHandler -> onlineStore.orderMs.idempotencyService "Проверяет и завершает идемпотентный запрос" "In-process"
-onlineStore.orderMs.checkoutHandler -> onlineStore.orderMs.integrationClients "Получает product snapshots" "In-process"
+onlineStore.orderMs.checkoutHandler -> onlineStore.orderMs.integrationClients "Получает и проверяет product snapshots" "In-process"
 onlineStore.orderMs.checkoutHandler -> onlineStore.orderDb "Создаёт Order, snapshots и idempotency record" "EF Core/PostgreSQL"
 
 onlineStore.orderMs.orderQueryHandlers -> onlineStore.orderDb "Читает собственные заказы" "EF Core/PostgreSQL"
@@ -17,10 +17,10 @@ onlineStore.orderMs.sagaWorker -> onlineStore.orderMs.sagaOrchestrator "Пере
 onlineStore.orderMs.sagaOrchestrator -> onlineStore.orderMs.integrationClients "Выполняет команды Saga и компенсации" "In-process"
 onlineStore.orderMs.sagaOrchestrator -> onlineStore.orderDb "Обновляет status, SagaStep и outbox" "EF Core/PostgreSQL"
 
-onlineStore.orderMs.integrationClients -> onlineStore.catalogMs "Получает product snapshots и цены" "HTTP/JSON"
+onlineStore.orderMs.integrationClients -> onlineStore.catalogMs "POST internal product snapshot" "HTTP/JSON"
 onlineStore.orderMs.integrationClients -> onlineStore.billingMs "Authorize, capture и cancel authorization" "HTTP/JSON"
 onlineStore.orderMs.integrationClients -> onlineStore.warehouseMs "Создаёт и отменяет резерв товаров" "HTTP/JSON"
 onlineStore.orderMs.integrationClients -> onlineStore.deliveryMs "Создаёт и отменяет резерв слота" "HTTP/JSON"
 
 onlineStore.orderMs.outboxPublisher -> onlineStore.orderDb "Читает outbox и отмечает сообщения опубликованными" "EF Core/PostgreSQL"
-onlineStore.orderMs.outboxPublisher -> onlineStore.kafka "Публикует OrderConfirmed / OrderRejected" "Kafka"
+onlineStore.orderMs.outboxPublisher -> onlineStore.kafka "Публикует order.confirmed.v1 / order.rejected.v2 (topic orders)" "Kafka"

@@ -3,892 +3,8 @@
   "description" : "C4-архитектура проекта",
   "documentation" : { },
   "id" : 1,
-  "lastModifiedDate" : "2026-06-22T16:00:41Z",
+  "lastModifiedDate" : "2026-07-02T12:56:59Z",
   "model" : {
-    "deploymentNodes" : [ {
-      "description" : "Публичная сеть за пределами Kubernetes-кластера.",
-      "environment" : "Development",
-      "id" : "141",
-      "infrastructureNodes" : [ {
-        "description" : "Внешние клиенты обращаются к магазину через Traefik.",
-        "environment" : "Development",
-        "id" : "142",
-        "name" : "Internet",
-        "properties" : {
-          "structurizr.dsl.identifier" : "development.externalNetwork.internet"
-        },
-        "relationships" : [ {
-          "description" : "Направляет внешний трафик в магазин",
-          "destinationId" : "146",
-          "id" : "222",
-          "sourceId" : "142",
-          "tags" : "Relationship",
-          "technology" : "HTTPS"
-        } ],
-        "tags" : "Element,Infrastructure Node",
-        "technology" : "HTTPS"
-      } ],
-      "instances" : "1",
-      "name" : "External network",
-      "properties" : {
-        "structurizr.dsl.identifier" : "development.externalNetwork"
-      },
-      "tags" : "Element,Deployment Node",
-      "technology" : "Network"
-    }, {
-      "children" : [ {
-        "children" : [ {
-          "containerInstances" : [ {
-            "containerId" : "5",
-            "environment" : "Development",
-            "id" : "146",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.traefikWorkload.traefikInstance"
-            },
-            "relationships" : [ {
-              "description" : "Маршрутизирует /api/auth/*; получает JWKS",
-              "destinationId" : "148",
-              "id" : "149",
-              "linkedRelationshipId" : "53",
-              "sourceId" : "146",
-              "technology" : "HTTPS/JSON"
-            }, {
-              "description" : "Маршрутизирует /api/customers/*",
-              "destinationId" : "151",
-              "id" : "152",
-              "linkedRelationshipId" : "54",
-              "sourceId" : "146",
-              "technology" : "HTTPS/JSON"
-            }, {
-              "description" : "Маршрутизирует /api/catalog/*",
-              "destinationId" : "155",
-              "id" : "156",
-              "linkedRelationshipId" : "55",
-              "sourceId" : "146",
-              "technology" : "HTTPS/JSON"
-            }, {
-              "description" : "Маршрутизирует /api/warehouse/*",
-              "destinationId" : "159",
-              "id" : "160",
-              "linkedRelationshipId" : "56",
-              "sourceId" : "146",
-              "technology" : "HTTPS/JSON"
-            }, {
-              "description" : "Маршрутизирует /api/orders/*",
-              "destinationId" : "163",
-              "id" : "164",
-              "linkedRelationshipId" : "57",
-              "sourceId" : "146",
-              "technology" : "HTTPS/JSON"
-            }, {
-              "description" : "Маршрутизирует /api/billing/*",
-              "destinationId" : "169",
-              "id" : "170",
-              "linkedRelationshipId" : "58",
-              "sourceId" : "146",
-              "technology" : "HTTPS/JSON"
-            }, {
-              "description" : "Маршрутизирует /api/delivery/*",
-              "destinationId" : "173",
-              "id" : "174",
-              "linkedRelationshipId" : "59",
-              "sourceId" : "146",
-              "technology" : "HTTPS/JSON"
-            }, {
-              "description" : "Маршрутизирует /api/notifications/*",
-              "destinationId" : "177",
-              "id" : "178",
-              "linkedRelationshipId" : "60",
-              "sourceId" : "146",
-              "technology" : "HTTPS/JSON"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Ingress Controller и API Gateway. Единственная публичная точка входа в систему.",
-          "environment" : "Development",
-          "id" : "145",
-          "instances" : "1",
-          "name" : "Traefik",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.traefikWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes Deployment"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "6",
-            "environment" : "Development",
-            "id" : "148",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.authWorkload.authInstance"
-            },
-            "relationships" : [ {
-              "description" : "Создаёт профиль при регистрации",
-              "destinationId" : "151",
-              "id" : "153",
-              "linkedRelationshipId" : "61",
-              "sourceId" : "148",
-              "technology" : "HTTP/JSON"
-            }, {
-              "description" : "Публикует UserActivated",
-              "destinationId" : "180",
-              "id" : "181",
-              "linkedRelationshipId" : "66",
-              "sourceId" : "148",
-              "technology" : "Kafka"
-            }, {
-              "description" : "Читает и записывает данные",
-              "destinationId" : "194",
-              "id" : "195",
-              "linkedRelationshipId" : "75",
-              "sourceId" : "148",
-              "technology" : "PostgreSQL"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Deployment и ClusterIP Service. Устанавливается Helm umbrella chart.",
-          "environment" : "Development",
-          "id" : "147",
-          "instances" : "1",
-          "name" : "AuthMs",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.authWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes Deployment"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "15",
-            "environment" : "Development",
-            "id" : "151",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.customerWorkload.customerInstance"
-            },
-            "relationships" : [ {
-              "description" : "Публикует CustomerCreated, CustomerUpdated",
-              "destinationId" : "180",
-              "id" : "182",
-              "linkedRelationshipId" : "69",
-              "sourceId" : "151",
-              "technology" : "Kafka"
-            }, {
-              "description" : "Читает и записывает данные",
-              "destinationId" : "196",
-              "id" : "197",
-              "linkedRelationshipId" : "76",
-              "sourceId" : "151",
-              "technology" : "PostgreSQL"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Deployment и ClusterIP Service. Устанавливается Helm umbrella chart.",
-          "environment" : "Development",
-          "id" : "150",
-          "instances" : "1",
-          "name" : "CustomerMs",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.customerWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes Deployment"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "7",
-            "environment" : "Development",
-            "id" : "155",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.catalogWorkload.catalogInstance"
-            },
-            "relationships" : [ {
-              "description" : "Получает signing keys из JWKS",
-              "destinationId" : "148",
-              "id" : "157",
-              "linkedRelationshipId" : "111",
-              "sourceId" : "155",
-              "technology" : "HTTPS/JWKS"
-            }, {
-              "description" : "Публикует ProductCreated, ProductUpdated, ProductArchived",
-              "destinationId" : "180",
-              "id" : "184",
-              "linkedRelationshipId" : "67",
-              "sourceId" : "155",
-              "technology" : "Kafka"
-            }, {
-              "description" : "Использует Cache-Aside",
-              "destinationId" : "191",
-              "id" : "192",
-              "linkedRelationshipId" : "80",
-              "sourceId" : "155",
-              "technology" : "Redis protocol"
-            }, {
-              "description" : "Записывает каталог, read model и outbox",
-              "destinationId" : "209",
-              "id" : "210",
-              "linkedRelationshipId" : "77",
-              "sourceId" : "155",
-              "technology" : "PostgreSQL"
-            }, {
-              "description" : "Читает данные каталога",
-              "destinationId" : "212",
-              "id" : "213",
-              "linkedRelationshipId" : "78",
-              "sourceId" : "155",
-              "technology" : "PostgreSQL"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Deployment и ClusterIP Service. Устанавливается Helm umbrella chart.",
-          "environment" : "Development",
-          "id" : "154",
-          "instances" : "1",
-          "name" : "CatalogMs",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.catalogWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes Deployment"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "16",
-            "environment" : "Development",
-            "id" : "159",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.warehouseWorkload.warehouseInstance"
-            },
-            "relationships" : [ {
-              "description" : "Получает signing keys из JWKS",
-              "destinationId" : "148",
-              "id" : "161",
-              "linkedRelationshipId" : "130",
-              "sourceId" : "159",
-              "technology" : "HTTPS/JWKS"
-            }, {
-              "description" : "Публикует StockChanged",
-              "destinationId" : "180",
-              "id" : "186",
-              "linkedRelationshipId" : "68",
-              "sourceId" : "159",
-              "technology" : "Kafka"
-            }, {
-              "description" : "Читает и записывает данные",
-              "destinationId" : "198",
-              "id" : "199",
-              "linkedRelationshipId" : "81",
-              "sourceId" : "159",
-              "technology" : "PostgreSQL"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Deployment и ClusterIP Service. Устанавливается Helm umbrella chart.",
-          "environment" : "Development",
-          "id" : "158",
-          "instances" : "1",
-          "name" : "WarehouseMs",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.warehouseWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes Deployment"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "25",
-            "environment" : "Development",
-            "id" : "163",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.orderWorkload.orderInstance"
-            },
-            "relationships" : [ {
-              "description" : "Получает signing keys из JWKS",
-              "destinationId" : "148",
-              "id" : "165",
-              "linkedRelationshipId" : "90",
-              "sourceId" : "163",
-              "technology" : "HTTPS/JWKS"
-            }, {
-              "description" : "Получает product snapshots и цены",
-              "destinationId" : "155",
-              "id" : "166",
-              "linkedRelationshipId" : "62",
-              "sourceId" : "163",
-              "technology" : "HTTP/JSON"
-            }, {
-              "description" : "Создаёт и отменяет резерв товаров",
-              "destinationId" : "159",
-              "id" : "167",
-              "linkedRelationshipId" : "64",
-              "sourceId" : "163",
-              "technology" : "HTTP/JSON"
-            }, {
-              "description" : "Authorize, capture и cancel authorization",
-              "destinationId" : "169",
-              "id" : "171",
-              "linkedRelationshipId" : "63",
-              "sourceId" : "163",
-              "technology" : "HTTP/JSON"
-            }, {
-              "description" : "Создаёт и отменяет резерв слота",
-              "destinationId" : "173",
-              "id" : "175",
-              "linkedRelationshipId" : "65",
-              "sourceId" : "163",
-              "technology" : "HTTP/JSON"
-            }, {
-              "description" : "Публикует OrderConfirmed, OrderRejected",
-              "destinationId" : "180",
-              "id" : "187",
-              "linkedRelationshipId" : "70",
-              "sourceId" : "163",
-              "technology" : "Kafka"
-            }, {
-              "description" : "Читает и записывает данные",
-              "destinationId" : "200",
-              "id" : "201",
-              "linkedRelationshipId" : "82",
-              "sourceId" : "163",
-              "technology" : "PostgreSQL"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Deployment и ClusterIP Service. Устанавливается Helm umbrella chart.",
-          "environment" : "Development",
-          "id" : "162",
-          "instances" : "1",
-          "name" : "OrderMs",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.orderWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes Deployment"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "34",
-            "environment" : "Development",
-            "id" : "169",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.billingWorkload.billingInstance"
-            },
-            "relationships" : [ {
-              "description" : "Читает и записывает данные",
-              "destinationId" : "202",
-              "id" : "203",
-              "linkedRelationshipId" : "83",
-              "sourceId" : "169",
-              "technology" : "PostgreSQL"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Deployment и ClusterIP Service. Устанавливается Helm umbrella chart.",
-          "environment" : "Development",
-          "id" : "168",
-          "instances" : "1",
-          "name" : "BillingMs",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.billingWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes Deployment"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "35",
-            "environment" : "Development",
-            "id" : "173",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.deliveryWorkload.deliveryInstance"
-            },
-            "relationships" : [ {
-              "description" : "Читает и записывает данные",
-              "destinationId" : "204",
-              "id" : "205",
-              "linkedRelationshipId" : "84",
-              "sourceId" : "173",
-              "technology" : "PostgreSQL"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Deployment и ClusterIP Service. Устанавливается Helm umbrella chart.",
-          "environment" : "Development",
-          "id" : "172",
-          "instances" : "1",
-          "name" : "DeliveryMs",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.deliveryWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes Deployment"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "36",
-            "environment" : "Development",
-            "id" : "177",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.notificationWorkload.notificationInstance"
-            },
-            "relationships" : [ {
-              "description" : "Читает и записывает данные",
-              "destinationId" : "206",
-              "id" : "207",
-              "linkedRelationshipId" : "85",
-              "sourceId" : "177",
-              "technology" : "PostgreSQL"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Deployment и ClusterIP Service. Устанавливается Helm umbrella chart.",
-          "environment" : "Development",
-          "id" : "176",
-          "instances" : "1",
-          "name" : "NotificationMs",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.notificationWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes Deployment"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "37",
-            "environment" : "Development",
-            "id" : "180",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.kafkaWorkload.kafkaInstance"
-            },
-            "relationships" : [ {
-              "description" : "Доставляет StockChanged",
-              "destinationId" : "155",
-              "id" : "183",
-              "linkedRelationshipId" : "73",
-              "sourceId" : "180",
-              "technology" : "Kafka"
-            }, {
-              "description" : "Доставляет события жизненного цикла товара",
-              "destinationId" : "159",
-              "id" : "185",
-              "linkedRelationshipId" : "72",
-              "sourceId" : "180",
-              "technology" : "Kafka"
-            }, {
-              "description" : "Доставляет UserActivated",
-              "destinationId" : "169",
-              "id" : "188",
-              "linkedRelationshipId" : "71",
-              "sourceId" : "180",
-              "technology" : "Kafka"
-            }, {
-              "description" : "Доставляет customer events и финальные события заказа",
-              "destinationId" : "177",
-              "id" : "189",
-              "linkedRelationshipId" : "74",
-              "sourceId" : "180",
-              "technology" : "Kafka"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "StatefulSet и ClusterIP Service. Устанавливается отдельным Helm release.",
-          "environment" : "Development",
-          "id" : "179",
-          "instances" : "1",
-          "name" : "Kafka",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.kafkaWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes StatefulSet"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "42",
-            "environment" : "Development",
-            "id" : "191",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.redisWorkload.redisInstance"
-            },
-            "tags" : "Container Instance"
-          } ],
-          "description" : "StatefulSet и ClusterIP Service. Используется CatalogMs для Cache-Aside.",
-          "environment" : "Development",
-          "id" : "190",
-          "instances" : "1",
-          "name" : "Catalog Redis",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.redisWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes StatefulSet"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "38",
-            "environment" : "Development",
-            "id" : "194",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.sharedPostgresWorkload.authDbInstance"
-            },
-            "tags" : "Container Instance"
-          }, {
-            "containerId" : "39",
-            "environment" : "Development",
-            "id" : "196",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.sharedPostgresWorkload.customerDbInstance"
-            },
-            "tags" : "Container Instance"
-          }, {
-            "containerId" : "43",
-            "environment" : "Development",
-            "id" : "198",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.sharedPostgresWorkload.warehouseDbInstance"
-            },
-            "tags" : "Container Instance"
-          }, {
-            "containerId" : "44",
-            "environment" : "Development",
-            "id" : "200",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.sharedPostgresWorkload.orderDbInstance"
-            },
-            "tags" : "Container Instance"
-          }, {
-            "containerId" : "45",
-            "environment" : "Development",
-            "id" : "202",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.sharedPostgresWorkload.billingDbInstance"
-            },
-            "tags" : "Container Instance"
-          }, {
-            "containerId" : "46",
-            "environment" : "Development",
-            "id" : "204",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.sharedPostgresWorkload.deliveryDbInstance"
-            },
-            "tags" : "Container Instance"
-          }, {
-            "containerId" : "47",
-            "environment" : "Development",
-            "id" : "206",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.sharedPostgresWorkload.notificationDbInstance"
-            },
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Один физический PostgreSQL instance с независимыми logical databases и отдельными credentials сервисов.",
-          "environment" : "Development",
-          "id" : "193",
-          "instances" : "1",
-          "name" : "Shared PostgreSQL",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.sharedPostgresWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes StatefulSet"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "40",
-            "environment" : "Development",
-            "id" : "209",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.catalogPrimaryWorkload.catalogDbInstance"
-            },
-            "relationships" : [ {
-              "description" : "Реплицирует данные",
-              "destinationId" : "212",
-              "id" : "214",
-              "linkedRelationshipId" : "79",
-              "sourceId" : "209",
-              "technology" : "PostgreSQL replication"
-            } ],
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Отдельный PostgreSQL instance, содержащий только catalog_db.",
-          "environment" : "Development",
-          "id" : "208",
-          "instances" : "1",
-          "name" : "Catalog PostgreSQL Primary",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.catalogPrimaryWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes StatefulSet"
-        }, {
-          "containerInstances" : [ {
-            "containerId" : "41",
-            "environment" : "Development",
-            "id" : "212",
-            "instanceId" : 1,
-            "properties" : {
-              "structurizr.dsl.identifier" : "development.minikube.storeNamespace.catalogReplicaWorkload.catalogReadReplicaInstance"
-            },
-            "tags" : "Container Instance"
-          } ],
-          "description" : "Read replica Catalog PostgreSQL Primary. Используется только CatalogMs для read-path.",
-          "environment" : "Development",
-          "id" : "211",
-          "instances" : "1",
-          "name" : "Catalog PostgreSQL Read Replica",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.storeNamespace.catalogReplicaWorkload"
-          },
-          "tags" : "Element,Deployment Node",
-          "technology" : "Kubernetes StatefulSet"
-        } ],
-        "description" : "Прикладной namespace. Микросервисы развёртываются Helm umbrella chart homework-apps. Traefik, Kafka, Redis и PostgreSQL устанавливаются отдельными Helm releases.",
-        "environment" : "Development",
-        "id" : "144",
-        "instances" : "1",
-        "name" : "Namespace: store",
-        "properties" : {
-          "structurizr.dsl.identifier" : "development.minikube.storeNamespace"
-        },
-        "tags" : "Element,Deployment Node",
-        "technology" : "Kubernetes Namespace"
-      }, {
-        "description" : "Мониторинг, устанавливаемый отдельными Helm releases.",
-        "environment" : "Development",
-        "id" : "215",
-        "infrastructureNodes" : [ {
-          "description" : "Собирает метрики сервисов через ServiceMonitor и endpoint /metrics.",
-          "environment" : "Development",
-          "id" : "216",
-          "name" : "Prometheus",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.observabilityNamespace.prometheus"
-          },
-          "relationships" : [ {
-            "description" : "Собирает метрики",
-            "destinationId" : "148",
-            "id" : "223",
-            "sourceId" : "216",
-            "tags" : "Relationship",
-            "technology" : "HTTP /metrics"
-          }, {
-            "description" : "Собирает метрики",
-            "destinationId" : "151",
-            "id" : "224",
-            "sourceId" : "216",
-            "tags" : "Relationship",
-            "technology" : "HTTP /metrics"
-          }, {
-            "description" : "Собирает метрики",
-            "destinationId" : "155",
-            "id" : "225",
-            "sourceId" : "216",
-            "tags" : "Relationship",
-            "technology" : "HTTP /metrics"
-          }, {
-            "description" : "Собирает метрики",
-            "destinationId" : "159",
-            "id" : "226",
-            "sourceId" : "216",
-            "tags" : "Relationship",
-            "technology" : "HTTP /metrics"
-          }, {
-            "description" : "Собирает метрики",
-            "destinationId" : "163",
-            "id" : "227",
-            "sourceId" : "216",
-            "tags" : "Relationship",
-            "technology" : "HTTP /metrics"
-          }, {
-            "description" : "Собирает метрики",
-            "destinationId" : "169",
-            "id" : "228",
-            "sourceId" : "216",
-            "tags" : "Relationship",
-            "technology" : "HTTP /metrics"
-          }, {
-            "description" : "Собирает метрики",
-            "destinationId" : "173",
-            "id" : "229",
-            "sourceId" : "216",
-            "tags" : "Relationship",
-            "technology" : "HTTP /metrics"
-          }, {
-            "description" : "Собирает метрики",
-            "destinationId" : "177",
-            "id" : "230",
-            "sourceId" : "216",
-            "tags" : "Relationship",
-            "technology" : "HTTP /metrics"
-          } ],
-          "tags" : "Element,Infrastructure Node",
-          "technology" : "Prometheus"
-        }, {
-          "description" : "Визуализирует метрики из Prometheus.",
-          "environment" : "Development",
-          "id" : "217",
-          "name" : "Grafana",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.observabilityNamespace.grafana"
-          },
-          "relationships" : [ {
-            "description" : "Запрашивает метрики",
-            "destinationId" : "216",
-            "id" : "231",
-            "sourceId" : "217",
-            "tags" : "Relationship",
-            "technology" : "PromQL/HTTP"
-          } ],
-          "tags" : "Element,Infrastructure Node",
-          "technology" : "Grafana"
-        } ],
-        "instances" : "1",
-        "name" : "Namespace: observability",
-        "properties" : {
-          "structurizr.dsl.identifier" : "development.minikube.observabilityNamespace"
-        },
-        "tags" : "Element,Deployment Node",
-        "technology" : "Kubernetes Namespace"
-      }, {
-        "description" : "Централизованное логирование. Пока не развёрнуто.",
-        "environment" : "Development",
-        "id" : "218",
-        "infrastructureNodes" : [ {
-          "description" : "Собирает stdout-логи контейнеров. Planned.",
-          "environment" : "Development",
-          "id" : "219",
-          "name" : "Fluent Bit",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.loggingNamespace.fluentBit"
-          },
-          "relationships" : [ {
-            "description" : "Собирает stdout-логи",
-            "destinationId" : "146",
-            "id" : "232",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "Kubernetes node logs"
-          }, {
-            "description" : "Собирает stdout-логи",
-            "destinationId" : "148",
-            "id" : "233",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "Kubernetes node logs"
-          }, {
-            "description" : "Собирает stdout-логи",
-            "destinationId" : "151",
-            "id" : "234",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "Kubernetes node logs"
-          }, {
-            "description" : "Собирает stdout-логи",
-            "destinationId" : "155",
-            "id" : "235",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "Kubernetes node logs"
-          }, {
-            "description" : "Собирает stdout-логи",
-            "destinationId" : "159",
-            "id" : "236",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "Kubernetes node logs"
-          }, {
-            "description" : "Собирает stdout-логи",
-            "destinationId" : "163",
-            "id" : "237",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "Kubernetes node logs"
-          }, {
-            "description" : "Собирает stdout-логи",
-            "destinationId" : "169",
-            "id" : "238",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "Kubernetes node logs"
-          }, {
-            "description" : "Собирает stdout-логи",
-            "destinationId" : "173",
-            "id" : "239",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "Kubernetes node logs"
-          }, {
-            "description" : "Собирает stdout-логи",
-            "destinationId" : "177",
-            "id" : "240",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "Kubernetes node logs"
-          }, {
-            "description" : "Передаёт централизованные логи",
-            "destinationId" : "220",
-            "id" : "241",
-            "sourceId" : "219",
-            "tags" : "Relationship",
-            "technology" : "HTTPS/JSON"
-          } ],
-          "tags" : "Element,Infrastructure Node,Planned",
-          "technology" : "Fluent Bit"
-        }, {
-          "description" : "Хранит и индексирует централизованные логи. Planned.",
-          "environment" : "Development",
-          "id" : "220",
-          "name" : "Elasticsearch",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.loggingNamespace.elasticsearch"
-          },
-          "tags" : "Element,Infrastructure Node,Planned",
-          "technology" : "Elasticsearch"
-        }, {
-          "description" : "Поиск и визуализация логов из Elasticsearch. Planned.",
-          "environment" : "Development",
-          "id" : "221",
-          "name" : "Kibana",
-          "properties" : {
-            "structurizr.dsl.identifier" : "development.minikube.loggingNamespace.kibana"
-          },
-          "relationships" : [ {
-            "description" : "Ищет и визуализирует логи",
-            "destinationId" : "220",
-            "id" : "242",
-            "sourceId" : "221",
-            "tags" : "Relationship",
-            "technology" : "HTTPS"
-          } ],
-          "tags" : "Element,Infrastructure Node,Planned",
-          "technology" : "Kibana"
-        } ],
-        "instances" : "1",
-        "name" : "Namespace: logging",
-        "properties" : {
-          "structurizr.dsl.identifier" : "development.minikube.loggingNamespace"
-        },
-        "tags" : "Element,Deployment Node",
-        "technology" : "Kubernetes Namespace"
-      } ],
-      "description" : "Локальный Kubernetes-кластер среды разработки.",
-      "environment" : "Development",
-      "id" : "143",
-      "instances" : "1",
-      "name" : "Minikube Cluster",
-      "properties" : {
-        "structurizr.dsl.identifier" : "development.minikube"
-      },
-      "tags" : "Element,Deployment Node",
-      "technology" : "Kubernetes"
-    } ],
     "people" : [ {
       "description" : "Пользователь интернет-магазина: просматривает каталог, управляет профилем, оформляет и отслеживает заказы.",
       "id" : "1",
@@ -972,7 +88,7 @@
           "technology" : "HTTPS/JSON"
         }, {
           "description" : "Маршрутизирует /api/customers/*",
-          "destinationId" : "15",
+          "destinationId" : "16",
           "id" : "54",
           "sourceId" : "5",
           "tags" : "Relationship",
@@ -986,7 +102,7 @@
           "technology" : "HTTPS/JSON"
         }, {
           "description" : "Маршрутизирует /api/warehouse/*",
-          "destinationId" : "16",
+          "destinationId" : "17",
           "id" : "56",
           "sourceId" : "5",
           "tags" : "Relationship",
@@ -1035,7 +151,7 @@
           "technology" : "HTTPS/JSON"
         }, {
           "description" : "Маршрутизирует /api/warehouse/*",
-          "destinationId" : "17",
+          "destinationId" : "18",
           "id" : "125",
           "sourceId" : "5",
           "tags" : "Relationship",
@@ -1053,13 +169,13 @@
         },
         "relationships" : [ {
           "description" : "Создаёт профиль при регистрации",
-          "destinationId" : "15",
+          "destinationId" : "16",
           "id" : "61",
           "sourceId" : "6",
           "tags" : "Relationship,InternalHttp",
           "technology" : "HTTP/JSON"
         }, {
-          "description" : "Публикует UserActivated",
+          "description" : "Публикует user.activated.v1 (topic auth)",
           "destinationId" : "37",
           "id" : "66",
           "sourceId" : "6",
@@ -1077,7 +193,7 @@
         "technology" : "ASP.NET Core (.NET 8.0)"
       }, {
         "components" : [ {
-          "description" : "Public API каталога и административные endpoint'ы управления товарами. Проверяет JWT на защищённых endpoint'ах.",
+          "description" : "Public API каталога: список товаров, карточки, бренды и категории. Проверяет JWT на защищённых endpoint'ах.",
           "documentation" : { },
           "id" : "8",
           "name" : "Catalog API",
@@ -1086,22 +202,29 @@
           },
           "relationships" : [ {
             "description" : "Передаёт product commands",
-            "destinationId" : "9",
+            "destinationId" : "10",
             "id" : "108",
             "sourceId" : "8",
             "tags" : "Relationship",
             "technology" : "MediatR"
           }, {
-            "description" : "Передаёт catalog queries",
-            "destinationId" : "10",
+            "description" : "Передаёт brand/category commands",
+            "destinationId" : "11",
             "id" : "109",
+            "sourceId" : "8",
+            "tags" : "Relationship",
+            "technology" : "MediatR"
+          }, {
+            "description" : "Передаёт catalog queries",
+            "destinationId" : "12",
+            "id" : "110",
             "sourceId" : "8",
             "tags" : "Relationship",
             "technology" : "MediatR"
           }, {
             "description" : "Получает signing keys из JWKS",
             "destinationId" : "6",
-            "id" : "110",
+            "id" : "111",
             "sourceId" : "8",
             "tags" : "Relationship",
             "technology" : "HTTPS/JWKS"
@@ -1109,66 +232,95 @@
           "tags" : "Element,Component,CatalogComponent",
           "technology" : "ASP.NET Core MVC"
         }, {
-          "description" : "Создают, изменяют и архивируют товары. Сохраняют Product и OutboxMessage в одной транзакции.",
+          "description" : "Internal HTTP snapshot товаров для OrderMs: читает актуальные цены с primary, проверяет expectedUnitPrice.",
           "documentation" : { },
           "id" : "9",
+          "name" : "Internal Catalog API",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.internalCatalogApi"
+          },
+          "relationships" : [ {
+            "description" : "Читает актуальные цены и проверяет expectedUnitPrice",
+            "destinationId" : "40",
+            "id" : "113",
+            "sourceId" : "9",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "ASP.NET Core MVC"
+        }, {
+          "description" : "Создают, изменяют и архивируют товары. В одной транзакции сохраняют Product, синхронно обновляют ProductReadModel и OutboxMessage.",
+          "documentation" : { },
+          "id" : "10",
           "name" : "Product Command Handlers",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.catalogMs.productCommandHandlers"
           },
           "relationships" : [ {
-            "description" : "Обновляет ProductReadModel после изменения товара",
-            "destinationId" : "12",
-            "id" : "112",
-            "sourceId" : "9",
-            "tags" : "Relationship",
-            "technology" : "In-process"
-          }, {
-            "description" : "Инвалидирует cache entries товара и поиска",
-            "destinationId" : "11",
-            "id" : "113",
-            "sourceId" : "9",
-            "tags" : "Relationship",
-            "technology" : "In-process"
-          }, {
-            "description" : "Сохраняет Product и OutboxMessage",
+            "description" : "Сохраняет Product, ProductReadModel и OutboxMessage",
             "destinationId" : "40",
             "id" : "114",
-            "sourceId" : "9",
+            "sourceId" : "10",
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           } ],
           "tags" : "Element,Component,CatalogComponent",
           "technology" : "MediatR"
         }, {
-          "description" : "Выполняют поиск, фильтрацию, просмотр карточек товара и internal-запрос product snapshots для OrderMs.",
+          "description" : "Создают и изменяют бренды и категории. После commit обновляют cache справочников из primary.",
           "documentation" : { },
-          "id" : "10",
+          "id" : "11",
+          "name" : "Reference Data Command Handlers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.referenceDataCommandHandlers"
+          },
+          "relationships" : [ {
+            "description" : "Сохраняет Brand и Category",
+            "destinationId" : "40",
+            "id" : "115",
+            "sourceId" : "11",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          }, {
+            "description" : "Обновляет cache брендов и категорий из primary",
+            "destinationId" : "13",
+            "id" : "116",
+            "sourceId" : "11",
+            "tags" : "Relationship",
+            "technology" : "In-process"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "MediatR"
+        }, {
+          "description" : "Поиск, фильтрация и просмотр карточек товара. Читают через cache-aside с read replica.",
+          "documentation" : { },
+          "id" : "12",
           "name" : "Catalog Query Handlers",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.catalogMs.catalogQueryHandlers"
           },
           "relationships" : [ {
-            "description" : "Запрашивает данные каталога",
-            "destinationId" : "11",
-            "id" : "115",
-            "sourceId" : "10",
+            "description" : "Запрашивает кешированные read-данные",
+            "destinationId" : "13",
+            "id" : "117",
+            "sourceId" : "12",
             "tags" : "Relationship",
             "technology" : "In-process"
           }, {
-            "description" : "Получает актуальные product snapshots для OrderMs",
-            "destinationId" : "40",
-            "id" : "116",
-            "sourceId" : "10",
+            "description" : "При cache miss читает ProductReadModel и справочники",
+            "destinationId" : "41",
+            "id" : "118",
+            "sourceId" : "12",
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           } ],
           "tags" : "Element,Component,CatalogComponent",
           "technology" : "MediatR"
         }, {
-          "description" : "Реализует Cache-Aside: читает и записывает cache entries, при miss получает данные из Read Replica.",
+          "description" : "Cache-aside: список товаров (короткий TTL), бренды и категории (длинный TTL). Miss — replica; справочники после admin write — refresh из primary.",
           "documentation" : { },
-          "id" : "11",
+          "id" : "13",
           "name" : "Catalog Cache Service",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.catalogMs.catalogCacheService"
@@ -1176,67 +328,42 @@
           "relationships" : [ {
             "description" : "Читает и записывает cache entries",
             "destinationId" : "42",
-            "id" : "117",
-            "sourceId" : "11",
+            "id" : "119",
+            "sourceId" : "13",
             "tags" : "Relationship",
             "technology" : "Redis protocol"
           }, {
-            "description" : "При cache miss читает ProductReadModel",
+            "description" : "При cache miss читает с read replica",
             "destinationId" : "41",
-            "id" : "118",
-            "sourceId" : "11",
+            "id" : "120",
+            "sourceId" : "13",
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           } ],
           "tags" : "Element,Component,CatalogComponent",
           "technology" : "Application Service"
         }, {
-          "description" : "Поддерживает денормализованный ProductReadModel после изменения товара и получения StockChanged.",
+          "description" : "Получает stock.changed.v1 (topic stocks) и обновляет AvailabilityStatus в ProductReadModel на primary.",
           "documentation" : { },
-          "id" : "12",
-          "name" : "Product Read Model Projector",
-          "properties" : {
-            "structurizr.dsl.identifier" : "onlineStore.catalogMs.productReadModelProjector"
-          },
-          "relationships" : [ {
-            "description" : "Инвалидирует affected cache entries",
-            "destinationId" : "11",
-            "id" : "121",
-            "sourceId" : "12",
-            "tags" : "Relationship",
-            "technology" : "In-process"
-          }, {
-            "description" : "Обновляет ProductReadModel",
-            "destinationId" : "40",
-            "id" : "122",
-            "sourceId" : "12",
-            "tags" : "Relationship",
-            "technology" : "EF Core/PostgreSQL"
-          } ],
-          "tags" : "Element,Component,CatalogComponent",
-          "technology" : "Application Service"
-        }, {
-          "description" : "Получает StockChanged из Kafka и передаёт обновление доступности в Product Read Model Projector.",
-          "documentation" : { },
-          "id" : "13",
-          "name" : "StockChanged Consumer",
+          "id" : "14",
+          "name" : "Stock Changed Consumer",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.catalogMs.stockChangedConsumer"
           },
           "relationships" : [ {
-            "description" : "Передаёт изменение availability status",
-            "destinationId" : "12",
-            "id" : "120",
-            "sourceId" : "13",
+            "description" : "Обновляет AvailabilityStatus в ProductReadModel",
+            "destinationId" : "40",
+            "id" : "122",
+            "sourceId" : "14",
             "tags" : "Relationship",
-            "technology" : "In-process"
+            "technology" : "EF Core/PostgreSQL"
           } ],
           "tags" : "Element,Component,CatalogComponent",
           "technology" : "BackgroundService / Kafka Consumer"
         }, {
-          "description" : "Публикует ProductCreated, ProductUpdated и ProductArchived из outbox в Kafka.",
+          "description" : "Публикует product.created.v1, product.archived.v1 и product.restored.v1 (topic products) из outbox в Kafka.",
           "documentation" : { },
-          "id" : "14",
+          "id" : "15",
           "name" : "Outbox Publisher",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.catalogMs.outboxPublisher"
@@ -1245,14 +372,14 @@
             "description" : "Читает outbox и отмечает сообщения опубликованными",
             "destinationId" : "40",
             "id" : "123",
-            "sourceId" : "14",
+            "sourceId" : "15",
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           }, {
-            "description" : "Публикует ProductCreated / ProductUpdated / ProductArchived",
+            "description" : "Публикует product.created.v1 / product.archived.v1 / product.restored.v1 (topic products)",
             "destinationId" : "37",
             "id" : "124",
-            "sourceId" : "14",
+            "sourceId" : "15",
             "tags" : "Relationship",
             "technology" : "Kafka"
           } ],
@@ -1267,7 +394,7 @@
           "structurizr.dsl.identifier" : "onlineStore.catalogMs"
         },
         "relationships" : [ {
-          "description" : "Публикует ProductCreated, ProductUpdated, ProductArchived",
+          "description" : "Публикует product.created.v1, product.archived.v1, product.restored.v1 (topic products)",
           "destinationId" : "37",
           "id" : "67",
           "sourceId" : "7",
@@ -1297,8 +424,8 @@
         }, {
           "description" : "Получает signing keys из JWKS",
           "destinationId" : "6",
-          "id" : "111",
-          "linkedRelationshipId" : "110",
+          "id" : "112",
+          "linkedRelationshipId" : "111",
           "sourceId" : "7",
           "technology" : "HTTPS/JWKS"
         } ],
@@ -1307,23 +434,23 @@
       }, {
         "description" : "Профиль клиента и адресная книга доставки.",
         "documentation" : { },
-        "id" : "15",
+        "id" : "16",
         "name" : "CustomerMs",
         "properties" : {
           "structurizr.dsl.identifier" : "onlineStore.customerMs"
         },
         "relationships" : [ {
-          "description" : "Публикует CustomerCreated, CustomerUpdated",
+          "description" : "Публикует customer.created.v1, customer.updated.v1 (topic customers)",
           "destinationId" : "37",
           "id" : "69",
-          "sourceId" : "15",
+          "sourceId" : "16",
           "tags" : "Relationship,Async",
           "technology" : "Kafka"
         }, {
           "description" : "Читает и записывает данные",
           "destinationId" : "39",
           "id" : "76",
-          "sourceId" : "15",
+          "sourceId" : "16",
           "tags" : "Relationship",
           "technology" : "PostgreSQL"
         } ],
@@ -1333,30 +460,30 @@
         "components" : [ {
           "description" : "Административный API для просмотра остатков, поступления товара и истории складских движений. Проверяет JWT на защищённых endpoint'ах.",
           "documentation" : { },
-          "id" : "17",
+          "id" : "18",
           "name" : "Warehouse Admin API",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.warehouseMs.warehouseAdminApi"
           },
           "relationships" : [ {
             "description" : "Передаёт stock commands",
-            "destinationId" : "19",
+            "destinationId" : "20",
             "id" : "127",
-            "sourceId" : "17",
+            "sourceId" : "18",
             "tags" : "Relationship",
             "technology" : "MediatR"
           }, {
             "description" : "Передаёт stock queries",
-            "destinationId" : "20",
+            "destinationId" : "21",
             "id" : "128",
-            "sourceId" : "17",
+            "sourceId" : "18",
             "tags" : "Relationship",
             "technology" : "MediatR"
           }, {
             "description" : "Получает signing keys из JWKS",
             "destinationId" : "6",
             "id" : "129",
-            "sourceId" : "17",
+            "sourceId" : "18",
             "tags" : "Relationship",
             "technology" : "HTTPS/JWKS"
           } ],
@@ -1365,25 +492,25 @@
         }, {
           "description" : "Internal API для создания и отмены резервов товаров в рамках Saga OrderMs.",
           "documentation" : { },
-          "id" : "18",
+          "id" : "19",
           "name" : "Internal Reservation API",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.warehouseMs.internalReservationApi"
           },
           "relationships" : [ {
             "description" : "Передаёт reserve/cancel commands",
-            "destinationId" : "21",
+            "destinationId" : "22",
             "id" : "131",
-            "sourceId" : "18",
+            "sourceId" : "19",
             "tags" : "Relationship",
             "technology" : "MediatR"
           } ],
           "tags" : "Element,Component,WarehouseComponent",
           "technology" : "ASP.NET Core MVC"
         }, {
-          "description" : "Обрабатывают поступления товара, обновляют StockItem и создают StockMovement. Используют optimistic locking.",
+          "description" : "Обрабатывают поступления товара, обновляют StockItem и создают StockMovement. Используют pessimistic locking (SELECT FOR UPDATE).",
           "documentation" : { },
-          "id" : "19",
+          "id" : "20",
           "name" : "Stock Command Handlers",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.warehouseMs.stockCommandHandlers"
@@ -1392,7 +519,7 @@
             "description" : "Обновляет StockItem, StockMovement и outbox",
             "destinationId" : "43",
             "id" : "132",
-            "sourceId" : "19",
+            "sourceId" : "20",
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           } ],
@@ -1401,7 +528,7 @@
         }, {
           "description" : "Возвращают текущие складские остатки и историю движений товара.",
           "documentation" : { },
-          "id" : "20",
+          "id" : "21",
           "name" : "Stock Query Handlers",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.warehouseMs.stockQueryHandlers"
@@ -1410,7 +537,7 @@
             "description" : "Читает остатки и историю движений",
             "destinationId" : "43",
             "id" : "133",
-            "sourceId" : "20",
+            "sourceId" : "21",
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           } ],
@@ -1419,7 +546,7 @@
         }, {
           "description" : "Создают и отменяют резервы. Проверяют доступный остаток и обеспечивают идемпотентность по orderId.",
           "documentation" : { },
-          "id" : "21",
+          "id" : "22",
           "name" : "Reservation Handlers",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.warehouseMs.reservationHandlers"
@@ -1428,57 +555,32 @@
             "description" : "Атомарно обновляет StockItem, StockReservation, StockMovement и outbox",
             "destinationId" : "43",
             "id" : "134",
-            "sourceId" : "21",
+            "sourceId" : "22",
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           } ],
           "tags" : "Element,Component,WarehouseComponent",
           "technology" : "MediatR"
         }, {
-          "description" : "Получает ProductCreated, ProductUpdated и ProductArchived из Kafka. Создаёт, обновляет или деактивирует локальный StockItem.",
+          "description" : "Получает product.created.v1, product.archived.v1 и product.restored.v1 (topic products) из Kafka. Создаёт, архивирует или восстанавливает локальный StockItem.",
           "documentation" : { },
-          "id" : "22",
+          "id" : "23",
           "name" : "Product Lifecycle Consumer",
           "properties" : {
             "structurizr.dsl.identifier" : "onlineStore.warehouseMs.productLifecycleConsumer"
           },
           "relationships" : [ {
-            "description" : "Создаёт, обновляет или деактивирует StockItem",
+            "description" : "Создаёт, архивирует или восстанавливает StockItem",
             "destinationId" : "43",
             "id" : "136",
-            "sourceId" : "22",
+            "sourceId" : "23",
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           } ],
           "tags" : "Element,Component,WarehouseComponent",
           "technology" : "BackgroundService / Kafka Consumer"
         }, {
-          "description" : "Находит просроченные активные резервы и запускает их отмену.",
-          "documentation" : { },
-          "id" : "23",
-          "name" : "Reservation TTL Worker",
-          "properties" : {
-            "structurizr.dsl.identifier" : "onlineStore.warehouseMs.reservationTtlWorker"
-          },
-          "relationships" : [ {
-            "description" : "Отменяет просроченные резервы",
-            "destinationId" : "21",
-            "id" : "137",
-            "sourceId" : "23",
-            "tags" : "Relationship",
-            "technology" : "In-process"
-          }, {
-            "description" : "Находит просроченные активные резервы",
-            "destinationId" : "43",
-            "id" : "138",
-            "sourceId" : "23",
-            "tags" : "Relationship",
-            "technology" : "EF Core/PostgreSQL"
-          } ],
-          "tags" : "Element,Component,WarehouseComponent",
-          "technology" : "BackgroundService"
-        }, {
-          "description" : "Публикует StockChanged из outbox в Kafka.",
+          "description" : "Публикует stock.changed.v1 (topic stocks) из outbox в Kafka.",
           "documentation" : { },
           "id" : "24",
           "name" : "Outbox Publisher",
@@ -1488,14 +590,14 @@
           "relationships" : [ {
             "description" : "Читает outbox и отмечает сообщения опубликованными",
             "destinationId" : "43",
-            "id" : "139",
+            "id" : "137",
             "sourceId" : "24",
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           }, {
-            "description" : "Публикует StockChanged",
+            "description" : "Публикует stock.changed.v1 (topic stocks)",
             "destinationId" : "37",
-            "id" : "140",
+            "id" : "138",
             "sourceId" : "24",
             "tags" : "Relationship",
             "technology" : "Kafka"
@@ -1505,23 +607,23 @@
         } ],
         "description" : "Складские остатки, поступления, резервы товаров и движения склада.",
         "documentation" : { },
-        "id" : "16",
+        "id" : "17",
         "name" : "WarehouseMs",
         "properties" : {
           "structurizr.dsl.identifier" : "onlineStore.warehouseMs"
         },
         "relationships" : [ {
-          "description" : "Публикует StockChanged",
+          "description" : "Публикует stock.changed.v1 (topic stocks)",
           "destinationId" : "37",
           "id" : "68",
-          "sourceId" : "16",
+          "sourceId" : "17",
           "tags" : "Relationship,Async",
           "technology" : "Kafka"
         }, {
           "description" : "Читает и записывает данные",
           "destinationId" : "43",
           "id" : "81",
-          "sourceId" : "16",
+          "sourceId" : "17",
           "tags" : "Relationship",
           "technology" : "PostgreSQL"
         }, {
@@ -1529,7 +631,7 @@
           "destinationId" : "6",
           "id" : "130",
           "linkedRelationshipId" : "129",
-          "sourceId" : "16",
+          "sourceId" : "17",
           "technology" : "HTTPS/JWKS"
         } ],
         "tags" : "Element,Container,Microservice",
@@ -1568,7 +670,7 @@
           "tags" : "Element,Component,OrderComponent",
           "technology" : "ASP.NET Core MVC"
         }, {
-          "description" : "Создаёт заказ в статусе Processing, сохраняет product snapshots и snapshot адреса, рассчитывает итоговую сумму.",
+          "description" : "Snapshot из Catalog, проверка цен, создание Order (Processing) или PriceChanged.",
           "documentation" : { },
           "id" : "27",
           "name" : "Checkout Command Handler",
@@ -1583,7 +685,7 @@
             "tags" : "Relationship",
             "technology" : "In-process"
           }, {
-            "description" : "Получает product snapshots",
+            "description" : "Получает и проверяет product snapshots",
             "destinationId" : "32",
             "id" : "92",
             "sourceId" : "27",
@@ -1694,7 +796,7 @@
             "structurizr.dsl.identifier" : "onlineStore.orderMs.integrationClients"
           },
           "relationships" : [ {
-            "description" : "Получает product snapshots и цены",
+            "description" : "POST internal product snapshot",
             "destinationId" : "7",
             "id" : "100",
             "sourceId" : "32",
@@ -1709,7 +811,7 @@
             "technology" : "HTTP/JSON"
           }, {
             "description" : "Создаёт и отменяет резерв товаров",
-            "destinationId" : "16",
+            "destinationId" : "17",
             "id" : "102",
             "sourceId" : "32",
             "tags" : "Relationship",
@@ -1725,7 +827,7 @@
           "tags" : "Element,Component,OrderComponent",
           "technology" : "HttpClient"
         }, {
-          "description" : "Публикует непереданные OrderConfirmed и OrderRejected из outbox в Kafka.",
+          "description" : "Публикует непереданные order.confirmed.v1 и order.rejected.v2 (topic orders) из outbox в Kafka.",
           "documentation" : { },
           "id" : "33",
           "name" : "Outbox Publisher",
@@ -1740,7 +842,7 @@
             "tags" : "Relationship",
             "technology" : "EF Core/PostgreSQL"
           }, {
-            "description" : "Публикует OrderConfirmed / OrderRejected",
+            "description" : "Публикует order.confirmed.v1 / order.rejected.v2 (topic orders)",
             "destinationId" : "37",
             "id" : "105",
             "sourceId" : "33",
@@ -1773,7 +875,7 @@
           "technology" : "HTTP/JSON"
         }, {
           "description" : "Создаёт и отменяет резерв товаров",
-          "destinationId" : "16",
+          "destinationId" : "17",
           "id" : "64",
           "sourceId" : "25",
           "tags" : "Relationship,InternalHttp",
@@ -1786,7 +888,7 @@
           "tags" : "Relationship,InternalHttp",
           "technology" : "HTTP/JSON"
         }, {
-          "description" : "Публикует OrderConfirmed, OrderRejected",
+          "description" : "Публикует order.confirmed.v1, order.rejected.v2 (topic orders)",
           "destinationId" : "37",
           "id" : "70",
           "sourceId" : "25",
@@ -1807,15 +909,15 @@
           "sourceId" : "25",
           "technology" : "HTTPS/JWKS"
         }, {
-          "description" : "Запрашивает product snapshots для checkout",
-          "destinationId" : "10",
+          "description" : "Запрашивает product snapshot для checkout",
+          "destinationId" : "9",
           "id" : "107",
           "sourceId" : "25",
           "tags" : "Relationship",
           "technology" : "HTTP/JSON"
         }, {
           "description" : "Создаёт и отменяет резерв товаров",
-          "destinationId" : "18",
+          "destinationId" : "19",
           "id" : "126",
           "sourceId" : "25",
           "tags" : "Relationship",
@@ -1886,43 +988,43 @@
           "structurizr.dsl.identifier" : "onlineStore.kafka"
         },
         "relationships" : [ {
-          "description" : "Доставляет UserActivated",
+          "description" : "Доставляет user.activated.v1 (topic auth)",
           "destinationId" : "34",
           "id" : "71",
           "sourceId" : "37",
           "tags" : "Relationship,Async",
           "technology" : "Kafka"
         }, {
-          "description" : "Доставляет события жизненного цикла товара",
-          "destinationId" : "16",
+          "description" : "Доставляет product.created.v1, product.archived.v1, product.restored.v1 (topic products)",
+          "destinationId" : "17",
           "id" : "72",
           "sourceId" : "37",
           "tags" : "Relationship,Async",
           "technology" : "Kafka"
         }, {
-          "description" : "Доставляет StockChanged",
+          "description" : "Доставляет stock.changed.v1 (topic stocks)",
           "destinationId" : "7",
           "id" : "73",
           "sourceId" : "37",
           "tags" : "Relationship,Async",
           "technology" : "Kafka"
         }, {
-          "description" : "Доставляет customer events и финальные события заказа",
+          "description" : "Доставляет customer.created.v1, customer.updated.v1, order.confirmed.v1, order.rejected.v2",
           "destinationId" : "36",
           "id" : "74",
           "sourceId" : "37",
           "tags" : "Relationship,Async",
           "technology" : "Kafka"
         }, {
-          "description" : "Доставляет StockChanged",
-          "destinationId" : "13",
-          "id" : "119",
+          "description" : "Доставляет stock.changed.v1 (topic stocks)",
+          "destinationId" : "14",
+          "id" : "121",
           "sourceId" : "37",
           "tags" : "Relationship",
           "technology" : "Kafka"
         }, {
-          "description" : "Доставляет ProductCreated / ProductUpdated / ProductArchived",
-          "destinationId" : "22",
+          "description" : "Доставляет product.created.v1 / product.archived.v1 / product.restored.v1 (topic products)",
+          "destinationId" : "23",
           "id" : "135",
           "sourceId" : "37",
           "tags" : "Relationship",
@@ -1979,7 +1081,7 @@
         "tags" : "Element,Container,Database",
         "technology" : "PostgreSQL"
       }, {
-        "description" : "Cache-Aside кеширование результатов read-запросов.",
+        "description" : "Cache-aside: список товаров, бренды и категории.",
         "documentation" : { },
         "id" : "42",
         "name" : "CatalogMs Cache",
@@ -2066,7 +1168,7 @@
         "vertices" : true
       },
       "containerId" : "25",
-      "description" : "Целевая внутренняя архитектура OrderMs: checkout, идемпотентность, Saga Orchestration, retry worker и outbox.",
+      "description" : "Внутренняя архитектура OrderMs: checkout с проверкой цен, идемпотентность, Saga Orchestration, retry worker и outbox.",
       "elements" : [ {
         "id" : "5",
         "x" : 0,
@@ -2080,7 +1182,7 @@
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "16",
+        "id" : "17",
         "x" : 0,
         "y" : 0
       }, {
@@ -2185,7 +1287,7 @@
         "vertices" : true
       },
       "containerId" : "7",
-      "description" : "Целевая внутренняя архитектура CatalogMs: CQRS-lite, Cache-Aside, Redis, Read Replica, Kafka consumer и outbox.",
+      "description" : "Внутренняя архитектура CatalogMs: CQRS-lite, cache-aside (products, brands, categories), read replica, internal snapshot на primary, Kafka consumer и outbox.",
       "elements" : [ {
         "id" : "5",
         "x" : 0,
@@ -2220,6 +1322,10 @@
         "y" : 0
       }, {
         "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
         "x" : 0,
         "y" : 0
       }, {
@@ -2258,7 +1364,7 @@
       }, {
         "id" : "110"
       }, {
-        "id" : "112"
+        "id" : "111"
       }, {
         "id" : "113"
       }, {
@@ -2293,18 +1399,14 @@
         "rankSeparation" : 100,
         "vertices" : true
       },
-      "containerId" : "16",
-      "description" : "Целевая внутренняя архитектура WarehouseMs: остатки, резервы, optimistic locking, product lifecycle events, reservation TTL и outbox.",
+      "containerId" : "17",
+      "description" : "Внутренняя архитектура WarehouseMs: остатки, резервы, pessimistic locking, product lifecycle events и outbox.",
       "elements" : [ {
         "id" : "5",
         "x" : 0,
         "y" : 0
       }, {
         "id" : "6",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "17",
         "x" : 0,
         "y" : 0
       }, {
@@ -2378,10 +1480,6 @@
         "id" : "137"
       }, {
         "id" : "138"
-      }, {
-        "id" : "139"
-      }, {
-        "id" : "140"
       } ],
       "title" : "C3. Компоненты — WarehouseMs"
     } ],
@@ -2491,11 +1589,11 @@
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "15",
+        "id" : "16",
         "x" : 0,
         "y" : 0
       }, {
-        "id" : "16",
+        "id" : "17",
         "x" : 0,
         "y" : 0
       }, {
@@ -2564,7 +1662,7 @@
       "name" : "Container View: Интернет-магазин электроники",
       "order" : 2,
       "relationships" : [ {
-        "id" : "111"
+        "id" : "112"
       }, {
         "id" : "130"
       }, {
@@ -2644,317 +1742,6 @@
       } ],
       "softwareSystemId" : "3",
       "title" : "C2. Контейнеры — обзор платформы"
-    } ],
-    "deploymentViews" : [ {
-      "automaticLayout" : {
-        "edgeSeparation" : 50,
-        "nodeSeparation" : 50,
-        "rankDirection" : "LeftRight",
-        "rankSeparation" : 100,
-        "vertices" : true
-      },
-      "description" : "Целевая development-среда: Helm umbrella chart для микросервисов, отдельные Helm releases для инфраструктуры, выделенный PostgreSQL Primary и Read Replica для CatalogMs. Centralized logging отмечен как planned.",
-      "elements" : [ {
-        "id" : "141",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "142",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "143",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "144",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "145",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "146",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "147",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "148",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "150",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "151",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "154",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "155",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "158",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "159",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "162",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "163",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "168",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "169",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "172",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "173",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "176",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "177",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "179",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "180",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "190",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "191",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "193",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "194",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "196",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "198",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "200",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "202",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "204",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "206",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "208",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "209",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "211",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "212",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "215",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "216",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "217",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "218",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "219",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "220",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "221",
-        "x" : 0,
-        "y" : 0
-      } ],
-      "environment" : "Development",
-      "key" : "KubernetesDeployment",
-      "name" : "Deployment View: Development",
-      "order" : 6,
-      "relationships" : [ {
-        "id" : "149"
-      }, {
-        "id" : "152"
-      }, {
-        "id" : "153"
-      }, {
-        "id" : "156"
-      }, {
-        "id" : "157"
-      }, {
-        "id" : "160"
-      }, {
-        "id" : "161"
-      }, {
-        "id" : "164"
-      }, {
-        "id" : "165"
-      }, {
-        "id" : "166"
-      }, {
-        "id" : "167"
-      }, {
-        "id" : "170"
-      }, {
-        "id" : "171"
-      }, {
-        "id" : "174"
-      }, {
-        "id" : "175"
-      }, {
-        "id" : "178"
-      }, {
-        "id" : "181"
-      }, {
-        "id" : "182"
-      }, {
-        "id" : "183"
-      }, {
-        "id" : "184"
-      }, {
-        "id" : "185"
-      }, {
-        "id" : "186"
-      }, {
-        "id" : "187"
-      }, {
-        "id" : "188"
-      }, {
-        "id" : "189"
-      }, {
-        "id" : "192"
-      }, {
-        "id" : "195"
-      }, {
-        "id" : "197"
-      }, {
-        "id" : "199"
-      }, {
-        "id" : "201"
-      }, {
-        "id" : "203"
-      }, {
-        "id" : "205"
-      }, {
-        "id" : "207"
-      }, {
-        "id" : "210"
-      }, {
-        "id" : "213"
-      }, {
-        "id" : "214"
-      }, {
-        "id" : "222"
-      }, {
-        "id" : "223"
-      }, {
-        "id" : "224"
-      }, {
-        "id" : "225"
-      }, {
-        "id" : "226"
-      }, {
-        "id" : "227"
-      }, {
-        "id" : "228"
-      }, {
-        "id" : "229"
-      }, {
-        "id" : "230"
-      }, {
-        "id" : "231"
-      }, {
-        "id" : "232"
-      }, {
-        "id" : "233"
-      }, {
-        "id" : "234"
-      }, {
-        "id" : "235"
-      }, {
-        "id" : "236"
-      }, {
-        "id" : "237"
-      }, {
-        "id" : "238"
-      }, {
-        "id" : "239"
-      }, {
-        "id" : "240"
-      }, {
-        "id" : "241"
-      }, {
-        "id" : "242"
-      } ],
-      "title" : "D1. Развёртывание платформы в Minikube"
     } ],
     "systemContextViews" : [ {
       "automaticLayout" : {
