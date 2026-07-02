@@ -34,9 +34,21 @@ resources:
 provisioning:
   enabled: true
   topics:
-    - name: orders
+    - name: auth
       partitions: 3
       replicationFactor: 1
     - name: customers
       partitions: 3
+      replicationFactor: 1
+    - name: orders
+      partitions: 3
+      replicationFactor: 1
+    - name: products
+      partitions: 3
+      replicationFactor: 1
+    - name: stocks
+      partitions: 3
+      replicationFactor: 1
+    - name: billing.dlq
+      partitions: 1
       replicationFactor: 1

@@ -20,6 +20,8 @@ data:
   Ms__Warehouse__Timeout: {{ .Values.config.msWarehouseTimeout | quote }}
   Ms__Delivery__BaseUrl: {{ default (include "order-service.deliveryServiceUrl" .) .Values.config.msDeliveryBaseUrlOverride | quote }}
   Ms__Delivery__Timeout: {{ .Values.config.msDeliveryTimeout | quote }}
+  Ms__Catalog__BaseUrl: {{ default (include "order-service.catalogServiceUrl" .) .Values.config.msCatalogBaseUrlOverride | quote }}
+  Ms__Catalog__Timeout: {{ .Values.config.msCatalogTimeout | quote }}
   OrderSaga__BatchSize: {{ .Values.config.orderSagaBatchSize | quote }}
   OrderSaga__LockDuration: {{ .Values.config.orderSagaLockDuration | quote }}
   OrderSaga__PollingInterval: {{ .Values.config.orderSagaPollingInterval | quote }}

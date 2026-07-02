@@ -5,6 +5,7 @@ global:
   peerBillingName: billing
   peerWarehouseName: warehouse
   peerDeliveryName: delivery
+  peerCatalogName: catalog
   clusterDomain: cluster.local
   secretType: Opaque
   dbHost: postgres-postgresql
@@ -60,6 +61,8 @@ config:
   msWarehouseTimeout: "00:00:10"
   msDeliveryBaseUrlOverride: ""
   msDeliveryTimeout: "00:00:10"
+  msCatalogBaseUrlOverride: ""
+  msCatalogTimeout: "00:00:10"
   orderSagaBatchSize: 10
   orderSagaLockDuration: "00:01:00"
   orderSagaPollingInterval: "00:00:05"

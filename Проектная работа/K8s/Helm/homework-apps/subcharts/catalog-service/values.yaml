@@ -4,18 +4,21 @@ global:
   peerAuthName: auth
   clusterDomain: cluster.local
   secretType: Opaque
-  dbHost: postgres-postgresql
-  dbPort: "5432"
+  catalogDbPrimaryHost: postgres-catalog-postgresql
+  catalogDbReplicaHost: postgres-catalog-postgresql-read
+  catalogDbPort: "5432"
+  redisHost: redis-master
+  redisPort: "6379"
   environment: Development
 
 enabled: true
-name: billing
-dbName: billing_db
+name: catalog
+dbName: catalog_db
 
 deployment:
-  imageRepository: maslovdeveloper/hwapp-billing-service
-  imageTag: "8.0"
-  replicaCount: 2
+  imageRepository: maslovdeveloper/hwapp-catalog-service
+  imageTag: "10.0"
+  replicaCount: 1
   maxSurge: 1
   maxUnavailable: 1
   port: 8000
@@ -44,18 +47,21 @@ migrationJob:
   enabled: true
   ttlSecondsAfterFinished: 100
   backoffLimit: 3
-  imageRepository: maslovdeveloper/hwapp-billing-migration
-  imageTag: "8.0"
+  imageRepository: maslovdeveloper/hwapp-catalog-migration
+  imageTag: "10.0"
 
 config:
   authUrlOverride: ""
-  kafkaGroupId: billing-service
+  kafkaGroupId: catalog-service
   kafkaTopics:
-    - auth
-  kafkaDlqTopic: billing.dlq
-  kafkaMaxRetryAttempts: 5
-  kafkaRetryDelaySeconds: 5
+    - stocks
+  kafkaAcks: "All"
+  kafkaEnableIdempotence: true
+  redisInstanceName: "catalog:"
+  lowStockThreshold: 5
+  brandsCacheTtl: "00:30:00"
+  categoriesCacheTtl: "00:30:00"
 
 secret:
-  dbUser: billing_user
-  dbPassword: billing_pass
+  dbUser: catalog_user
+  dbPassword: catalog_pass

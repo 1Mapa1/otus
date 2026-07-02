@@ -66,6 +66,38 @@ spec:
                 configMapKeyRef:
                   name: {{ include "warehouse-service.fullname" . }}
                   key: Auth__Url
+            - name: Kafka__BootstrapServers
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "warehouse-service.fullname" . }}
+                  key: Kafka__BootstrapServers
+            - name: Kafka__GroupId
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "warehouse-service.fullname" . }}
+                  key: Kafka__GroupId
+            {{- range $i, $_ := .Values.config.kafkaTopics }}
+            - name: Kafka__Topics__{{ $i }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "warehouse-service.fullname" $ }}
+                  key: Kafka__Topics__{{ $i }}
+            {{- end }}
+            - name: Kafka__WarehouseStockTopic
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "warehouse-service.fullname" . }}
+                  key: Kafka__WarehouseStockTopic
+            - name: Kafka__Acks
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "warehouse-service.fullname" . }}
+                  key: Kafka__Acks
+            - name: Kafka__EnableIdempotence
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "warehouse-service.fullname" . }}
+                  key: Kafka__EnableIdempotence
             - name: DB_USER
               valueFrom:
                 secretKeyRef:

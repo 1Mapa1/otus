@@ -14,4 +14,12 @@ data:
   DB_NAME: {{ .Values.dbName }}
   ASPNETCORE_ENVIRONMENT: {{ .Values.global.environment }}
   Auth__Url: {{ default (include "billing-service.authServiceUrl" .) .Values.config.authUrlOverride | quote }}
+  Kafka__BootstrapServers: {{ default (include "billing-service.kafkaBootstrapServersDefault" .) .Values.global.kafkaBootstrapServers | quote }}
+  Kafka__GroupId: {{ .Values.config.kafkaGroupId | quote }}
+  {{- range $i, $topic := .Values.config.kafkaTopics }}
+  Kafka__Topics__{{ $i }}: {{ $topic | quote }}
+  {{- end }}
+  Kafka__DlqTopic: {{ .Values.config.kafkaDlqTopic | quote }}
+  Kafka__MaxRetryAttempts: {{ .Values.config.kafkaMaxRetryAttempts | quote }}
+  Kafka__RetryDelaySeconds: {{ .Values.config.kafkaRetryDelaySeconds | quote }}
 {{- end }}

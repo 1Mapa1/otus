@@ -7,11 +7,20 @@
   CustomerService:
   http://{{ .Values.ingress.host }}/api/customers
 
+  CatalogService:
+  http://{{ .Values.ingress.host }}/api/catalog
+
   NotificationService:
   http://{{ .Values.ingress.host }}/api/notifications
 
   BillingService:
   http://{{ .Values.ingress.host }}/api/billing
+
+  WarehouseService:
+  http://{{ .Values.ingress.host }}/api/warehouse
+
+  DeliveryService:
+  http://{{ .Values.ingress.host }}/api/delivery
 
   OrderService:
   http://{{ .Values.ingress.host }}/api/orders

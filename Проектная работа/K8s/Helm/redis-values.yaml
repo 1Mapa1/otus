@@ -1,0 +1,12 @@
+architecture: standalone
+
+auth:
+  enabled: false
+
+master:
+  persistence:
+    enabled: true
+    size: 1Gi
+
+  service:
+    type: ClusterIP

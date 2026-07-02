@@ -1,42 +1,43 @@
-# Chart homework-apps
+# homework-apps
 
-Umbrella chart: общий Ingress родителя и подчарты **auth-service**, **customer-service**, **billing-service**, **warehouse-service**, **delivery-service**, **notification-service**, **order-service** (каталог `subcharts/`). Postgres, Kafka и прочая инфраструктура в chart не входят.
+Umbrella Helm chart для микросервисов HwApp.
 
-## Состав
+## Subcharts
 
-- **Родитель**: Ingress, `NOTES.txt`.
-- **auth-service**: Deployment, Service, ConfigMap, Secret (JWT), Job миграций.
-- **customer-service**: Deployment, Service, ConfigMap, Secret, Job миграций.
-- **notification-service**: Deployment, Service, ConfigMap, Secret, Job миграций; Kafka consumer + HTTP API (`/api/notifications`).
-- **billing-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API (`/api/billing/...`).
-- **warehouse-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API склада (`/api/warehouse/...`, `/api/internal/warehouse/...`).
-- **delivery-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API доставки (`/api/delivery/...`, `/api/internal/delivery/...`).
-- **order-service**: Deployment, Service, ConfigMap, Secret, Job миграций; HTTP API заказов (`/api/orders`), JWT, **сага заказа** (фоновый воркер), HTTP-клиенты **Billing** / **Warehouse** / **Delivery**, Kafka (outbox), настройки **идемпотентности** (`Idempotency__*`).
+| Alias | Service |
+|-------|---------|
+| `authService` | Auth |
+| `customerService` | Customer |
+| `catalogService` | Catalog |
+| `billingService` | Billing |
+| `warehouseService` | Warehouse |
+| `deliveryService` | Delivery |
+| `notificationService` | Notification |
+| `orderService` | Order |
 
-## Требования
+Включение/выключение: `values.yaml` → `<alias>.enabled`.
 
-- **Helm 3** на машине, с которой выполняется установка.
+## Global (`values.yaml`)
+
+- `dbHost` / `dbPort` — общий Postgres для 7 MS
+- `catalogDbPrimaryHost` / `catalogDbReplicaHost` — отдельный Postgres Catalog
+- `redisHost` / `redisPort` — Redis для Catalog
+- `kafkaClusterReleaseName` — имя Helm-релиза Kafka (по умолчанию `kafka`)
+- `peerCatalogName` — component name для in-cluster URL Catalog
 
 ## Установка
 
-Из каталога этого chart:
+Из каталога `K8s`:
+
+```bash
+make apps
+```
+
+Или вручную:
 
 ```bash
 helm dependency update
-
-helm upgrade --install homework-apps . \
-  -n homework \
-  --create-namespace
+helm upgrade --install homework-apps . -n electronics-store --create-namespace
 ```
 
-Флаг **`--dependency-update`** у `helm upgrade --install` может заменить отдельный вызов `helm dependency update` (подтянет зависимости из `subcharts/` в `charts/*.tgz` перед рендером).
-
-## Конфигурация
-
-Файл `values.yaml`:
-
-- **`global`** — общие настройки для подчартов: БД, окружение, домен кластера, Kafka bootstrap, имена компонентов для in-cluster URL (`peerAuthName`, `peerCustomerName`, `peerBillingName`, `peerWarehouseName`, `peerDeliveryName`, `umbrellaChartName`, `kubernetesAppName`).
-- **`authService`** / **`customerService`** / **`billingService`** / **`warehouseService`** / **`deliveryService`** / **`notificationService`** / **`orderService`** — параметры подчартов (образы, реплики, пробы, секреты, список Kafka-топиков для Notification, Billing/Kafka для Order и т.д.).
-- **`ingress`** — хост, класс, пути и привязка к сервисам.
-
-PostgreSQL и остальное — отдельно, см. [README уровня K8s](../../README.md).
+PostgreSQL, Redis, Kafka — отдельно, см. [README уровня K8s](../../README.md).

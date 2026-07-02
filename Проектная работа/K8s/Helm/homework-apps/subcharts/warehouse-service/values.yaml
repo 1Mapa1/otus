@@ -49,6 +49,12 @@ migrationJob:
 
 config:
   authUrlOverride: ""
+  kafkaGroupId: warehouse-service
+  kafkaTopics:
+    - products
+  kafkaWarehouseStockTopic: stocks
+  kafkaAcks: "All"
+  kafkaEnableIdempotence: true
 
 secret:
   dbUser: warehouse_user

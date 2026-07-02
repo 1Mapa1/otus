@@ -14,4 +14,12 @@ data:
   DB_NAME: {{ .Values.dbName }}
   ASPNETCORE_ENVIRONMENT: {{ .Values.global.environment }}
   Auth__Url: {{ default (include "warehouse-service.authServiceUrl" .) .Values.config.authUrlOverride | quote }}
+  Kafka__BootstrapServers: {{ default (include "warehouse-service.kafkaBootstrapServersDefault" .) .Values.global.kafkaBootstrapServers | quote }}
+  Kafka__GroupId: {{ .Values.config.kafkaGroupId | quote }}
+  {{- range $i, $topic := .Values.config.kafkaTopics }}
+  Kafka__Topics__{{ $i }}: {{ $topic | quote }}
+  {{- end }}
+  Kafka__WarehouseStockTopic: {{ .Values.config.kafkaWarehouseStockTopic | quote }}
+  Kafka__Acks: {{ .Values.config.kafkaAcks | quote }}
+  Kafka__EnableIdempotence: {{ .Values.config.kafkaEnableIdempotence | quote }}
 {{- end }}

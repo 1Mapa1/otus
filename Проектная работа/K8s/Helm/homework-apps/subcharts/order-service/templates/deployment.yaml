@@ -96,6 +96,16 @@ spec:
                 configMapKeyRef:
                   name: {{ include "order-service.fullname" . }}
                   key: Ms__Delivery__Timeout
+            - name: Ms__Catalog__BaseUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Ms__Catalog__BaseUrl
+            - name: Ms__Catalog__Timeout
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "order-service.fullname" . }}
+                  key: Ms__Catalog__Timeout
             - name: OrderSaga__BatchSize
               valueFrom:
                 configMapKeyRef:

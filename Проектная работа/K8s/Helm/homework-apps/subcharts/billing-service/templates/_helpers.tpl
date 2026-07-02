@@ -36,3 +36,8 @@ app.kubernetes.io/component: {{ .Values.name }}
 {{- $host := printf "%s-%s" (include "billing-service.releaseBase" .) .Values.global.peerAuthName | trunc 63 | trimSuffix "-" -}}
 {{- printf "http://%s.%s.svc.%s" $host .Release.Namespace (default "cluster.local" .Values.global.clusterDomain) -}}
 {{- end }}
+
+{{- define "billing-service.kafkaBootstrapServersDefault" -}}
+{{- $kafkaRelease := .Values.global.kafkaClusterReleaseName | default "kafka" -}}
+{{- printf "%s-controller-headless.%s.svc.%s:9092" $kafkaRelease .Release.Namespace (default "cluster.local" .Values.global.clusterDomain) -}}
+{{- end }}

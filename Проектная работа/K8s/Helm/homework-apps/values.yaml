@@ -11,8 +11,14 @@ global:
   peerBillingName: billing
   peerWarehouseName: warehouse
   peerDeliveryName: delivery
+  peerCatalogName: catalog
   dbHost: postgres-postgresql
   dbPort: "5432"
+  catalogDbPrimaryHost: postgres-catalog-postgresql
+  catalogDbReplicaHost: postgres-catalog-postgresql-read
+  catalogDbPort: "5432"
+  redisHost: redis-master
+  redisPort: "6379"
   environment: Development
   secretType: Opaque
   clusterDomain: cluster.local
@@ -27,7 +33,7 @@ authService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-auth-service
-    imageTag: "7.0"
+    imageTag: "10.0"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -69,7 +75,7 @@ authService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-auth-migration
-    imageTag: "7.0"
+    imageTag: "10.0"
 
   config:
     # Optional override. Empty value means auto-resolve in-cluster URL.
@@ -121,7 +127,7 @@ customerService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-customer-service
-    imageTag: "7.1"
+    imageTag: "10.0"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -163,7 +169,7 @@ customerService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-customer-migration
-    imageTag: "7.0"
+    imageTag: "10.0"
 
   config:
     authUrlOverride: ""
@@ -174,6 +180,62 @@ customerService:
     dbUser: customer_user
     dbPassword: customer_pass
 
+catalogService:
+  enabled: true
+  name: catalog
+  dbName: catalog_db
+
+  deployment:
+    imageRepository: maslovdeveloper/hwapp-catalog-service
+    imageTag: "10.0"
+    replicaCount: 1
+    maxSurge: 1
+    maxUnavailable: 1
+    port: 8000
+    protocol: TCP
+    startupProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 12
+    readinessProbe:
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+      successThreshold: 1
+    livenessProbe:
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    port: 80
+    protocol: TCP
+    name: http
+
+  migrationJob:
+    enabled: true
+    ttlSecondsAfterFinished: 100
+    backoffLimit: 3
+    imageRepository: maslovdeveloper/hwapp-catalog-migration
+    imageTag: "10.0"
+
+  config:
+    authUrlOverride: ""
+    kafkaGroupId: catalog-service
+    kafkaTopics:
+      - stocks
+    kafkaAcks: "All"
+    kafkaEnableIdempotence: true
+    redisInstanceName: "catalog:"
+    lowStockThreshold: 5
+    brandsCacheTtl: "00:30:00"
+    categoriesCacheTtl: "00:30:00"
+
+  secret:
+    dbUser: catalog_user
+    dbPassword: catalog_pass
+
 notificationService:
   enabled: true
   name: notification
@@ -181,7 +243,7 @@ notificationService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-notification-service
-    imageTag: "8.4"
+    imageTag: "10.0"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -212,7 +274,7 @@ notificationService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-notification-migration
-    imageTag: "8.0"
+    imageTag: "10.0"
 
   config:
     authUrlOverride: ""
@@ -232,7 +294,7 @@ billingService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-billing-service
-    imageTag: "8.0"
+    imageTag: "10.0"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -263,10 +325,16 @@ billingService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-billing-migration
-    imageTag: "8.0"
+    imageTag: "10.0"
 
   config:
     authUrlOverride: ""
+    kafkaGroupId: billing-service
+    kafkaTopics:
+      - auth
+    kafkaDlqTopic: billing.dlq
+    kafkaMaxRetryAttempts: 5
+    kafkaRetryDelaySeconds: 5
 
   secret:
     dbUser: billing_user
@@ -279,7 +347,7 @@ orderService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-order-service
-    imageTag: "9.1"
+    imageTag: "10.0"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -310,7 +378,7 @@ orderService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-order-migration
-    imageTag: "9.0"
+    imageTag: "10.0"
 
   config:
     authUrlOverride: ""
@@ -320,6 +388,8 @@ orderService:
     msWarehouseTimeout: "00:00:10"
     msDeliveryBaseUrlOverride: ""
     msDeliveryTimeout: "00:00:10"
+    msCatalogBaseUrlOverride: ""
+    msCatalogTimeout: "00:00:10"
     orderSagaBatchSize: 10
     orderSagaLockDuration: "00:01:00"
     orderSagaPollingInterval: "00:00:05"
@@ -339,7 +409,7 @@ warehouseService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-warehouse-service
-    imageTag: "8.1"
+    imageTag: "10.0"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -370,10 +440,16 @@ warehouseService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-warehouse-migration
-    imageTag: "8.1"
+    imageTag: "10.0"
 
   config:
     authUrlOverride: ""
+    kafkaGroupId: warehouse-service
+    kafkaTopics:
+      - products
+    kafkaWarehouseStockTopic: stocks
+    kafkaAcks: "All"
+    kafkaEnableIdempotence: true
 
   secret:
     dbUser: warehouse_user
@@ -386,7 +462,7 @@ deliveryService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-delivery-service
-    imageTag: "8.2"
+    imageTag: "10.0"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -417,7 +493,7 @@ deliveryService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-delivery-migration
-    imageTag: "8.0"
+    imageTag: "10.0"
 
   config:
     authUrlOverride: ""
@@ -429,7 +505,7 @@ deliveryService:
 ingress:
   enabled: true
   className: nginx
-  host: arch.homework
+  host: electronics.store
   paths:
     - path: /api/auth
       service: authService
@@ -437,6 +513,8 @@ ingress:
       service: authService
     - path: /api/customers
       service: customerService
+    - path: /api/catalog
+      service: catalogService
     - path: /api/notifications
       service: notificationService
     - path: /api/billing

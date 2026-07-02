@@ -66,6 +66,38 @@ spec:
                 configMapKeyRef:
                   name: {{ include "billing-service.fullname" . }}
                   key: Auth__Url
+            - name: Kafka__BootstrapServers
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "billing-service.fullname" . }}
+                  key: Kafka__BootstrapServers
+            - name: Kafka__GroupId
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "billing-service.fullname" . }}
+                  key: Kafka__GroupId
+            {{- range $i, $_ := .Values.config.kafkaTopics }}
+            - name: Kafka__Topics__{{ $i }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "billing-service.fullname" $ }}
+                  key: Kafka__Topics__{{ $i }}
+            {{- end }}
+            - name: Kafka__DlqTopic
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "billing-service.fullname" . }}
+                  key: Kafka__DlqTopic
+            - name: Kafka__MaxRetryAttempts
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "billing-service.fullname" . }}
+                  key: Kafka__MaxRetryAttempts
+            - name: Kafka__RetryDelaySeconds
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "billing-service.fullname" . }}
+                  key: Kafka__RetryDelaySeconds
             - name: DB_USER
               valueFrom:
                 secretKeyRef:

@@ -1,130 +1,97 @@
 # Kubernetes
 
-Helm chart и значения для развёртывания приложений (**Auth**, **Customer**, **Billing**, **Warehouse**, **Delivery**, **Notification**, **Order**), общий **PostgreSQL**, **Kafka** (для OrderService и NotificationService) и **Ingress**.
+Helm chart и значения для развёртывания приложений (**Auth**, **Customer**, **Catalog**, **Billing**, **Warehouse**, **Delivery**, **Notification**, **Order**), **PostgreSQL** (общий + отдельный для Catalog с read replica), **Redis**, **Kafka**, **Kafka UI** и **Ingress** (nginx).
 
 ## Требования
 
-- Kubernetes (например, minikube)
+- Kubernetes (minikube)
 - Helm 3
-- Ingress Controller (ниже — установка ingress-nginx через Helm)
-- В `/etc/hosts` (или аналог): `<IP кластера> arch.homework`
+- Ingress Controller (ingress-nginx через Helm)
+- В `hosts`: `<IP minikube> electronics.store`
 
 ## Makefile (быстрая установка)
 
-Из каталога **`ДЗ 9/K8s`** (рядом с `Helm/`): `make help`. Типовой сценарий: **`make install`** — репозитории Helm, namespace для ingress (`m` по умолчанию), **ingress-nginx**, namespace приложений (**`homework`** по умолчанию), Postgres, Kafka, один релиз umbrella **`homework-apps`** (все сервисы приложения ставятся вместе). Опционально: **`make kafka-ui`**. Свой namespace: `make install NS=my-namespace`. Снятие релизов Helm: **`make uninstall`**; при необходимости затем **`make purge-ns`** (удалит namespace `NS` целиком). Namespace ingress (`INGRESS_NS`) `purge-ns` не трогает.
+Из каталога **`K8s`** (рядом с `Helm/`): `make help`.
 
-Нужны **GNU Make** и shell как в WSL / Git Bash / Linux (на чистом `cmd.exe` без `make` этот файл не используется).
+**`make install`** — полный стенд:
+
+1. Helm repos
+2. ingress-nginx (namespace `m`)
+3. namespace приложений **`electronics-store`**
+4. Postgres (7 MS)
+5. Postgres Catalog (primary + read replica)
+6. Redis
+7. Kafka (топики: `auth`, `customers`, `orders`, `products`, `stocks`, `billing.dlq`)
+8. Kafka UI
+9. umbrella **`homework-apps`** (все 8 MS)
+
+Свой namespace: `make install NS=my-namespace` (тогда поправьте `bootstrapServers` в `Helm/kafka-ui-values.yaml`).
+
+Снятие: **`make uninstall`** → при необходимости **`make purge-ns`**.
 
 ## Ingress
 
-```bash
-kubectl create namespace m
+Host по умолчанию: **`electronics.store`** (`homework-apps/values.yaml` → `ingress.host`).
 
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
+Маршруты (только public API):
 
-helm install nginx ingress-nginx/ingress-nginx \
-  --namespace m \
-  -f Helm/nginx-ingress.yaml
-```
+| Path | Service |
+|------|---------|
+| `/api/auth`, `/.well-known` | Auth |
+| `/api/customers` | Customer |
+| `/api/catalog` | Catalog |
+| `/api/notifications` | Notification |
+| `/api/billing` | Billing |
+| `/api/warehouse` | Warehouse |
+| `/api/delivery` | Delivery |
+| `/api/orders` | Order |
 
-## Namespace
+`/api/internal/*` в Ingress **не** публикуется — вызовы между MS идут in-cluster.
 
-В командах ниже везде стоит **`homework`** — это **короткий placeholder**: подставьте **свой** namespace (`-n <ваш>`) во всех шагах одинаково (Postgres, Kafka, `homework-apps`). Какой namespace выбрать — **на ваше усмотрение**.
+Swagger: `/api/<service>/swagger` (если включён в образе).
 
-При пустом `global.kafkaBootstrapServers` в `homework-apps` bootstrap по умолчанию:  
-`<релиз-kafka>-controller-headless.<ваш-namespace>.svc.cluster.local:9092` (см. `global.kafkaClusterReleaseName`, обычно релиз **`kafka`**).
+## Инфраструктура
 
-## PostgreSQL
+| Релиз Helm | Назначение |
+|------------|------------|
+| `postgres` | БД для Auth, Customer, Order, Billing, Warehouse, Delivery, Notification |
+| `postgres-catalog` | `catalog_db` на primary + streaming read replica |
+| `redis` | кэш Catalog (brands/categories/products list) |
+| `kafka` | event bus |
+| `kafka-ui` | UI для просмотра топиков |
 
-Один релиз Bitnami PostgreSQL с init-скриптом: пользователи и БД для сервисов, включая **warehouse** и **delivery** (см. `Helm/postgres-values.yaml`).
+Bootstrap Kafka (при пустом `global.kafkaBootstrapServers` в umbrella):
 
-```bash
-kubectl create namespace homework
+`kafka-controller-headless.<namespace>.svc.cluster.local:9092`
 
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo update
+## Приложения (`homework-apps`)
 
-helm install postgres bitnami/postgresql \
-  -n homework \
-  -f Helm/postgres-values.yaml
-```
-
-## Kafka
-
-Нужен для **OrderService** (outbox → продюсер) и **NotificationService** (consumer). Ставьте в **тот же namespace**, что и `homework-apps` и Postgres.
-
-Из каталога **`ДЗ 9/K8s`** (рядом лежат `Helm/kafka-values.yaml`, `Helm/kafka-ui-values.yaml`). Если команды запускаете из **`ДЗ 9/K8s/Helm`**, укажите `-f kafka-values.yaml` и `-f kafka-ui-values.yaml`.
-
-Репозиторий Bitnami нужен для `helm search` / привычки; сам Kafka ставится **OCI-чартом** `bitnamicharts/kafka`:
+Образы: `maslovdeveloper/hwapp-*`, тег **`10.0`**.
 
 ```bash
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo update
-
-helm upgrade --install kafka oci://registry-1.docker.io/bitnamicharts/kafka \
-  -n homework \
-  -f Helm/kafka-values.yaml \
-  --wait=false
+cd K8s
+make install
 ```
 
-Опционально **Kafka UI** (Provectus):
+Или только apps (если инфра уже поднята): `make apps`.
 
-```bash
-helm repo add kafka-ui https://provectus.github.io/kafka-ui-charts
-helm repo update
+**OrderService** — in-cluster URL Billing, Catalog, Warehouse, Delivery (`Ms__*__*`).
 
-helm upgrade --install kafka-ui kafka-ui/kafka-ui \
-  -n homework \
-  -f Helm/kafka-ui-values.yaml
-```
+**CatalogService** — dual DB (`DB_PRIMARY_*` / `DB_REPLICA_*`), Redis, Kafka consumer `stocks`.
 
-В `Helm/kafka-ui-values.yaml` в `bootstrapServers` может быть зашит **другой** namespace — приведите к тому же, куда ставите Kafka (`<релиз>-controller-headless.<namespace>.svc.cluster.local:9092`).
+**BillingService** — Kafka consumer `auth`, DLQ `billing.dlq`.
 
-Имя релиза Kafka в `homework-apps/values.yaml`: **`kafkaClusterReleaseName: kafka`** (полный bootstrap при пустом `kafkaBootstrapServers`: **`kafka-controller-headless.<ваш-namespace>.svc.cluster.local:9092`**).
-
-## Приложения (Helm chart `homework-apps`)
-
-Chart: [Helm/homework-apps](./Helm/homework-apps/README.md) — umbrella chart с подчартами в `subcharts/` (**auth**, **customer**, **billing**, **warehouse**, **delivery**, **notification**, **order**). Все подчарты ставятся **одним** `helm upgrade --install` родителя (включение/выключение — через `values.yaml` и `enabled`).
-
-```bash
-cd Helm/homework-apps
-
-helm dependency update
-
-helm upgrade --install homework-apps . \
-  -n homework \
-  --create-namespace
-```
-
-Либо одной командой из **`ДЗ 9/K8s`**: **`make apps`** или добавьте **`--dependency-update`** к `helm upgrade --install`, если не вызывали `helm dependency update` вручную.
-
-При установке создаются ресурсы для подключённых сервисов (ConfigMap, Secret, Job миграций, Deployment, Service), Ingress с маршрутами (см. `templates/ingress.yaml` и `values.yaml`):
-
-- `/api/auth`, `/.well-known` → AuthService
-- `/api/customers` → CustomerService
-- `/api/notifications` → NotificationService
-- `/api/billing` → BillingService
-- `/api/warehouse` → WarehouseService
-- `/api/delivery` → DeliveryService
-- `/api/orders` → OrderService (Swagger: `.../api/orders/swagger/...`)
-
-**OrderService** получает in-cluster URL сервисов Billing, Warehouse и Delivery через переменные окружения `Ms__Billing__*`, `Ms__Warehouse__*`, `Ms__Delivery__*`, настройки саги `OrderSaga__*` и **идемпотентности** `Idempotency__*` (см. `homework-apps/values.yaml` → `orderService.config`).
+**WarehouseService** — Kafka consumer `products`, producer topic `stocks`.
 
 ## Проверка
 
 ```bash
-kubectl get pods -n homework
-kubectl get ingress -n homework
+make status
+# или
+kubectl get pods -n electronics-store
+kubectl get ingress -n electronics-store
 ```
-
-(Замените `homework` на тот namespace, который использовали в командах выше.)
-
-Примеры запросов (после записи `arch.homework`):
 
 ```bash
-curl -sS http://arch.homework/.well-known/jwks.json
-curl -sS -X POST http://arch.homework/api/auth/login -H "Content-Type: application/json" -d "{}"
+curl -sS http://electronics.store/.well-known/jwks.json
 ```
-
-Swagger (если включён в образе) — по путям сервисов за Ingress согласно настройке приложения.

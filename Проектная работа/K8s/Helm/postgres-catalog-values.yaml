@@ -1,0 +1,30 @@
+architecture: replication
+
+auth:
+  postgresPassword: postgres
+  username: catalog_user
+  password: catalog_pass
+  database: catalog_db
+
+primary:
+  persistence:
+    enabled: true
+    size: 1Gi
+
+  service:
+    type: ClusterIP
+
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+
+readReplicas:
+  replicaCount: 1
+
+  persistence:
+    enabled: true
+    size: 1Gi
