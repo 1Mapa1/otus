@@ -1,3 +1,4 @@
+using CatalogService.Application.Abstractions.Caching;
 using CatalogService.Application.Abstractions.Persistence;
 using CatalogService.Application.Common;
 using MediatR;
@@ -7,11 +8,19 @@ namespace CatalogService.Application.Categories.UpdateCategory
     internal sealed class UpdateCategoryHandler : IRequestHandler<UpdateCategoryCommand, Result>
     {
         private readonly ICategoryWriteRepository _categoryRepository;
+        private readonly ICategoryPrimaryReadRepository _categoryPrimaryReadRepository;
+        private readonly ICatalogReferenceListCacheService _referenceListCacheService;
         private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateCategoryHandler(ICategoryWriteRepository categoryRepository, IUnitOfWork unitOfWork)
+        public UpdateCategoryHandler(
+            ICategoryWriteRepository categoryRepository,
+            ICategoryPrimaryReadRepository categoryPrimaryReadRepository,
+            ICatalogReferenceListCacheService referenceListCacheService,
+            IUnitOfWork unitOfWork)
         {
             _categoryRepository = categoryRepository;
+            _categoryPrimaryReadRepository = categoryPrimaryReadRepository;
+            _referenceListCacheService = referenceListCacheService;
             _unitOfWork = unitOfWork;
         }
 
@@ -29,6 +38,10 @@ namespace CatalogService.Application.Categories.UpdateCategory
 
             category.Rename(request.Name, DateTime.UtcNow);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            await _referenceListCacheService.RefreshCategoriesAsync(
+                ct => _categoryPrimaryReadRepository.GetCategoriesAsync(ct),
+                cancellationToken);
 
             return Result.Success();
         }

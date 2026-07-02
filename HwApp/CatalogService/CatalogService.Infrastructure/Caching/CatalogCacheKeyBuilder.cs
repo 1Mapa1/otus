@@ -4,6 +4,13 @@ namespace CatalogService.Infrastructure.Caching
 {
     internal static class CatalogCacheKeyBuilder
     {
+        public const string BrandsListKey = "brands:all";
+
+        public const string CategoriesListKey = "categories:all";
+
+        public static string BuildLockKey(string cacheKey)
+            => $"catalog:locks:{cacheKey}";
+
         public static string BuildListKey(ProductListQuery query)
         {
             var search = NormalizeSearch(query.Search);
@@ -16,7 +23,7 @@ namespace CatalogService.Infrastructure.Caching
         }
 
         public static string BuildListLockKey(ProductListQuery query)
-            => $"catalog:locks:{BuildListKey(query)}";
+            => BuildLockKey(BuildListKey(query));
 
         private static string NormalizeSearch(string? search)
         {

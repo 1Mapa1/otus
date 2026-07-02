@@ -80,6 +80,8 @@ namespace CatalogService.Infrastructure
             services.AddScoped<IProductReadRepository, ProductReadRepository>();
             services.AddScoped<IBrandReadRepository, BrandReadRepository>();
             services.AddScoped<ICategoryReadRepository, CategoryReadRepository>();
+            services.AddScoped<IBrandPrimaryReadRepository, BrandPrimaryReadRepository>();
+            services.AddScoped<ICategoryPrimaryReadRepository, CategoryPrimaryReadRepository>();
 
             return services;
         }
@@ -106,7 +108,16 @@ namespace CatalogService.Infrastructure
                 services.AddSingleton(new RedisConnectionAccessor(null));
             }
 
+            services.AddScoped<CatalogDistributedCache>();
             services.AddScoped<IProductListCacheService, ProductListCacheService>();
+            services.AddScoped<ICatalogReferenceListCacheService, CatalogReferenceListCacheService>();
+
+            services.AddOptions<CatalogOptions>()
+                .Bind(configuration.GetSection(CatalogOptions.SectionName))
+                .Validate(options => options.LowStockThreshold >= 0, "Catalog:LowStockThreshold must be zero or greater.")
+                .Validate(options => options.BrandsCacheTtl > TimeSpan.Zero, "Catalog:BrandsCacheTtl must be greater than zero.")
+                .Validate(options => options.CategoriesCacheTtl > TimeSpan.Zero, "Catalog:CategoriesCacheTtl must be greater than zero.")
+                .ValidateOnStart();
 
             return services;
         }
@@ -115,11 +126,6 @@ namespace CatalogService.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            services.AddOptions<CatalogOptions>()
-                .Bind(configuration.GetSection(CatalogOptions.SectionName))
-                .Validate(options => options.LowStockThreshold >= 0, "Catalog:LowStockThreshold must be zero or greater.")
-                .ValidateOnStart();
-
             services.AddOptions<KafkaOptions>()
                 .Bind(configuration.GetSection(KafkaOptions.SectionName))
                 .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "Kafka:BootstrapServers must be provided.")

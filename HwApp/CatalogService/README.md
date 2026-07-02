@@ -29,13 +29,24 @@
 
 ### Redis Cache-Aside
 
-Только для `GET /api/catalog/products`:
+**Product list** (`GET /api/catalog/products`):
 
-- `IDistributedCache` + `IConnectionMultiplexer`, `InstanceName = catalog:`
 - TTL: **60 с + jitter 0–15 с**
-- `CatalogCacheKeyBuilder` — нормализованный ключ запроса
-- `RedisCacheLock` — distributed lock против cache stampede (Lua release)
-- Redis недоступен → bypass cache, читаем replica
+- Ключ зависит от query (search, filters, sort, page)
+
+**Brands / categories** (`GET /api/catalog/brands`, `GET /api/catalog/categories`):
+
+- Фиксированные ключи `brands:all`, `categories:all`
+- TTL: `Catalog:BrandsCacheTtl` / `Catalog:CategoriesCacheTtl` (default **30 min**)
+- После admin create/update: **refresh** списка из **primary** → `Set` в Redis (не delete)
+- Cache miss: чтение с **replica** + distributed lock
+
+Общая инфраструктура:
+
+- `CatalogDistributedCache` — `GetOrCreateWithLockAsync`, `SetAsync`
+- `IDistributedCache` + `IConnectionMultiplexer`, `InstanceName = catalog:`
+- `RedisCacheLock` — lock против cache stampede на нескольких pod'ах
+- Redis недоступен → bypass cache / skip write, warning log; admin command остаётся успешной
 - Replica недоступна при cache miss → **503**
 
 ### Kafka
@@ -60,7 +71,11 @@ Payload lifecycle: `{ "productId": "guid" }`. Key: `productId`.
     "CatalogReplica": ""
   },
   "Auth": { "Url": "" },
-  "Catalog": { "LowStockThreshold": 5 },
+  "Catalog": {
+    "LowStockThreshold": 5,
+    "BrandsCacheTtl": "00:30:00",
+    "CategoriesCacheTtl": "00:30:00"
+  },
   "Redis": {
     "Configuration": "localhost:6379",
     "InstanceName": "catalog:"
@@ -85,8 +100,8 @@ Env overrides: `DB_PRIMARY_*`, `DB_REPLICA_*`.
 |-------|------|----------|
 | GET | `/api/catalog/products` | Список активных товаров (ProductReadModel, Redis cache) |
 | GET | `/api/catalog/products/{id}` | Детали (Product + brand + category + attributes + availability) |
-| GET | `/api/catalog/brands` | Справочник брендов |
-| GET | `/api/catalog/categories` | Справочник категорий |
+| GET | `/api/catalog/brands` | Справочник брендов (Redis cache, replica on miss) |
+| GET | `/api/catalog/categories` | Справочник категорий (Redis cache, replica on miss) |
 
 Query для списка: `search`, `brandId`, `categoryId`, `minPrice`, `maxPrice`, `sort` (`price-asc`, `price-desc`, `name-asc`, `name-desc`), `page` (default 1), `pageSize` (default 24, max 100).
 
