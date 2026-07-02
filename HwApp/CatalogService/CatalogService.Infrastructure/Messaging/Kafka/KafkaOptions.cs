@@ -10,8 +10,6 @@ namespace CatalogService.Infrastructure.Messaging.Kafka
 
         public string[] Topics { get; init; } = [];
 
-        public string CatalogProductTopic { get; init; } = "catalog.product";
-
         public string Acks { get; init; } = "All";
 
         public bool EnableIdempotence { get; init; } = true;

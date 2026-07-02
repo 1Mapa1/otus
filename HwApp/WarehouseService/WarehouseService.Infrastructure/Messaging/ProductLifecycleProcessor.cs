@@ -17,9 +17,9 @@ namespace WarehouseService.Infrastructure.Messaging
 
         private static readonly HashSet<string> SupportedEventTypes = new(StringComparer.Ordinal)
         {
-            "ProductCreated",
-            "ProductArchived",
-            "ProductRestored"
+            "product.created.v1",
+            "product.archived.v1",
+            "product.restored.v1"
         };
 
         private readonly DatabaseContext _databaseContext;
@@ -55,15 +55,15 @@ namespace WarehouseService.Infrastructure.Messaging
 
             switch (envelope.EventType)
             {
-                case "ProductCreated":
+                case "product.created.v1":
                     await HandleProductCreatedAsync(productId, cancellationToken);
                     break;
 
-                case "ProductArchived":
+                case "product.archived.v1":
                     await HandleProductArchivedAsync(productId, cancellationToken);
                     break;
 
-                case "ProductRestored":
+                case "product.restored.v1":
                     await HandleProductRestoredAsync(productId, cancellationToken);
                     break;
             }

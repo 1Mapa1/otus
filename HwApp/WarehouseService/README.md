@@ -1,6 +1,6 @@
 # WarehouseService
 
-Сервис **складских остатков** (`WarehouseMs`): `StockItem`, резервы под заказ, движения склада, публикация `StockChanged` в Kafka. **Товарной карточки** (name, price) в Warehouse **нет** — она в CatalogMs.
+Сервис **складских остатков** (`WarehouseMs`): `StockItem`, резервы под заказ, движения склада, публикация `stock.changed.v1` в Kafka. **Товарной карточки** (name, price) в Warehouse **нет** — она в CatalogMs.
 
 ## Архитектура
 
@@ -50,14 +50,14 @@ ReservedQuantity  = уже зарезервировано
 
 ## Kafka
 
-**Потребляет** (topics из `Kafka:Topics`, envelope как Billing):
+**Потребляет** (topic `products`, envelope как Billing):
 
-- `ProductCreated` — создать `StockItem` с нулевым остатком (идемпотентно)
-- `ProductArchived` / `ProductRestored` — `IsActive` (без изменения quantities)
+- `product.created.v1` — создать `StockItem` с нулевым остатком (идемпотентно)
+- `product.archived.v1` / `product.restored.v1` — `IsActive` (без изменения quantities)
 
-**Публикует** (topic `Kafka:WarehouseStockTopic`, outbox):
+**Публикует** (topic `stocks`, outbox):
 
-- `StockChanged` после Income / Reserve / Cancel
+- `stock.changed.v1` после Income / Reserve / Cancel
 
 Конфигурация (`appsettings` / env):
 
@@ -74,7 +74,7 @@ Inbox в Warehouse **не используется**.
 ## Связанные сервисы
 
 - [OrderService](../OrderService/README.md) — сага (резерв / отмена)
-- [CatalogService](../CatalogService/README.md) — lifecycle события и потребитель `StockChanged`
+- [CatalogService](../CatalogService/README.md) — lifecycle события и потребитель `stock.changed.v1`
 
 ## Сборка Docker
 

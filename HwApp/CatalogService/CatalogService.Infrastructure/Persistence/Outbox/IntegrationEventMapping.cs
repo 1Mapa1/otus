@@ -8,9 +8,9 @@ namespace CatalogService.Infrastructure.Persistence.Outbox
         private static readonly IReadOnlyDictionary<Type, (string Topic, string EventType)> Mapping =
             new Dictionary<Type, (string Topic, string EventType)>
             {
-                [typeof(ProductCreatedEvent)] = ("catalog.product", "ProductCreated"),
-                [typeof(ProductArchivedEvent)] = ("catalog.product", "ProductArchived"),
-                [typeof(ProductRestoredEvent)] = ("catalog.product", "ProductRestored")
+                [typeof(ProductCreatedEvent)] = ("products", "product.created.v1"),
+                [typeof(ProductArchivedEvent)] = ("products", "product.archived.v1"),
+                [typeof(ProductRestoredEvent)] = ("products", "product.restored.v1")
             };
 
         public EventMetadata Resolve(IDomainEvent domainEvent)

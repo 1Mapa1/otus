@@ -67,17 +67,17 @@ AvailableCapacity = Capacity - ReservedCount
 
 ### HTTP API
 
-|Method|Endpoint|Назначение|Доступ|
-|---|---|---|---|
-|POST|`/api/delivery/slots/available`|Получить доступные слоты для переданного адреса|USER|
-|GET|`/api/delivery/zones`|Получить список зон доставки|ADMIN|
-|POST|`/api/delivery/zones`|Создать зону доставки|ADMIN|
-|PUT|`/api/delivery/zones/{zoneId}`|Изменить или деактивировать зону|ADMIN|
-|GET|`/api/delivery/slots`|Получить список слотов|ADMIN|
-|POST|`/api/delivery/slots`|Создать слот доставки для зоны|ADMIN|
-|PUT|`/api/delivery/slots/{slotId}`|Изменить время, capacity или статус слота|ADMIN|
-|POST|`/api/internal/delivery/reservations`|Зарезервировать слот под заказ|INTERNAL|
-|POST|`/api/internal/delivery/reservations/cancel`|Отменить резерв доставки|INTERNAL|
+| Method | Endpoint                                     | Назначение                                      | Доступ   |
+| ------ | -------------------------------------------- | ----------------------------------------------- | -------- |
+| POST   | `/api/delivery/slots/available`              | Получить доступные слоты для переданного адреса | USER     |
+| GET    | `/api/delivery/zones`                        | Получить список зон доставки                    | ADMIN    |
+| POST   | `/api/delivery/zones`                        | Создать зону доставки                           | ADMIN    |
+| PUT    | `/api/delivery/zones/{zoneId}`               | Изменить или деактивировать зону                | ADMIN    |
+| GET    | `/api/delivery/slots`                        | Получить список слотов                          | ADMIN    |
+| POST   | `/api/delivery/slots`                        | Создать слот доставки для зоны                  | ADMIN    |
+| PUT    | `/api/delivery/slots/{slotId}`               | Изменить время, capacity или статус слота       | ADMIN    |
+| POST   | `/api/internal/delivery/reservations`        | Зарезервировать слот под заказ                  | INTERNAL |
+| POST   | `/api/internal/delivery/reservations/cancel` | Отменить резерв доставки                        | INTERNAL |
 
 ### Взаимодействует с
 
@@ -101,5 +101,5 @@ AvailableCapacity = Capacity - ReservedCount
 - Role-Based Access Control
 - Saga Participant
 - Idempotency
-- Optimistic Locking
+- Atomic Conditional Update
 - Transactional Consistency

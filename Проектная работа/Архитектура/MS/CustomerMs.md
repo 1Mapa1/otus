@@ -70,8 +70,8 @@ CustomerMs отвечает за профиль клиента и его адр�
 ### Kafka events
 
 Публикует:
-- `CustomerCreated`
-- `CustomerUpdated`
+- `CustomerCreatedV1` (`customer.created.v1`)
+- `CustomerUpdatedV1` (`customer.updated.v1`)
 
 Потребляет:
 - —

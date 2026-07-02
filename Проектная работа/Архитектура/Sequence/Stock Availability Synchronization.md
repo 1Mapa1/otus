@@ -71,7 +71,7 @@ sequenceDiagram
 
     note over C: Update ProductReadModel:<br/>AvailabilityStatus = InStock / LowStock / OutOfStock
 ```
-> Статус наличия в `CatalogMs` является витринной информацией и может кратковременно отставать от фактического состояния из-за eventual consistency. Событие содержит `version`, чтобы `CatalogMs` не применил устаревшее изменение остатка.
+> Статус наличия в `CatalogMs` является витринной информацией и может кратковременно отставать от фактического состояния из-за eventual consistency. 
 ### Результат
 - `WarehouseMs` остаётся единственным источником истины о фактическом складском остатке.
 - После каждого изменения остатка публикуется событие `StockChanged`.

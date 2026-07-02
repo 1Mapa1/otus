@@ -13,7 +13,7 @@ AuthMs отвечает за регистрацию пользователей, 
 - `User`
 - `UserStatus`
 - `UserRole`
-- `OutboxEvent`
+- `OutboxMessage`
 #### User
 
 Основная сущность учетной записи пользователя.
@@ -37,6 +37,10 @@ AuthMs отвечает за регистрацию пользователей, 
 Роли пользователя:
 - `USER`
 - `ADMIN`
+#### OutboxMessage
+Техническая сущность для надежной публикации финальных событий пользователя в Kafka.
+
+Изменение активности пользователя и создание outbox-сообщения выполняются в одной транзакции.
 ### HTTP API
 
 | Method | Endpoint                 | Назначение                                  | Доступ |
@@ -46,19 +50,19 @@ AuthMs отвечает за регистрацию пользователей, 
 | GET    | `/.well-known/jwks.json` | Получение публичных ключей для проверки JWT | PUBLIC |
 ### Взаимодействует с
 
-| Сервис     | Протокол    | Зачем                                                                         |
-| ---------- | ----------- | ----------------------------------------------------------------------------- |
-| CustomerMs | HTTP        | Создать профиль клиента при регистрации                                       |
-| BillingMs  | Kafka       | Передать событие `UserActivated`, чтобы BillingMs мог создать счет асинхронно |
-| ApiGateway | HTTP / JWKS | ApiGateway проверяет JWT пользователя по публичному ключу                     |
-| CustomerMs | JWKS / JWT  | CustomerMs валидирует JWT на пользовательских endpoint'ах                     |
-| OrderMs    | JWKS / JWT  | OrderMs получает `userId` из JWT при создании заказа                          |
-| BillingMs  | JWKS / JWT  | BillingMs использует JWT на внешних пользовательских endpoint'ах              |
-| DeliveryMs | JWKS / JWT  | DeliveryMs использует JWT на внешних пользовательских endpoint'ах             |
+| Сервис     | Протокол    | Зачем                                                                           |
+| ---------- | ----------- | ------------------------------------------------------------------------------- |
+| CustomerMs | HTTP        | Создать профиль клиента при регистрации                                         |
+| BillingMs  | Kafka       | Передать событие `UserActivatedV1`, чтобы BillingMs мог создать счет асинхронно |
+| ApiGateway | HTTP / JWKS | ApiGateway проверяет JWT пользователя по публичному ключу                       |
+| CustomerMs | JWKS / JWT  | CustomerMs валидирует JWT на пользовательских endpoint'ах                       |
+| OrderMs    | JWKS / JWT  | OrderMs получает `userId` из JWT при создании заказа                            |
+| BillingMs  | JWKS / JWT  | BillingMs использует JWT на внешних пользовательских endpoint'ах                |
+| DeliveryMs | JWKS / JWT  | DeliveryMs использует JWT на внешних пользовательских endpoint'ах               |
 ### Kafka events
 
 Публикует:
-- `UserActivated`
+- `UserActivatedV1` (`user.activated.v1`)
 
 Потребляет:
 - —

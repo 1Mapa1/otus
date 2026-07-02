@@ -60,16 +60,17 @@ NotificationMs отвечает за создание, хранение и от�
 - —
 
 Потребляет:
-- `CustomerCreated`
-- `CustomerUpdated`
-- `OrderConfirmed`
-- `OrderRejected`
+- `CustomerCreatedV1` (`customer.created.v1`)
+- `CustomerUpdatedV1` (`customer.updated.v1`)
+- `OrderConfirmedV1` (`order.confirmed.v1`)
+- `OrderRejectedV1` (`order.rejected.v2`)
 
 ### Ключевые паттерны
 - Database per Service
 - JWT Validation via JWKS
 - Event-Driven Architecture
 - Inbox Pattern
+- DLQ
 - Idempotency
 - Eventual Consistency
 - Local Read Model

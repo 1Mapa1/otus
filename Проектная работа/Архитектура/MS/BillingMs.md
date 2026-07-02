@@ -89,7 +89,7 @@ AvailableBalance = Balance - HeldAmount
 - —
 
 Потребляет:
-- `UserActivated`
+- `UserActivatedV1` (`user.activated.v1`)
 ### Поведение lazy creation
 
 Счет не является обязательным условием успешной регистрации.
@@ -113,8 +113,10 @@ authorize
 - Saga Participant
 - Idempotency
 - Inbox Pattern
+- DLQ
 - Event-Driven Architecture
 - Eventual Consistency
 - Ledger Pattern
 - Lazy Creation
+- Atomic Conditional Update
 - Transactional Consistency

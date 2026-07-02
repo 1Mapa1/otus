@@ -125,7 +125,6 @@ namespace CatalogService.Infrastructure
                 .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "Kafka:BootstrapServers must be provided.")
                 .Validate(options => !string.IsNullOrEmpty(options.GroupId), "Kafka:GroupId must be provided.")
                 .Validate(options => options.Topics.Length > 0, "At least one Kafka topic must be configured.")
-                .Validate(options => !string.IsNullOrEmpty(options.CatalogProductTopic), "Kafka:CatalogProductTopic must be provided.")
                 .Validate(options => options.Acks == "All" || options.Acks == "Leader" || options.Acks == "None", "Kafka:Acks must be 'All', 'Leader', or 'None'.")
                 .ValidateOnStart();
 

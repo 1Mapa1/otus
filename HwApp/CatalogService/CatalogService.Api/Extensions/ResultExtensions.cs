@@ -21,6 +21,14 @@ namespace CatalogService.Api.Extensions
             return ToErrorResult(result.Error);
         }
 
+        public static IActionResult ToNoContentResult(this Result result)
+        {
+            if (result.IsSuccess)
+                return new NoContentResult();
+
+            return ToErrorResult(result.Error);
+        }
+
         private static IActionResult ToErrorResult(Error? error)
         {
             if (error is null)

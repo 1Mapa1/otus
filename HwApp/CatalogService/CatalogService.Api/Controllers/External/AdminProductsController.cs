@@ -40,7 +40,10 @@ namespace CatalogService.Api.Controllers.External
                 cancellationToken);
 
             if (result.IsSuccess)
-                return Accepted(new { productId = result.Value!.ProductId });
+            {
+                var productId = result.Value!.ProductId;
+                return Created($"/api/catalog/products/{productId}", new { productId });
+            }
 
             return result.ToActionResult();
         }
@@ -70,14 +73,14 @@ namespace CatalogService.Api.Controllers.External
         public async Task<IActionResult> ArchiveProduct(Guid productId, CancellationToken cancellationToken)
         {
             var result = await _sender.Send(new ArchiveProductCommand(productId), cancellationToken);
-            return result.ToActionResult();
+            return result.ToNoContentResult();
         }
 
         [HttpPost("{productId:guid}/restore")]
         public async Task<IActionResult> RestoreProduct(Guid productId, CancellationToken cancellationToken)
         {
             var result = await _sender.Send(new RestoreProductCommand(productId), cancellationToken);
-            return result.ToActionResult();
+            return result.ToNoContentResult();
         }
 
         private static IReadOnlyList<ProductAttributeInput> MapAttributes(IReadOnlyList<ProductAttributeRequest> attributes)

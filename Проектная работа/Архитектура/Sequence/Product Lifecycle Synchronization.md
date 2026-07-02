@@ -76,12 +76,39 @@ sequenceDiagram
 	K->>W: ProductArchived
 	note over W: StockItem IsActive = false<br/>Запретить новые резервы
 ```
+#### Диаграмма разархивирование товара
+```mermaid
+sequenceDiagram
+    autonumber
 
-> `ProductUpdated` не меняет складскую запись, если изменились только название, цена, описание или изображения товара. `WarehouseMs` не должен хранить и синхронизировать эти данные.
+    actor A as Admin
+    participant F as Frontend
+    participant G as ApiGateway
+    participant C as CatalogMs
+    participant K as Kafka
+    participant W as WarehouseMs
+
+	A->>F: Разархивировать товар
+	F->>G: POST /api/catalog/products/{productId}/restore
+	G->>C: restored product
+
+	note over C: Product IsActive = true
+
+	C-->>G: 204 No Content
+	G-->>F: 204 No Content
+	F-->>A: Товар разархивирован
+
+	Note over C,K: Outbox worker публикует событие
+	C->>K: publish ProductRestored (через outbox)
+
+	K->>W: ProductRestored
+	note over W: StockItem IsActive = true<br/>Разрешить новые резервы
+```
 ### Результат
 
 - После создания товара в `WarehouseMs` появляется локальный `StockItem`.
 - Новый товар имеет нулевой доступный и зарезервированный остаток.
 - После архивирования `WarehouseMs` запрещает новые резервы этого товара.
+- После разархивирования `WarehouseMs` разрешает новые резервы этого товара. 
 - `CatalogMs` остаётся источником истины для названия, цены, описания и других данных карточки товара.
 - `WarehouseMs` хранит только `productId`, остатки и признак активности.

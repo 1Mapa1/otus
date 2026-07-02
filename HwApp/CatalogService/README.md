@@ -42,14 +42,14 @@
 
 | Направление | Topic | События |
 |-------------|-------|---------|
-| **Publish** (outbox) | `catalog.product` | `ProductCreated`, `ProductArchived`, `ProductRestored` |
-| **Consume** | `warehouse.stock` | `StockChanged` → обновление `ProductReadModel.AvailabilityStatus` |
+| **Publish** (outbox) | `products` | `product.created.v1`, `product.archived.v1`, `product.restored.v1` |
+| **Consume** | `stocks` | `stock.changed.v1` → обновление `ProductReadModel.AvailabilityStatus` |
 
 **Нет** `ProductUpdated` — изменение карточки не влияет на склад.
 
 Payload lifecycle: `{ "productId": "guid" }`. Key: `productId`.
 
-`StockChanged` использует только `availableQuantity`; порог low stock: `Catalog:LowStockThreshold` (default **5**).
+`stock.changed.v1` использует только `availableQuantity`; порог low stock: `Catalog:LowStockThreshold` (default **5**).
 
 ## Конфигурация
 
@@ -68,8 +68,7 @@ Payload lifecycle: `{ "productId": "guid" }`. Key: `productId`.
   "Kafka": {
     "BootstrapServers": "localhost:9092",
     "GroupId": "catalog-service",
-    "Topics": [ "warehouse.stock" ],
-    "CatalogProductTopic": "catalog.product"
+    "Topics": [ "stocks" ]
   }
 }
 ```
@@ -122,7 +121,7 @@ Request item: `{ productId, quantity, expectedUnitPrice? }`. Ответ 1:1 с r
 ## Связанные сервисы
 
 - [OrderService](../OrderService/README.md) — snapshot при checkout
-- [WarehouseService](../WarehouseService/README.md) — `StockChanged`, потребитель lifecycle events
+- [WarehouseService](../WarehouseService/README.md) — `stock.changed.v1`, потребитель lifecycle events
 - [AuthService](../AuthService/README.md) — JWT / JWKS
 
 ## Docker

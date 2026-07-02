@@ -28,8 +28,8 @@ WarehouseMs отвечает за складские остатки и резе�
 - `AvailableQuantity`
 - `ReservedQuantity`
 - `IsActive`
+- `CreatedAt`
 - `UpdatedAt`
-- `Version`
 
 `ProductId` создается в CatalogMs. WarehouseMs хранит только идентификатор товара и складские данные.
 #### StockReservation
@@ -38,6 +38,7 @@ WarehouseMs отвечает за складские остатки и резе�
 Поля:
 - `Id`
 - `OrderId`
+- `UserId`
 - `Status`
 - `CreatedAt`
 - `CanceledAt`
@@ -71,14 +72,14 @@ WarehouseMs отвечает за складские остатки и резе�
 Изменение остатка, создание движения склада и outbox-сообщения выполняются в одной транзакции.
 ### HTTP API
 
-|Method|Endpoint|Назначение|Доступ|
-|---|---|---|---|
-|GET|`/api/warehouse/stocks`|Получить список складских остатков|ADMIN|
-|GET|`/api/warehouse/stocks/{productId}`|Получить остаток конкретного товара|ADMIN|
-|POST|`/api/warehouse/stocks/{productId}/income`|Оформить поступление товара на склад|ADMIN|
-|GET|`/api/warehouse/stocks/{productId}/movements`|Получить историю движений товара|ADMIN|
-|POST|`/api/internal/warehouse/reservations`|Создать резерв товаров под заказ|INTERNAL|
-|POST|`/api/internal/warehouse/reservations/cancel`|Отменить резерв товаров|INTERNAL|
+| Method | Endpoint                                      | Назначение                           | Доступ   |
+| ------ | --------------------------------------------- | ------------------------------------ | -------- |
+| GET    | `/api/warehouse/stocks`                       | Получить список складских остатков   | ADMIN    |
+| GET    | `/api/warehouse/stocks/{productId}`           | Получить остаток конкретного товара  | ADMIN    |
+| POST   | `/api/warehouse/stocks/{productId}/income`    | Оформить поступление товара на склад | ADMIN    |
+| GET    | `/api/warehouse/stocks/{productId}/movements` | Получить историю движений товара     | ADMIN    |
+| POST   | `/api/internal/warehouse/reservations`        | Создать резерв товаров под заказ     | INTERNAL |
+| POST   | `/api/internal/warehouse/reservations/cancel` | Отменить резерв товаров              | INTERNAL |
 ### Взаимодействует с
 
 |Сервис|Протокол|Зачем|
@@ -90,19 +91,19 @@ WarehouseMs отвечает за складские остатки и резе�
 ### Kafka events
 
 Публикует:
-- `StockChanged`
+- `StockChangedV1` (`stock.changed.v1`)
 
 Потребляет:
-- `ProductCreated`
-- `ProductUpdated`
-- `ProductArchived`
+- `ProductCreatedV1` (`product.created.v1`) 
+- `ProductRestoredV1` (`product.restored.v1`) 
+- `ProductArchivedV1` (`product.archived.v1`) 
 
 ### Ключевые паттерны
 - Database per Service
 - Saga Participant
 - Idempotency
 - Transactional Consistency
-- Concurrency Control
+- Pessimistic locking
 - Outbox Pattern
 - Event-Driven Architecture
 - Eventual Consistency

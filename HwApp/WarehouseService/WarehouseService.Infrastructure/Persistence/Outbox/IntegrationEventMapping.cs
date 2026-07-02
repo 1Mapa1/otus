@@ -8,7 +8,7 @@ namespace WarehouseService.Infrastructure.Persistence.Outbox
         private static readonly IReadOnlyDictionary<Type, (string Topic, string EventType)> Mapping =
             new Dictionary<Type, (string Topic, string EventType)>
             {
-                [typeof(StockChangedEvent)] = ("warehouse.stock", "StockChanged")
+                [typeof(StockChangedEvent)] = ("stocks", "stock.changed.v1")
             };
 
         public EventMetadata Resolve(IDomainEvent domainEvent)

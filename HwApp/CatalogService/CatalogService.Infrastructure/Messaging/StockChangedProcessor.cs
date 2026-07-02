@@ -40,7 +40,7 @@ namespace CatalogService.Infrastructure.Messaging
             if (envelope is null || string.IsNullOrWhiteSpace(envelope.EventType))
                 throw new InvalidOperationException("Kafka message envelope is invalid.");
 
-            if (!string.Equals(envelope.EventType, "StockChanged", StringComparison.Ordinal))
+            if (!string.Equals(envelope.EventType, "stock.changed.v1", StringComparison.Ordinal))
             {
                 _logger.LogWarning("Skipping unsupported warehouse event type: {EventType}", envelope.EventType);
                 return;

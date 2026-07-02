@@ -32,7 +32,7 @@ CatalogMs отвечает за товарный каталог интернет
 - `BrandId`
 - `Price`
 - `Attributes`
-- `Images`
+- `ImageUrl`
 - `IsActive`
 - `CreatedAt`
 - `UpdatedAt`
@@ -78,16 +78,17 @@ Read model обновляется при изменении товара и по
 Изменение товара и создание записи в outbox выполняются в одной транзакции базы данных.
 ### HTTP API
 
-|Method|Endpoint|Назначение|Доступ|
-|---|---|---|---|
-|GET|`/api/catalog/products`|Поиск, фильтрация и постраничный вывод товаров|PUBLIC|
-|GET|`/api/catalog/products/{productId}`|Получить карточку товара|PUBLIC|
-|GET|`/api/catalog/categories`|Получить список категорий|PUBLIC|
-|GET|`/api/catalog/brands`|Получить список брендов|PUBLIC|
-|POST|`/api/internal/catalog/products/snapshot`|Получить snapshot товаров для создания заказа|INTERNAL|
-|POST|`/api/catalog/products`|Создать товар|ADMIN|
-|PUT|`/api/catalog/products/{productId}`|Изменить товар|ADMIN|
-|DELETE|`/api/catalog/products/{productId}`|Архивировать товар|ADMIN|
+| Method | Endpoint                                    | Назначение                                     | Доступ   |
+| ------ | ------------------------------------------- | ---------------------------------------------- | -------- |
+| GET    | `/api/catalog/products`                     | Поиск, фильтрация и постраничный вывод товаров | PUBLIC   |
+| GET    | `/api/catalog/products/{productId}`         | Получить карточку товара                       | PUBLIC   |
+| GET    | `/api/catalog/categories`                   | Получить список категорий                      | PUBLIC   |
+| GET    | `/api/catalog/brands`                       | Получить список брендов                        | PUBLIC   |
+| POST   | `/api/internal/catalog/products/snapshot`   | Получить snapshot товаров для создания заказа  | INTERNAL |
+| POST   | `/api/catalog/products`                     | Создать товар                                  | ADMIN    |
+| PUT    | `/api/catalog/products/{productId}`         | Изменить товар                                 | ADMIN    |
+| DELETE | `/api/catalog/products/{productId}`         | Архивировать товар                             | ADMIN    |
+| POST   | `/api/catalog/products/{productId}/restore` | Разархивировать товар                          | ADMIN    |
 ### Взаимодействует с
 
 |Сервис|Протокол|Зачем|
@@ -99,12 +100,12 @@ Read model обновляется при изменении товара и по
 ### Kafka events
 
 Публикует:
-- `ProductCreated`
-- `ProductUpdated`
-- `ProductArchived`
+- `ProductCreatedV1` (`product.created.v1`) 
+- `ProductRestoredV1` (`product.restored.v1`) 
+- `ProductArchivedV1` (`product.archived.v1`) 
 
 Потребляет:
-- `StockChanged`
+- `StockChangedV1` (`stock.changed.v1`)
 ### Ключевые паттерны
 - Database per Service
 - Cache-Aside
