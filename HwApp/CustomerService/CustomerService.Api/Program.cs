@@ -63,6 +63,22 @@ namespace CustomerService
 
             var app = builder.Build();
 
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger(c =>
+                {
+                    c.RouteTemplate = "api/customers/swagger/{documentName}/swagger.json";
+                });
+
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/api/customers/swagger/v1/swagger.json", "Customer API V1");
+                    c.RoutePrefix = "api/customers/swagger";
+                });
+            }
+
+            app.UseRouting();
+
             app.UseHttpMetrics(options =>
             {
                 options.RequestDuration.Histogram = Metrics.CreateHistogram(
@@ -91,20 +107,6 @@ namespace CustomerService
                         ],
                     });
             });
-
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger(c =>
-                {
-                    c.RouteTemplate = "api/customers/swagger/{documentName}/swagger.json";
-                });
-
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/api/customers/swagger/v1/swagger.json", "Customer API V1");
-                    c.RoutePrefix = "api/customers/swagger";
-                });
-            }
 
             app.UseAuthentication();
             app.UseAuthorization();

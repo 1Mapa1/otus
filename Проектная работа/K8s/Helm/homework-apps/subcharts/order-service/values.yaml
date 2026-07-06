@@ -45,6 +45,17 @@ service:
   port: 80
   protocol: TCP
   name: http
+  monitor:
+    enabled: true
+    port: 8080
+    protocol: TCP
+    name: monitor
+
+serviceMonitor:
+  enabled: true
+  scrapeTimeout: 30s
+  honorLabels: true
+  path: /metrics
 
 migrationJob:
   enabled: true

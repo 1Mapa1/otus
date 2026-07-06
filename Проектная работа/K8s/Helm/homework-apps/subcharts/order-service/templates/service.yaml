@@ -13,5 +13,11 @@ spec:
       targetPort: {{ .Values.deployment.port }}
       protocol: {{ .Values.service.protocol }}
       name: {{ .Values.service.name }}
+    {{- if .Values.service.monitor.enabled }}
+    - port: {{ .Values.service.monitor.port }}
+      targetPort: {{ .Values.deployment.port }}
+      protocol: {{ .Values.service.monitor.protocol }}
+      name: {{ .Values.service.monitor.name }}
+    {{- end }}
   type: {{ .Values.service.type }}
 {{- end }}

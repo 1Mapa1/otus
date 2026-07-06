@@ -18,16 +18,17 @@ Helm chart и значения для развёртывания приложе�
 1. Helm repos
 2. **Traefik** (namespace `m`, HTTP :80)
 3. namespace приложений **`electronics-store`**
-4. Postgres (7 MS)
-5. Postgres Catalog (primary + read replica)
-6. Redis
-7. Kafka (топики: `auth`, `customers`, `orders`, `products`, `stocks`, `billing.dlq`)
-8. Kafka UI
-9. umbrella **`homework-apps`** (все 8 MS)
+4. **kube-prometheus-stack** (namespace **`monitoring`**: Prometheus + Grafana)
+5. Postgres (7 MS)
+6. Postgres Catalog (primary + read replica)
+7. Redis
+8. Kafka (топики: `auth`, `customers`, `orders`, `products`, `stocks`, `billing.dlq`)
+9. Kafka UI
+10. umbrella **`homework-apps`** (все 8 MS)
 
 Свой namespace: `make install NS=my-namespace` (тогда поправьте `bootstrapServers` в `Helm/kafka-ui-values.yaml`).
 
-Снятие: **`make uninstall`** → при необходимости **`make purge-ns`**.
+Снятие: **`make uninstall`** → при необходимости **`make purge-ns`** и **`make purge-monitoring-ns`**.
 
 ## API Gateway (Traefik)
 
@@ -73,6 +74,7 @@ Swagger: `/api/<service>/swagger` (если включён в образе).
 | `redis` | кэш Catalog (brands/categories/products list) |
 | `kafka` | event bus |
 | `kafka-ui` | UI для просмотра топиков |
+| `monitoring` | Prometheus + Grafana (`kube-prometheus-stack`) |
 
 Bootstrap Kafka (при пустом `global.kafkaBootstrapServers` в umbrella):
 
@@ -96,6 +98,19 @@ make install
 **BillingService** — Kafka consumer `auth`, DLQ `billing.dlq`.
 
 **WarehouseService** — Kafka consumer `products`, producer topic `stocks`.
+
+## Мониторинг (Prometheus + Grafana)
+
+Конфиг: `Helm/prometheus-values.yaml`. Prometheus подхватывает **ServiceMonitor** из namespace `electronics-store` (все 8 MS + Postgres).
+
+Grafana (логин/пароль по умолчанию `admin` / `admin`):
+
+```bash
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+# http://localhost:3000
+```
+
+Метрики MS: `/metrics` (порт `monitor` в Service → targetPort приложения 8000).
 
 ## Проверка
 
