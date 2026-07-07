@@ -19,12 +19,16 @@ Helm chart и значения для развёртывания приложе�
 2. **Traefik** (namespace `m`, HTTP :80)
 3. namespace приложений **`electronics-store`**
 4. **kube-prometheus-stack** (namespace **`monitoring`**: Prometheus + Grafana)
-5. Postgres (7 MS)
-6. Postgres Catalog (primary + read replica)
-7. Redis
-8. Kafka (топики: `auth`, `customers`, `orders`, `products`, `stocks`, `billing.dlq`)
-9. Kafka UI
-10. umbrella **`homework-apps`** (все 8 MS)
+5. **EFK** (namespace **`monitoring`**: Elasticsearch + Kibana + Filebeat)
+6. Postgres (7 MS)
+7. Postgres Catalog (primary + read replica)
+8. Redis
+9. Kafka (топики: `auth`, `customers`, `orders`, `products`, `stocks`, `billing.dlq`)
+10. Kafka UI
+11. umbrella **`homework-apps`** (все 8 MS)
+
+> **RAM:** для стенда с логами (Elasticsearch + Kibana) поднимите minikube минимум до **12 GB**:
+> `minikube start --memory=12288 --cpus=4`
 
 Свой namespace: `make install NS=my-namespace` (тогда поправьте `bootstrapServers` в `Helm/kafka-ui-values.yaml`).
 
@@ -75,6 +79,9 @@ Swagger: `/api/<service>/swagger` (если включён в образе).
 | `kafka` | event bus |
 | `kafka-ui` | UI для просмотра топиков |
 | `monitoring` | Prometheus + Grafana (`kube-prometheus-stack`) |
+| `elasticsearch` | хранилище логов (single-node, HTTP без TLS) |
+| `kibana` | UI для просмотра логов |
+| `filebeat` | DaemonSet: сбор stdout-логов `electronics-store` → Elasticsearch |
 
 Bootstrap Kafka (при пустом `global.kafkaBootstrapServers` в umbrella):
 
@@ -111,6 +118,25 @@ kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
 ```
 
 Метрики MS: `/metrics` (порт `monitor` в Service → targetPort приложения 8000).
+
+## Логи (EFK)
+
+Конфиги: `Helm/elasticsearch-values.yaml`, `Helm/kibana-values.yaml`, `Helm/filebeat-values.yaml`. Всё в namespace `monitoring` (рядом с Prometheus/Grafana).
+
+Микросервисы пишут JSON в stdout (Serilog `RenderedCompactJsonFormatter`). **Filebeat** (DaemonSet) читает `/var/log/containers/*`, собирает только namespace `electronics-store`, парсит JSON и шлёт в **Elasticsearch** (индекс `filebeat-electronics-*`).
+
+Только `make logging` (если инфра уже поднята): Elasticsearch + Kibana + Filebeat.
+
+Kibana:
+
+```bash
+kubectl port-forward -n monitoring svc/kibana-kibana 5601:5601
+# http://localhost:5601
+```
+
+В Kibana создайте data view по паттерну `filebeat-electronics-*` (time field `@timestamp`). Поля из логов: `@mt` (шаблон), `@l` (уровень), `RequestId`, `kubernetes.pod.name`, `kubernetes.container.name`.
+
+Проверка сквозного `RequestId`: сделайте запрос `Order → Catalog` и отфильтруйте в Kibana по `RequestId` — события обоих сервисов будут с одинаковым значением.
 
 ## Проверка
 

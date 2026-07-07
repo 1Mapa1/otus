@@ -38,6 +38,8 @@ help:
 
 	@echo "  make prometheus       kube-prometheus-stack (Grafana + Prometheus)"
 
+	@echo "  make logging          EFK: Elasticsearch + Kibana + Filebeat ($(MONITORING_NS))"
+
 	@echo "  make postgres         Bitnami PostgreSQL (7 MS)"
 
 	@echo "  make postgres-catalog Bitnami PostgreSQL для Catalog"
@@ -77,6 +79,8 @@ repos:
 	helm repo add kafka-ui https://provectus.github.io/kafka-ui-charts || true
 
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
+
+	helm repo add elastic https://helm.elastic.co || true
 
 	helm repo update
 
@@ -127,6 +131,42 @@ prometheus: repos monitoring-ns
 		--namespace $(MONITORING_NS) \
 
 		-f Helm/prometheus-values.yaml
+
+
+
+.PHONY: elasticsearch
+
+elasticsearch: repos monitoring-ns
+
+	helm upgrade --install elasticsearch elastic/elasticsearch \
+		--namespace $(MONITORING_NS) \
+		-f Helm/elasticsearch-values.yaml
+
+
+
+.PHONY: kibana
+
+kibana: repos monitoring-ns
+
+	helm upgrade --install kibana elastic/kibana \
+		--namespace $(MONITORING_NS) \
+		-f Helm/kibana-values.yaml
+
+
+
+.PHONY: filebeat
+
+filebeat: repos monitoring-ns
+
+	helm upgrade --install filebeat elastic/filebeat \
+		--namespace $(MONITORING_NS) \
+		-f Helm/filebeat-values.yaml
+
+
+
+.PHONY: logging
+
+logging: elasticsearch kibana filebeat
 
 
 
@@ -214,7 +254,7 @@ apps: repos apps-ns
 
 .PHONY: install
 
-install: repos ingress-ns ingress apps-ns monitoring-ns prometheus postgres postgres-catalog redis kafka kafka-ui apps
+install: repos ingress-ns ingress apps-ns monitoring-ns prometheus logging postgres postgres-catalog redis kafka kafka-ui apps
 
 
 
@@ -231,6 +271,18 @@ uninstall-apps:
 uninstall-prometheus:
 
 	helm uninstall monitoring -n $(MONITORING_NS) --ignore-not-found
+
+
+
+.PHONY: uninstall-logging
+
+uninstall-logging:
+
+	helm uninstall filebeat -n $(MONITORING_NS) --ignore-not-found
+
+	helm uninstall kibana -n $(MONITORING_NS) --ignore-not-found
+
+	helm uninstall elasticsearch -n $(MONITORING_NS) --ignore-not-found
 
 
 
@@ -284,7 +336,7 @@ uninstall-ingress:
 
 .PHONY: uninstall
 
-uninstall: uninstall-apps uninstall-kafka-ui uninstall-kafka uninstall-redis uninstall-postgres-catalog uninstall-postgres uninstall-prometheus uninstall-ingress
+uninstall: uninstall-apps uninstall-kafka-ui uninstall-kafka uninstall-redis uninstall-postgres-catalog uninstall-postgres uninstall-logging uninstall-prometheus uninstall-ingress
 
 
 

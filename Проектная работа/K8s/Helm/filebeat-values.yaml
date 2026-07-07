@@ -1,0 +1,45 @@
+daemonset:
+  filebeatConfig:
+    filebeat.yml: |
+      filebeat.autodiscover:
+        providers:
+          - type: kubernetes
+            node: ${NODE_NAME}
+            hints.enabled: true
+            templates:
+              - condition:
+                  equals:
+                    kubernetes.namespace: electronics-store
+                config:
+                  - type: container
+                    paths:
+                      - /var/log/containers/*-${data.kubernetes.container.id}.log
+                    json.keys_under_root: true
+                    json.add_error_key: true
+                    json.overwrite_keys: true
+
+      processors:
+        - add_kubernetes_metadata:
+            host: ${NODE_NAME}
+            matchers:
+              - logs_path:
+                  logs_path: "/var/log/containers/"
+        - drop_fields:
+            fields: ["agent", "ecs", "input", "stream"]
+            ignore_missing: true
+
+      output.elasticsearch:
+        hosts: ["http://elasticsearch-master:9200"]
+        index: "filebeat-electronics-%{+yyyy.MM.dd}"
+
+      setup.ilm.enabled: false
+      setup.template.name: "filebeat-electronics"
+      setup.template.pattern: "filebeat-electronics-*"
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"

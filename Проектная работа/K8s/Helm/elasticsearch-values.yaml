@@ -1,0 +1,35 @@
+clusterName: elasticsearch
+replicas: 1
+minimumMasterNodes: 1
+
+esConfig:
+  elasticsearch.yml: |
+    discovery.type: single-node
+    xpack.security.enabled: false
+    xpack.security.http.ssl.enabled: false
+    xpack.security.transport.ssl.enabled: false
+
+createCert: false
+secret:
+  enabled: false
+
+esJavaOpts: "-Xms1g -Xmx1g"
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1536Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1536Mi"
+
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 3Gi
+
+service:
+  type: ClusterIP
+
+antiAffinity: "soft"
