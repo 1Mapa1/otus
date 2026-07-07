@@ -20,7 +20,8 @@ namespace AuthService.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(
             this IServiceCollection services,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            Action<IHttpClientBuilder>? configureHttpClient = null)
         {
             services.AddInfrastructureDatabaseContext(configuration);
 
@@ -30,7 +31,7 @@ namespace AuthService.Infrastructure
 
             services.AddInfrastructureOptions(configuration);
 
-            services.AddInfrastructureHttpClients();
+            services.AddInfrastructureHttpClients(configureHttpClient);
 
             services.AddOptions<KafkaOptions>()
                 .Bind(configuration.GetSection(KafkaOptions.SectionName))
@@ -95,17 +96,21 @@ namespace AuthService.Infrastructure
         }
 
         private static IServiceCollection AddInfrastructureHttpClients(
-            this IServiceCollection services)
+            this IServiceCollection services,
+            Action<IHttpClientBuilder>? configureHttpClient)
         {
-            services.AddHttpClient<ICustomerServiceClient, CustomerServiceClient>((sp, httpClient) =>
-            {
-                var options = sp
-                    .GetRequiredService<IOptions<CustomerServiceOptions>>()
-                    .Value;
+            var clientBuilder = services
+                .AddHttpClient<ICustomerServiceClient, CustomerServiceClient>((sp, httpClient) =>
+                {
+                    var options = sp
+                        .GetRequiredService<IOptions<CustomerServiceOptions>>()
+                        .Value;
 
-                httpClient.BaseAddress = new Uri(options.BaseUrl);
-                httpClient.Timeout = options.Timeout;
-            });
+                    httpClient.BaseAddress = new Uri(options.BaseUrl);
+                    httpClient.Timeout = options.Timeout;
+                });
+
+            configureHttpClient?.Invoke(clientBuilder);
 
             return services;
         }

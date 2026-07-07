@@ -3,120 +3,167 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using NotificationService.Api.Authentication;
+using NotificationService.Api.Observability;
 using NotificationService.Application;
 using NotificationService.Infrastructure;
 using Prometheus;
 using Prometheus.HttpMetrics;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 
-namespace NotificationService.Api;
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(new RenderedCompactJsonFormatter())
+    .CreateBootstrapLogger();
 
-internal class Program
+try
 {
-    private static void Main(string[] args)
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog((context, _, loggerConfiguration) => loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console(new RenderedCompactJsonFormatter()));
+
+    builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
+        .ReadFrom.Configuration(builder.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console(new RenderedCompactJsonFormatter()));
+
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
     {
-        var builder = WebApplication.CreateBuilder(args);
-
-        builder.Services.AddControllers();
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen(options =>
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                In = ParameterLocation.Header,
-                Description = "Enter JWT",
-                Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
-            });
+            In = ParameterLocation.Header,
+            Description = "Enter JWT",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+        });
 
-            var securityRequirement = new OpenApiSecurityRequirement();
-            securityRequirement.Add(
-                new OpenApiSecurityScheme
+        var securityRequirement = new OpenApiSecurityRequirement();
+        securityRequirement.Add(
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
                 {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer",
-                    },
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer",
                 },
-                new List<string>());
-            options.AddSecurityRequirement(securityRequirement);
+            },
+            new List<string>());
+        options.AddSecurityRequirement(securityRequirement);
+    });
+
+    builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddInfrastructureHealthChecks()
+        .ForwardToPrometheus();
+
+    builder.Services.AddHttpClient(JwksSigningKeyCache.HttpClientName, client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(15);
+    });
+
+    builder.Services.AddSingleton<JwksSigningKeyCache>();
+    builder.Services.AddSingleton<IPostConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
+
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer();
+
+    var app = builder.Build();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger(c =>
+        {
+            c.RouteTemplate = "api/notifications/swagger/{documentName}/swagger.json";
         });
 
-        builder.Services.AddApplication();
-        builder.Services.AddInfrastructure(builder.Configuration);
-        builder.Services.AddInfrastructureHealthChecks()
-            .ForwardToPrometheus();
-
-        builder.Services.AddHttpClient(JwksSigningKeyCache.HttpClientName, client =>
+        app.UseSwaggerUI(c =>
         {
-            client.Timeout = TimeSpan.FromSeconds(15);
+            c.SwaggerEndpoint("/api/notifications/swagger/v1/swagger.json", "Notification API V1");
+            c.RoutePrefix = "api/notifications/swagger";
         });
-
-        builder.Services.AddSingleton<JwksSigningKeyCache>();
-        builder.Services.AddSingleton<IPostConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
-
-        builder.Services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer();
-
-        var app = builder.Build();
-
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger(c =>
-            {
-                c.RouteTemplate = "api/notifications/swagger/{documentName}/swagger.json";
-            });
-
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/api/notifications/swagger/v1/swagger.json", "Notification API V1");
-                c.RoutePrefix = "api/notifications/swagger";
-            });
-        }
-
-        app.UseRouting();
-
-        app.UseHttpMetrics(options =>
-        {
-            options.RequestDuration.Histogram = Metrics.CreateHistogram(
-                "http_request_duration_seconds",
-                "Duration of HTTP requests in seconds",
-                labelNames: HttpRequestLabelNames.All,
-                configuration: new HistogramConfiguration
-                {
-                    Buckets =
-                    [
-                        0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1,
-                        0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
-                    ],
-                });
-        });
-
-        app.UseAuthentication();
-        app.UseAuthorization();
-
-        app.MapHealthChecks("/health/live", new HealthCheckOptions
-        {
-            Predicate = _ => false,
-        });
-
-        app.MapHealthChecks("/health/ready", new HealthCheckOptions
-        {
-            Predicate = check => check.Tags.Contains("ready"),
-        });
-
-        app.MapHealthChecks("/health/startup", new HealthCheckOptions
-        {
-            Predicate = check => check.Tags.Contains("startup"),
-        });
-
-        app.MapControllers();
-
-        app.MapMetrics();
-
-        app.Run();
     }
+
+    app.UseRouting();
+    app.UseMiddleware<RequestIdMiddleware>();
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.GetLevel = static (httpContext, _, ex) =>
+        {
+            if (ex is not null)
+            {
+                return LogEventLevel.Error;
+            }
+
+            var path = httpContext.Request.Path.Value ?? string.Empty;
+            if (path.StartsWith("/health", StringComparison.OrdinalIgnoreCase) ||
+                path.Equals("/metrics", StringComparison.OrdinalIgnoreCase))
+            {
+                return LogEventLevel.Debug;
+            }
+
+            return httpContext.Response.StatusCode switch
+            {
+                >= 500 => LogEventLevel.Error,
+                >= 400 => LogEventLevel.Warning,
+                _ => LogEventLevel.Information,
+            };
+        };
+    });
+
+    app.UseHttpMetrics(options =>
+    {
+        options.RequestDuration.Histogram = Metrics.CreateHistogram(
+            "http_request_duration_seconds",
+            "Duration of HTTP requests in seconds",
+            labelNames: HttpRequestLabelNames.All,
+            configuration: new HistogramConfiguration
+            {
+                Buckets =
+                [
+                    0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1,
+                    0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
+                ],
+            });
+    });
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapHealthChecks("/health/live", new HealthCheckOptions
+    {
+        Predicate = _ => false,
+    });
+
+    app.MapHealthChecks("/health/ready", new HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("ready"),
+    });
+
+    app.MapHealthChecks("/health/startup", new HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("startup"),
+    });
+
+    app.MapControllers();
+
+    app.MapMetrics();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
 }
