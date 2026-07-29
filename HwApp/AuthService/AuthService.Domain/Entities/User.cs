@@ -40,6 +40,14 @@ namespace AuthService.Domain.Entities
             AddEvent(new UserActivatedEvent(Id));
         }
 
+        public void UpdatePasswordHash(string passwordHash)
+        {
+            if (string.IsNullOrWhiteSpace(passwordHash))
+                throw new ArgumentException("Password hash must not be empty.", nameof(passwordHash));
+
+            PasswordHash = passwordHash;
+        }
+
         public void Block() => Status = UserStatus.Blocked;
 
         public void AddEvent(IDomainEvent domainEvent)

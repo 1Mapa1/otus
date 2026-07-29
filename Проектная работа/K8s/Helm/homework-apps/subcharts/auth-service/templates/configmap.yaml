@@ -13,6 +13,7 @@ data:
   DB_PORT: {{ .Values.global.dbPort | quote }}
   DB_NAME: {{ .Values.dbName }}
   ASPNETCORE_ENVIRONMENT: {{ .Values.global.environment }}
+  OutboxPublisherEnabled: {{ .Values.config.outboxPublisherEnabled | quote }}
   Ms__Customer__BaseUrl: {{ default (include "auth-service.customerServiceUrl" .) .Values.config.msCustomerBaseUrlOverride | quote }}
   Ms__Customer__Timeout: {{ .Values.config.msCustomerTimeout | quote }}
   Jwt__Issuer: {{ default (include "auth-service.authServiceUrl" .) .Values.config.jwtIssuerOverride | quote }}

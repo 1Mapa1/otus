@@ -18,7 +18,7 @@ dbName: customer_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-customer-service
-  imageTag: "7.0"
+  imageTag: "10.1"
   replicaCount: 3
   maxSurge: 1
   maxUnavailable: 1
@@ -63,6 +63,7 @@ migrationJob:
   imageTag: "7.0"
 
 config:
+  outboxPublisherEnabled: true
   authUrlOverride: ""
   kafkaAcks: "All"
   kafkaEnableIdempotence: true

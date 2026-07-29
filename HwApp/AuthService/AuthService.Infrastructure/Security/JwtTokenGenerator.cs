@@ -25,7 +25,7 @@ namespace AuthService.Infrastructure.Security
             {
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new(ClaimTypes.Name, user.Login),
-                new(ClaimTypes.Role, user.Role.ToString().ToUpperInvariant()),
+                new("role", user.Role.ToString().ToUpperInvariant()),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

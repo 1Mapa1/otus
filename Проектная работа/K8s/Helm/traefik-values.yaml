@@ -4,6 +4,14 @@
 deployment:
   kind: DaemonSet
 
+# Minikube состоит из одного узла, а Traefik занимает hostPort 80.
+# Второй pod нельзя запустить параллельно со старым во время обновления.
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 0
+
 hostNetwork: false
 
 ports:
@@ -32,21 +40,15 @@ ingressClass:
   isDefaultClass: true
   name: traefik
 
-logs:
-  general:
-    level: INFO
-  access:
-    enabled: true
-    fields:
-      headers:
-        names:
-          X-Request-ID: keep
+log:
+  level: INFO
 
-experimental:
-  plugins:
-    requestid:
-      moduleName: github.com/jeroentrappers/traefik-plugin-request-id
-      version: v0.1.0
+accessLog:
+  enabled: true
+  fields:
+    headers:
+      names:
+        X-Request-ID: keep
 
 securityContext:
   capabilities:
@@ -56,4 +58,5 @@ securityContext:
       - NET_BIND_SERVICE
 
 service:
-  type: ClusterIP
+  spec:
+    type: ClusterIP

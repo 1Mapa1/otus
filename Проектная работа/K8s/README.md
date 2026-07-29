@@ -11,21 +11,26 @@ Helm chart и значения для развёртывания приложе�
 
 ## Makefile (быстрая установка)
 
+Auth DbMigrator при установке идемпотентно создаёт администратора приложения. Значения задаются в `Helm/homework-apps/values.yaml` как `authService.secret.adminLogin` и `authService.secret.adminPassword`; по умолчанию — `admin` / `Admin123!`. Публичный `/api/auth/register` по-прежнему создаёт только роль `USER`.
+
+Перед установкой версии с admin seed нужно собрать и опубликовать migration image `maslovdeveloper/hwapp-auth-migration:10.1` из `HwApp/AuthService/Dockerfile.Migration`.
+
 Из каталога **`K8s`** (рядом с `Helm/`): `make help`.
 
-**`make install`** — полный стенд:
+**`make install`** — основной стенд для проверки API в Postman:
 
 1. Helm repos
 2. **Traefik** (namespace `m`, HTTP :80)
 3. namespace приложений **`electronics-store`**
-4. **kube-prometheus-stack** (namespace **`monitoring`**: Prometheus + Grafana)
-5. **EFK** (namespace **`monitoring`**: Elasticsearch + Kibana + Filebeat)
-6. Postgres (7 MS)
-7. Postgres Catalog (primary + read replica)
-8. Redis
-9. Kafka (топики: `auth`, `customers`, `orders`, `products`, `stocks`, `billing.dlq`)
-10. Kafka UI
-11. umbrella **`homework-apps`** (все 8 MS)
+4. Postgres (7 MS)
+5. Postgres Catalog (primary + read replica)
+6. Redis
+7. Kafka (топики: `auth`, `customers`, `orders`, `products`, `stocks`, `billing.dlq`)
+8. umbrella **`homework-apps`** (все 8 MS)
+
+**`make install-all`** дополнительно устанавливает Kafka UI, kube-prometheus-stack
+(Prometheus + Grafana) и EFK (Elasticsearch + Kibana + Filebeat) в namespace
+`monitoring`.
 
 > **RAM:** для стенда с логами (Elasticsearch + Kibana) поднимите minikube минимум до **12 GB**:
 > `minikube start --memory=12288 --cpus=4`
@@ -36,7 +41,7 @@ Helm chart и значения для развёртывания приложе�
 
 ## API Gateway (Traefik)
 
-Конфиг: `Helm/traefik-values.yaml`. Только **HTTP** (без TLS и redirect на HTTPS). Плагин `traefik-plugin-request-id` для `X-Request-ID`.
+Конфиг: `Helm/traefik-values.yaml`. Только **HTTP** (без TLS и redirect на HTTPS). Catalog-плагин `github.com/mdklapwijk/traefik-plugin-request-id:v0.1.1` генерирует `X-Request-ID`.
 
 Host по умолчанию: **`electronics.store`** (`homework-apps/values.yaml` → `ingress.host`).
 

@@ -5,6 +5,9 @@ dependencies:
 - name: customer-service
   repository: file://subcharts/customer-service
   version: 0.1.0
+- name: catalog-service
+  repository: file://subcharts/catalog-service
+  version: 0.1.0
 - name: notification-service
   repository: file://subcharts/notification-service
   version: 0.1.0
@@ -20,5 +23,5 @@ dependencies:
 - name: delivery-service
   repository: file://subcharts/delivery-service
   version: 0.1.0
-digest: sha256:3bdab83069317b1940c6b456fa0c0afb6e0aa288d3164d8864a7c4e5fa8edae1
-generated: "2026-05-27T15:16:02.941012508+03:00"
+digest: sha256:9c4020abf86611da7697f38cf6dbe0da6fda02d443840d5c331fafb367a6d170
+generated: "2026-07-21T14:55:44.477143604+03:00"

@@ -14,7 +14,7 @@ global:
   peerCatalogName: catalog
   dbHost: postgres-postgresql
   dbPort: "5432"
-  catalogDbPrimaryHost: postgres-catalog-postgresql
+  catalogDbPrimaryHost: postgres-catalog-postgresql-primary
   catalogDbReplicaHost: postgres-catalog-postgresql-read
   catalogDbPort: "5432"
   redisHost: redis-master
@@ -33,7 +33,7 @@ authService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-auth-service
-    imageTag: "10.0"
+    imageTag: "10.5"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -75,9 +75,10 @@ authService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-auth-migration
-    imageTag: "10.0"
+    imageTag: "10.3"
 
   config:
+    outboxPublisherEnabled: true
     # Optional override. Empty value means auto-resolve in-cluster URL.
     msCustomerBaseUrlOverride: ""
     msCustomerTimeout: "00:00:10"
@@ -90,6 +91,8 @@ authService:
   secret:
     dbUser: auth_user
     dbPassword: auth_pass
+    adminLogin: admin
+    adminPassword: Admin123!
     jwtPrivateKeyPem: |
       -----BEGIN RSA PRIVATE KEY-----
       MIIEpQIBAAKCAQEA5yIBbI5zCDxCB7wf1i/0EdDGmxI0k9w/FBLnkC1ec/hEGtQx
@@ -127,7 +130,7 @@ customerService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-customer-service
-    imageTag: "10.0"
+    imageTag: "10.1"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -172,6 +175,7 @@ customerService:
     imageTag: "10.0"
 
   config:
+    outboxPublisherEnabled: true
     authUrlOverride: ""
     kafkaAcks: "All"
     kafkaEnableIdempotence: true
@@ -229,7 +233,7 @@ catalogService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-catalog-migration
-    imageTag: "10.0"
+    imageTag: "10.1"
 
   config:
     authUrlOverride: ""
@@ -422,7 +426,7 @@ orderService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-order-migration
-    imageTag: "10.0"
+    imageTag: "10.3"
 
   config:
     authUrlOverride: ""
@@ -495,7 +499,7 @@ warehouseService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-warehouse-migration
-    imageTag: "10.0"
+    imageTag: "10.1"
 
   config:
     authUrlOverride: ""
@@ -559,7 +563,7 @@ deliveryService:
     ttlSecondsAfterFinished: 100
     backoffLimit: 3
     imageRepository: maslovdeveloper/hwapp-delivery-migration
-    imageTag: "10.0"
+    imageTag: "10.1"
 
   config:
     authUrlOverride: ""
@@ -571,10 +575,11 @@ deliveryService:
 traefik:
   middlewares:
     requestId:
-      enabled: true
+      # Every API already generates and propagates X-Request-ID in ASP.NET middleware.
+      # Keeping routing independent from the external Traefik plugin registry prevents
+      # a plugin download timeout from disabling all application routes.
+      enabled: false
       headerName: X-Request-ID
-      sourceHeaders:
-        - X-Request-ID
     rateLimitAuth:
       enabled: true
       average: 10

@@ -19,8 +19,6 @@ namespace WarehouseService.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            services.AddSingleton<IIntegrationEventMapping, IntegrationEventMapping>();
-
             services.AddInfrastructureDatabaseContext(configuration);
             services.AddInfrastructureRepositories();
             services.AddInfrastructureMessaging(configuration);
@@ -47,6 +45,8 @@ namespace WarehouseService.Infrastructure
             IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionStringLocal();
+
+            services.AddSingleton<IIntegrationEventMapping, IntegrationEventMapping>();
 
             services.AddDbContext<DatabaseContext>(options =>
                 options.UseNpgsql(connectionString));

@@ -62,7 +62,7 @@ migrationJob:
   ttlSecondsAfterFinished: 100
   backoffLimit: 3
   imageRepository: maslovdeveloper/hwapp-order-migration
-  imageTag: "9.0"
+  imageTag: "10.3"
 
 config:
   authUrlOverride: ""

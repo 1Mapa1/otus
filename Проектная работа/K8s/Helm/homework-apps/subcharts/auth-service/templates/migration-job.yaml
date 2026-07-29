@@ -18,6 +18,7 @@ spec:
       containers:
         - name: {{ .Values.name }}-migration
           image: {{ .Values.migrationJob.imageRepository }}:{{ .Values.migrationJob.imageTag }}
+          imagePullPolicy: {{ .Values.migrationJob.imagePullPolicy | default "Always" }}
           env:
             - name: DB_HOST
               valueFrom:
@@ -44,5 +45,15 @@ spec:
                 secretKeyRef:
                   name: {{ include "auth-service.fullname" . }}
                   key: DB_PASSWORD
+            - name: ADMIN_LOGIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "auth-service.fullname" . }}
+                  key: ADMIN_LOGIN
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "auth-service.fullname" . }}
+                  key: ADMIN_PASSWORD
       restartPolicy: Never
 {{- end }}

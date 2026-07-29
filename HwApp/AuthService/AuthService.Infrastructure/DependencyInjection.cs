@@ -1,4 +1,6 @@
 ﻿using AuthService.Application.Interfaces;
+using AuthService.Domain.Entities;
+using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces;
 using AuthService.Infrastructure.Clients.CustomerService;
 using AuthService.Infrastructure.Messaging.Kafka;
@@ -9,6 +11,7 @@ using AuthService.Infrastructure.Persistence.Outbox;
 using AuthService.Infrastructure.Rersistence.Repositories;
 using AuthService.Infrastructure.Security;
 using AuthService.Infrastructure.Workers;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,16 +36,18 @@ namespace AuthService.Infrastructure
 
             services.AddInfrastructureHttpClients(configureHttpClient);
 
-            services.AddOptions<KafkaOptions>()
-                .Bind(configuration.GetSection(KafkaOptions.SectionName))
-                .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "BootstrapServers must be provided.")
-                .Validate(options => !string.IsNullOrEmpty(options.Acks), "Acks must be provided.")
-                .Validate(options => options.Acks == "All" || options.Acks == "Leader" || options.Acks == "None", "Acks must be 'All', 'Leader', or 'None'.")
-                .ValidateOnStart();
+            if (configuration.GetValue("OutboxPublisherEnabled", true))
+            {
+                services.AddOptions<KafkaOptions>()
+                    .Bind(configuration.GetSection(KafkaOptions.SectionName))
+                    .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "BootstrapServers must be provided.")
+                    .Validate(options => !string.IsNullOrEmpty(options.Acks), "Acks must be provided.")
+                    .Validate(options => options.Acks == "All" || options.Acks == "Leader" || options.Acks == "None", "Acks must be 'All', 'Leader', or 'None'.")
+                    .ValidateOnStart();
 
-            services.AddSingleton<IKafkaProducer, KafkaProducer>();
-
-            services.AddHostedService<OutboxPublisher>();
+                services.AddSingleton<IKafkaProducer, KafkaProducer>();
+                services.AddHostedService<OutboxPublisher>();
+            }
 
             services.AddSingleton<RsaJwtSigningKeyProvider>();
             services.AddSingleton<IJwksProvider, JwksProvider>();
@@ -143,6 +148,59 @@ namespace AuthService.Infrastructure
             var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
 
             await db.Database.MigrateAsync();
+
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            await SeedAdminAsync(db, configuration);
+        }
+
+        private static async Task SeedAdminAsync(
+            AuthDbContext db,
+            IConfiguration configuration)
+        {
+            var login = configuration["ADMIN_LOGIN"];
+            var password = configuration["ADMIN_PASSWORD"];
+
+            if (string.IsNullOrWhiteSpace(login) && string.IsNullOrWhiteSpace(password))
+                return;
+
+            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+            {
+                throw new InvalidOperationException(
+                    "Both ADMIN_LOGIN and ADMIN_PASSWORD must be configured for the admin seed.");
+            }
+
+            var existingUser = await db.Users
+                .SingleOrDefaultAsync(user => user.Login == login);
+
+            if (existingUser is not null)
+            {
+                if (existingUser.Role != UserRole.Admin)
+                {
+                    throw new InvalidOperationException(
+                        $"User '{login}' already exists but does not have the Admin role.");
+                }
+
+                var existingPasswordHasher = new PasswordHasher<User>();
+                existingUser.UpdatePasswordHash(
+                    existingPasswordHasher.HashPassword(existingUser, password));
+
+                if (existingUser.Status != UserStatus.Active)
+                    existingUser.Activate();
+
+                await db.SaveChangesAsync();
+                return;
+            }
+
+            var passwordHasher = new PasswordHasher<User>();
+            var admin = new User(
+                login,
+                passwordHasher.HashPassword(null!, password),
+                UserRole.Admin);
+
+            admin.Activate();
+
+            db.Users.Add(admin);
+            await db.SaveChangesAsync();
         }
     }
 }

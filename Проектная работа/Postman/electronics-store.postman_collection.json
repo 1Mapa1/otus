@@ -1,0 +1,1945 @@
+{
+  "info": {
+    "_postman_id": "72cf1cc0-13dd-4e57-b7a6-a100b8f12ee1",
+    "name": "Electronics Store — main API and Catalog Redis",
+    "description": "Основной smoke-набор для Auth и Catalog. Папка 04 демонстрирует cache-aside и refresh справочника брендов в Redis.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 Start",
+      "item": [
+        {
+          "name": "Init data and Catalog smoke",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = `${Date.now()}_${Math.floor(Math.random() * 100000)}`;",
+                  "pm.environment.set('suffix', suffix);",
+                  "pm.environment.set('userLogin', `postman_${suffix}`);",
+                  "pm.environment.set('userPassword', `Pass_${suffix}!`);",
+                  "pm.environment.set('userName', `Postman User ${suffix}`);",
+                  "pm.environment.set('userEmail', `postman_${suffix}@example.test`);",
+                  "pm.environment.set('brandName', `Postman Brand ${suffix}`);",
+                  "pm.environment.set('categoryName', `Postman Category ${suffix}`);",
+                  "pm.environment.set('productName', `Postman Laptop ${suffix}`);",
+                  "['userToken','adminToken','customerId','addressId','brandId','categoryId','productId','zoneId','deliverySlotId','orderId','notificationId','rejectedProductId','rejectedOrderId','brandUpdatedName','catalogWarmBody','catalogWarmTime','customerPoll','billingPoll','warehousePoll','catalogDetailsPoll','catalogListPoll','orderPoll','rejectedWarehousePoll','rejectedOrderPoll','notificationPoll'].forEach(k => pm.environment.unset(k));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Catalog public API is reachable', () => pm.response.to.have.status(200));",
+                  "pm.test('Catalog list contract is returned', () => { const json = pm.response.json(); pm.expect(json.items).to.be.an('array'); pm.expect(json.page).to.eql(1); pm.expect(json.pageSize).to.eql(1); });",
+                  "pm.test('Unique test data initialized', () => pm.expect(pm.environment.get('suffix')).to.not.be.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/products?page=1&pageSize=1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 Auth",
+      "item": [
+        {
+          "name": "Register user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('User registered', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{userLogin}}\",\n  \"password\": \"{{userPassword}}\",\n  \"name\": \"{{userName}}\",\n  \"email\": \"{{userEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('User logged in', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('User access token returned', () => pm.expect(json.accessToken).to.be.a('string').and.not.empty);",
+                  "pm.environment.set('userToken', json.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{userLogin}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin credentials are configured', () => { pm.expect(pm.environment.get('adminLogin'), 'Set adminLogin in environment').to.not.be.empty; pm.expect(pm.environment.get('adminPassword'), 'Set adminPassword in environment').to.not.be.empty; });",
+                  "pm.test('Admin logged in', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Admin access token returned', () => pm.expect(json.accessToken).to.be.a('string').and.not.empty);",
+                  "pm.environment.set('adminToken', json.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{adminLogin}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Customer",
+      "item": [
+        {
+          "name": "Wait for customer profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const attempt = Number(pm.environment.get('customerPoll') || 0);",
+                  "pm.test('Customer is being created asynchronously', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));",
+                  "if (pm.response.code === 404 && attempt < 10) { pm.environment.set('customerPoll', attempt + 1); pm.execution.setNextRequest(pm.info.requestName); } else { pm.environment.unset('customerPoll'); pm.test('Customer profile is ready', () => pm.response.to.have.status(200)); if (pm.response.code === 200) pm.environment.set('customerId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/customers/me"
+          }
+        },
+        {
+          "name": "Update customer profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Customer updated', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{userName}} Updated\",\n  \"email\": \"{{userEmail}}\",\n  \"dateOfBirth\": \"1995-05-15T00:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/customers/me"
+          }
+        },
+        {
+          "name": "Create address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Address created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json(); pm.environment.set('addressId', json.id);",
+                  "pm.test('Address id returned', () => pm.expect(json.id).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"city\": \"Moscow\", \"street\": \"Tverskaya\", \"house\": 10, \"apartment\": 25 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/customers/me/addresses"
+          }
+        },
+        {
+          "name": "Get addresses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Addresses returned', () => pm.response.to.have.status(200));",
+                  "pm.test('Created address is present', () => pm.expect(pm.response.json().some(x => x.id === pm.environment.get('addressId'))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/customers/me/addresses"
+          }
+        },
+        {
+          "name": "Update address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Address updated', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"city\": \"Moscow\", \"street\": \"Tverskaya Updated\", \"house\": 10, \"apartment\": 26 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/customers/me/addresses/{{addressId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Catalog main functionality",
+      "item": [
+        {
+          "name": "Create brand",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Brand accepted', () => pm.response.to.have.status(202));",
+                  "const json = pm.response.json();",
+                  "pm.test('Brand id returned', () => pm.expect(json.brandId).to.be.a('string').and.not.empty);",
+                  "pm.environment.set('brandId', json.brandId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"{{brandName}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/catalog/brands"
+          }
+        },
+        {
+          "name": "Create category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Category accepted', () => pm.response.to.have.status(202));",
+                  "const json = pm.response.json();",
+                  "pm.test('Category id returned', () => pm.expect(json.categoryId).to.be.a('string').and.not.empty);",
+                  "pm.environment.set('categoryId', json.categoryId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"{{categoryName}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/catalog/categories"
+          }
+        },
+        {
+          "name": "Create product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Product created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Product id returned', () => pm.expect(json.productId).to.be.a('string').and.not.empty);",
+                  "pm.environment.set('productId', json.productId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{productName}}\",\n  \"description\": \"Created by Postman regression collection\",\n  \"brandId\": \"{{brandId}}\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"price\": 125000,\n  \"imageUrl\": \"https://example.test/laptop.png\",\n  \"attributes\": [\n    { \"name\": \"RAM\", \"value\": \"32 GB\" },\n    { \"name\": \"CPU\", \"value\": \"Postman CPU\" }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/catalog/products"
+          }
+        },
+        {
+          "name": "Get product details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const attempt=Number(pm.environment.get('catalogDetailsPoll')||0); pm.test('Catalog replica is processing',()=>pm.expect(pm.response.code).to.be.oneOf([200,404]));",
+                  "if(pm.response.code===404&&attempt<10){pm.environment.set('catalogDetailsPoll',attempt+1);pm.execution.setNextRequest(pm.info.requestName);}else{pm.environment.unset('catalogDetailsPoll');pm.test('Product details returned',()=>pm.response.to.have.status(200));if(pm.response.code===200){const json=pm.response.json();pm.test('Correct product returned',()=>pm.expect(json.productId).to.eql(pm.environment.get('productId')));pm.test('Product contains brand, category and attributes',()=>{pm.expect(json.brand.id).to.eql(pm.environment.get('brandId'));pm.expect(json.category.id).to.eql(pm.environment.get('categoryId'));pm.expect(json.attributes).to.be.an('array').with.lengthOf(2);});}}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/products/{{productId}}"
+          }
+        },
+        {
+          "name": "Search, filter and pagination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Filtered product list returned',()=>pm.response.to.have.status(200));const json=pm.response.json();const found=json.items.some(x=>x.productId===pm.environment.get('productId'));const attempt=Number(pm.environment.get('catalogListPoll')||0);",
+                  "if(!found&&attempt<10){pm.environment.set('catalogListPoll',attempt+1);pm.execution.setNextRequest(pm.info.requestName);}else{pm.environment.unset('catalogListPoll');pm.test('Pagination contract is valid',()=>{pm.expect(json.items).to.be.an('array');pm.expect(json.page).to.eql(1);pm.expect(json.pageSize).to.eql(9);pm.expect(json.totalCount).to.be.a('number');});pm.test('Created product is found',()=>pm.expect(found).to.be.true);}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/products?search={{productName}}&brandId={{brandId}}&categoryId={{categoryId}}&minPrice=100000&maxPrice=130000&sort=price-asc&page=1&pageSize=9"
+          }
+        },
+        {
+          "name": "Invalid pagination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid page size rejected', () => pm.response.to.have.status(400));",
+                  "pm.test('Validation error returned', () => pm.expect(pm.response.json().errorCode).to.eql('ValidationError'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/products?page=1&pageSize=101"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Catalog Redis cache demonstration",
+      "description": "Запросы выполнять строго по порядку. Они не обращаются к Redis напрямую: демонстрируют cache-aside через повтор идентичного запроса и немедленный refresh brands:all после admin update.",
+      "item": [
+        {
+          "name": "1. Warm product-list cache",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cache warm-up request succeeded', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('catalogWarmBody', pm.response.text());",
+                  "pm.environment.set('catalogWarmTime', String(pm.response.responseTime));",
+                  "console.log(`Catalog cache MISS/warm-up candidate: ${pm.response.responseTime} ms`);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/products?search={{productName}}&brandId={{brandId}}&categoryId={{categoryId}}&minPrice=100000&maxPrice=130000&sort=price-asc&page=1&pageSize=10"
+          }
+        },
+        {
+          "name": "2. Read same product-list key from cache",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Repeated request succeeded', () => pm.response.to.have.status(200));",
+                  "pm.test('Cached response is identical', () => pm.expect(pm.response.text()).to.eql(pm.environment.get('catalogWarmBody')));",
+                  "const first = Number(pm.environment.get('catalogWarmTime'));",
+                  "console.log(`Catalog repeated/cache-hit candidate: ${pm.response.responseTime} ms; warm-up: ${first} ms`);",
+                  "pm.test('Response time is recorded (not used as a flaky speed assertion)', () => { pm.expect(first).to.be.at.least(0); pm.expect(pm.response.responseTime).to.be.at.least(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/products?search={{productName}}&brandId={{brandId}}&categoryId={{categoryId}}&minPrice=100000&maxPrice=130000&sort=price-asc&page=1&pageSize=10"
+          }
+        },
+        {
+          "name": "3. Warm brands cache",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Brands cache endpoint succeeded', () => pm.response.to.have.status(200));",
+                  "pm.test('Created brand exists before refresh', () => pm.expect(pm.response.json().some(x => x.id === pm.environment.get('brandId'))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/brands"
+          }
+        },
+        {
+          "name": "4. Admin update refreshes brands Redis key",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('brandUpdatedName', `${pm.environment.get('brandName')} Redis refreshed`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Brand updated and cache refresh completed', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"{{brandUpdatedName}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/catalog/brands/{{brandId}}"
+          }
+        },
+        {
+          "name": "5. Immediate read sees refreshed Redis value",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Brands read succeeded', () => pm.response.to.have.status(200));",
+                  "const brands = pm.response.json();",
+                  "const updated = brands.find(x => x.id === pm.environment.get('brandId'));",
+                  "pm.test('Updated brand is immediately visible', () => { pm.expect(updated).to.exist; pm.expect(updated.name).to.eql(pm.environment.get('brandUpdatedName')); });",
+                  "console.log('Catalog returned the value written by RefreshBrandsAsync to Redis key catalog:brands:all.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/brands"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Warehouse",
+      "item": [
+        {
+          "name": "Wait for product lifecycle in Warehouse",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const attempt = Number(pm.environment.get('warehousePoll') || 0); pm.test('Warehouse lifecycle is processing', () => pm.expect(pm.response.code).to.be.oneOf([200,404]));",
+                  "if (pm.response.code === 404 && attempt < 15) { pm.environment.set('warehousePoll', attempt + 1); pm.execution.setNextRequest(pm.info.requestName); } else { pm.environment.unset('warehousePoll'); pm.test('Product appeared in Warehouse', () => pm.response.to.have.status(200)); if (pm.response.code === 200) { const x=pm.response.json(); pm.expect(x.productId).to.eql(pm.environment.get('productId')); pm.expect(x.isActive).to.be.true; } }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/warehouse/stocks/{{productId}}"
+          }
+        },
+        {
+          "name": "Income product stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Stock income succeeded', () => pm.response.to.have.status(200));",
+                  "pm.test('Available quantity is 10', () => pm.expect(pm.response.json().availableQuantity).to.eql(10));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"quantity\": 10 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/warehouse/stocks/{{productId}}/income"
+          }
+        },
+        {
+          "name": "Get stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Stock returned', () => pm.response.to.have.status(200));",
+                  "const x=pm.response.json(); pm.test('Stock is active and free', () => { pm.expect(x.availableQuantity).to.eql(10); pm.expect(x.reservedQuantity).to.eql(0); pm.expect(x.isActive).to.be.true; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/warehouse/stocks/{{productId}}"
+          }
+        },
+        {
+          "name": "Get stock movements",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Movements returned', () => pm.response.to.have.status(200));",
+                  "pm.test('Income movement exists', () => { const items=pm.response.json().items; pm.expect(items).to.be.an('array'); pm.expect(items.some(x => x.quantity === 10)).to.be.true; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/warehouse/stocks/{{productId}}/movements"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Delivery",
+      "item": [
+        {
+          "name": "Create delivery zone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Zone created or already exists', () => pm.expect(pm.response.code).to.be.oneOf([200,409]));",
+                  "if(pm.response.code===200){const x=pm.response.json();pm.environment.set('zoneId',x.zoneId);pm.test('Zone is active',()=>pm.expect(x.isActive).to.be.true);}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Postman Moscow {{suffix}}\", \"city\": \"Moscow\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/delivery/zones"
+          }
+        },
+        {
+          "name": "Resolve Moscow delivery zone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delivery zones returned', () => pm.response.to.have.status(200));",
+                  "const zone=pm.response.json().zones.find(x=>x.city==='Moscow');pm.test('Moscow zone exists and is active',()=>{pm.expect(zone).to.exist;pm.expect(zone.isActive).to.be.true;});if(zone){pm.environment.set('zoneId',zone.zoneId);}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/delivery/zones"
+          }
+        },
+        {
+          "name": "Create delivery slot",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const from=new Date(Date.now()+48*3600000); const to=new Date(from.getTime()+2*3600000); pm.environment.set('deliverySlotTimeFrom',from.toISOString()); pm.environment.set('deliverySlotTimeTo',to.toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Slot created', () => pm.response.to.have.status(200));",
+                  "const x=pm.response.json(); pm.environment.set('deliverySlotId',x.slotId); pm.test('Slot has capacity', () => { pm.expect(x.capacity).to.eql(2); pm.expect(x.reservedCount).to.eql(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"zoneId\": \"{{zoneId}}\", \"timeFrom\": \"{{deliverySlotTimeFrom}}\", \"timeTo\": \"{{deliverySlotTimeTo}}\", \"capacity\": 2 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/delivery/slots"
+          }
+        },
+        {
+          "name": "Open delivery slot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Slot opened', () => pm.response.to.have.status(200));",
+                  "pm.test('Slot status is Open', () => pm.expect(pm.response.json().status).to.eql('Open'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"zoneId\": \"{{zoneId}}\", \"timeFrom\": \"{{deliverySlotTimeFrom}}\", \"timeTo\": \"{{deliverySlotTimeTo}}\", \"capacity\": 2, \"status\": \"Open\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/delivery/slots/{{deliverySlotId}}"
+          }
+        },
+        {
+          "name": "Get available slots for address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Available slots returned', () => pm.response.to.have.status(200));",
+                  "pm.test('Created slot is available', () => pm.expect(pm.response.json().deliverySlots.some(x => x.slotId === pm.environment.get('deliverySlotId'))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"address\": { \"city\": \"Moscow\", \"street\": \"Tverskaya\", \"house\": \"10\", \"apartment\": \"25\" } }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/delivery/slots/available"
+          }
+        },
+        {
+          "name": "Get admin slots",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin slots returned', () => pm.response.to.have.status(200));",
+                  "pm.test('Created slot exists', () => pm.expect(pm.response.json().deliverySlots.some(x => x.slotId === pm.environment.get('deliverySlotId'))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/delivery/slots"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Billing",
+      "item": [
+        {
+          "name": "Wait for billing account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const a=Number(pm.environment.get('billingPoll')||0); pm.test('Billing account is processing',()=>pm.expect(pm.response.code).to.be.oneOf([200,404]));",
+                  "if(pm.response.code===404&&a<10){pm.environment.set('billingPoll',a+1);pm.execution.setNextRequest(pm.info.requestName);}else{pm.environment.unset('billingPoll');pm.test('Billing account is ready',()=>pm.response.to.have.status(200));}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/billing/accounts/me"
+          }
+        },
+        {
+          "name": "Deposit account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Deposit succeeded', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"amount\": {{depositAmount}} }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/billing/accounts/deposit"
+          }
+        },
+        {
+          "name": "Get balance before order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Account returned', () => pm.response.to.have.status(200));",
+                  "const x=pm.response.json(); pm.environment.set('balanceBeforeOrder',String(x.balance)); pm.test('Deposit is available',()=>{pm.expect(x.balance).to.eql(Number(pm.environment.get('depositAmount')));pm.expect(x.heldAmount).to.eql(0);});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/billing/accounts/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Order Happy Path",
+      "item": [
+        {
+          "name": "Create confirmed order candidate",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('idempotencyKey',pm.variables.replaceIn('{{$guid}}'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Order accepted',()=>pm.response.to.have.status(202));",
+                  "const x=pm.response.json();pm.environment.set('orderId',x.id);pm.test('Order starts Processing',()=>pm.expect(x.status).to.eql('Processing'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"deliverySlotId\": \"{{deliverySlotId}}\", \"deliveryAddress\": { \"city\": \"Moscow\", \"street\": \"Tverskaya\", \"house\": \"10\", \"apartment\": \"25\" }, \"items\": [{ \"productId\": \"{{productId}}\", \"quantity\": 2, \"expectedUnitPrice\": 125000 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "Wait until order Confirmed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Order returned',()=>pm.response.to.have.status(200));const x=pm.response.json();const a=Number(pm.environment.get('orderPoll')||0);",
+                  "if(x.status==='Processing'&&a<20){pm.environment.set('orderPoll',a+1);pm.execution.setNextRequest(pm.info.requestName);}else{pm.environment.unset('orderPoll');pm.test('Saga confirmed order',()=>pm.expect(x.status).to.eql('Confirmed'));pm.test('Order snapshot is correct',()=>{pm.expect(x.orderDetails[0].productId).to.eql(pm.environment.get('productId'));pm.expect(x.orderDetails[0].quantity).to.eql(2);pm.expect(x.totalAmount).to.eql(250000);});}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/orders/{{orderId}}"
+          }
+        },
+        {
+          "name": "Check balance after confirmed order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Account returned',()=>pm.response.to.have.status(200));const x=pm.response.json();",
+                  "pm.test('Payment captured',()=>{pm.expect(x.balance).to.eql(Number(pm.environment.get('balanceBeforeOrder'))-250000);pm.expect(x.heldAmount).to.eql(0);});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/billing/accounts/me"
+          }
+        },
+        {
+          "name": "Check stock after confirmed order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Stock returned',()=>pm.response.to.have.status(200));const x=pm.response.json();pm.test('Two units reserved for confirmed order',()=>{pm.expect(x.availableQuantity).to.eql(8);pm.expect(x.reservedQuantity).to.eql(2);});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/warehouse/stocks/{{productId}}"
+          }
+        },
+        {
+          "name": "Check delivery reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Slots returned',()=>pm.response.to.have.status(200));const s=pm.response.json().deliverySlots.find(x=>x.slotId===pm.environment.get('deliverySlotId'));pm.test('Slot reserved once',()=>{pm.expect(s).to.exist;pm.expect(s.reservedCount).to.eql(1);});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/delivery/slots"
+          }
+        },
+        {
+          "name": "Get my orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Orders returned',()=>pm.response.to.have.status(200));pm.test('Confirmed order listed',()=>pm.expect(pm.response.json().some(x=>x.id===pm.environment.get('orderId')&&x.status==='Confirmed')).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/orders/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Order Rejected — StockNotAvailable",
+      "item": [
+        {
+          "name": "Create product without stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Second product created',()=>pm.response.to.have.status(201));pm.environment.set('rejectedProductId',pm.response.json().productId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"No Stock {{suffix}}\", \"description\": \"Saga rejection product\", \"brandId\": \"{{brandId}}\", \"categoryId\": \"{{categoryId}}\", \"price\": 10000, \"imageUrl\": \"https://example.test/no-stock.png\", \"attributes\": [{\"name\":\"Test\",\"value\":\"No stock\"}] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/catalog/products"
+          }
+        },
+        {
+          "name": "Wait for no-stock product in Warehouse",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const a=Number(pm.environment.get('rejectedWarehousePoll')||0);pm.test('Lifecycle processing',()=>pm.expect(pm.response.code).to.be.oneOf([200,404]));",
+                  "if(pm.response.code===404&&a<15){pm.environment.set('rejectedWarehousePoll',a+1);pm.execution.setNextRequest(pm.info.requestName);}else{pm.environment.unset('rejectedWarehousePoll');pm.test('No-stock product exists',()=>pm.response.to.have.status(200));if(pm.response.code===200)pm.expect(pm.response.json().availableQuantity).to.eql(0);}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/warehouse/stocks/{{rejectedProductId}}"
+          }
+        },
+        {
+          "name": "Create rejected order candidate",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('rejectedIdempotencyKey',pm.variables.replaceIn('{{$guid}}'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Order accepted for saga',()=>pm.response.to.have.status(202));pm.environment.set('rejectedOrderId',pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{rejectedIdempotencyKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"deliverySlotId\": \"{{deliverySlotId}}\", \"deliveryAddress\": { \"city\": \"Moscow\", \"street\": \"Tverskaya\", \"house\": \"10\", \"apartment\": \"25\" }, \"items\": [{ \"productId\": \"{{rejectedProductId}}\", \"quantity\": 1, \"expectedUnitPrice\": 10000 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "Wait until order Rejected",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Order returned',()=>pm.response.to.have.status(200));const x=pm.response.json();const a=Number(pm.environment.get('rejectedOrderPoll')||0);",
+                  "if(x.status==='Processing'&&a<20){pm.environment.set('rejectedOrderPoll',a+1);pm.execution.setNextRequest(pm.info.requestName);}else{pm.environment.unset('rejectedOrderPoll');pm.test('Order rejected',()=>pm.expect(x.status).to.eql('Rejected'));pm.test('Failure reason exists',()=>pm.expect(x.failureReason).to.be.a('string').and.not.empty);}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/orders/{{rejectedOrderId}}"
+          }
+        },
+        {
+          "name": "Check billing compensation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Account returned',()=>pm.response.to.have.status(200));const x=pm.response.json();pm.test('Rejected order did not charge balance',()=>{pm.expect(x.balance).to.eql(Number(pm.environment.get('balanceBeforeOrder'))-250000);pm.expect(x.heldAmount).to.eql(0);});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/billing/accounts/me"
+          }
+        },
+        {
+          "name": "Check delivery compensation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Slots returned',()=>pm.response.to.have.status(200));const s=pm.response.json().deliverySlots.find(x=>x.slotId===pm.environment.get('deliverySlotId'));pm.test('Rejected order released delivery',()=>pm.expect(s.reservedCount).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/delivery/slots"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Idempotency",
+      "item": [
+        {
+          "name": "Create order without Idempotency-Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missing key rejected',()=>pm.response.to.have.status(400));pm.test('Correct error returned',()=>pm.expect(pm.response.json().errorCode).to.eql('IdempotencyKeyRequired'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"deliverySlotId\": \"{{deliverySlotId}}\", \"deliveryAddress\": { \"city\": \"Moscow\", \"street\": \"Tverskaya\", \"house\": \"10\", \"apartment\": \"25\" }, \"items\": [{ \"productId\": \"{{productId}}\", \"quantity\": 1, \"expectedUnitPrice\": 125000 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "Repeat same key and body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Saved response returned',()=>pm.response.to.have.status(202));pm.test('Same order id returned',()=>pm.expect(pm.response.json().id).to.eql(pm.environment.get('orderId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"deliverySlotId\": \"{{deliverySlotId}}\", \"deliveryAddress\": { \"city\": \"Moscow\", \"street\": \"Tverskaya\", \"house\": \"10\", \"apartment\": \"25\" }, \"items\": [{ \"productId\": \"{{productId}}\", \"quantity\": 2, \"expectedUnitPrice\": 125000 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "Same key with different body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Changed body conflicts',()=>pm.response.to.have.status(409));pm.test('Correct conflict returned',()=>pm.expect(pm.response.json().errorCode).to.eql('IdempotencyKeyConflict'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"deliverySlotId\": \"{{deliverySlotId}}\", \"deliveryAddress\": { \"city\": \"Moscow\", \"street\": \"Tverskaya\", \"house\": \"10\", \"apartment\": \"25\" }, \"items\": [{ \"productId\": \"{{productId}}\", \"quantity\": 3, \"expectedUnitPrice\": 125000 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/orders"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Security",
+      "item": [
+        {
+          "name": "Admin API without JWT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Anonymous admin request is unauthorized', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Forbidden Brand {{suffix}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/catalog/brands"
+          }
+        },
+        {
+          "name": "Admin API with USER token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('USER cannot call admin API', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Forbidden Brand {{suffix}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/catalog/brands"
+          }
+        },
+        {
+          "name": "Customer profile without JWT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Private profile requires JWT', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/customers/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Notifications",
+      "item": [
+        {
+          "name": "Wait for confirmed order notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Notifications returned',()=>pm.response.to.have.status(200));const list=pm.response.json();const n=list.find(x=>x.orderId===pm.environment.get('orderId'));const a=Number(pm.environment.get('notificationPoll')||0);",
+                  "if(!n&&a<40){pm.environment.set('notificationPoll',a+1);pm.execution.setNextRequest(pm.info.requestName);}else{pm.environment.unset('notificationPoll');pm.test('Confirmed notification exists',()=>pm.expect(n).to.exist);if(n)pm.environment.set('notificationId',n.id);}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/notifications/me"
+          }
+        },
+        {
+          "name": "Get notification details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Notification returned',()=>pm.response.to.have.status(200));const x=pm.response.json();pm.test('Notification belongs to order',()=>{pm.expect(x.id).to.eql(pm.environment.get('notificationId'));pm.expect(x.orderId).to.eql(pm.environment.get('orderId'));pm.expect(x.body).to.be.a('string').and.not.empty;});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/notifications/{{notificationId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

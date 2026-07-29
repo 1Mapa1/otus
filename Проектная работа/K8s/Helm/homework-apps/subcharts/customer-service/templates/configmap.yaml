@@ -13,6 +13,7 @@ data:
   DB_PORT: {{ .Values.global.dbPort | quote }}
   DB_NAME: {{ .Values.dbName }}
   ASPNETCORE_ENVIRONMENT: {{ .Values.global.environment }}
+  OutboxPublisherEnabled: {{ .Values.config.outboxPublisherEnabled | quote }}
   Auth__Url: {{ default (include "customer-service.authServiceUrl" .) .Values.config.authUrlOverride | quote }}
   Kafka__BootstrapServers: {{ default (include "customer-service.kafkaBootstrapServersDefault" .) .Values.global.kafkaBootstrapServers | quote }}
   Kafka__Acks: {{ .Values.config.kafkaAcks | quote }}

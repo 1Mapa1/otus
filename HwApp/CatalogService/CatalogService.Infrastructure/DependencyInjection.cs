@@ -49,6 +49,8 @@ namespace CatalogService.Infrastructure
         {
             var connectionString = configuration.GetPrimaryConnectionString();
 
+            services.AddSingleton<IIntegrationEventMapping, IntegrationEventMapping>();
+
             services.AddDbContext<CatalogWriteDbContext>(options =>
                 options.UseNpgsql(connectionString));
 

@@ -18,6 +18,7 @@ spec:
       containers:
         - name: {{ .Values.name }}-migration
           image: {{ .Values.migrationJob.imageRepository }}:{{ .Values.migrationJob.imageTag }}
+          imagePullPolicy: {{ .Values.migrationJob.imagePullPolicy | default "Always" }}
           env:
             - name: DB_HOST
               valueFrom:

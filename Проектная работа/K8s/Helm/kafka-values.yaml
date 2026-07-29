@@ -1,4 +1,8 @@
-replicaCount: 1
+controller:
+  replicaCount: 3
+
+broker:
+  replicaCount: 0
 
 image:
   registry: docker.io
@@ -52,5 +56,6 @@ provisioning:
     - name: billing.dlq
       partitions: 1
       replicationFactor: 1
+
 
 

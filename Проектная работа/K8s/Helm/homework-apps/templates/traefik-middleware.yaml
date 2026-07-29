@@ -8,11 +8,8 @@ metadata:
 spec:
   plugin:
     requestid:
+      enabled: true
       headerName: {{ .Values.traefik.middlewares.requestId.headerName | quote }}
-      {{- with .Values.traefik.middlewares.requestId.sourceHeaders }}
-      sourceHeaders:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
 {{- end }}
 {{- if and .Values.ingress.enabled .Values.traefik.middlewares.rateLimitAuth.enabled }}
 {{- if .Values.traefik.middlewares.requestId.enabled }}

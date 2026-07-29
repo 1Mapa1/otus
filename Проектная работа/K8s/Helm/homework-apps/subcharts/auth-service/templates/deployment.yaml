@@ -66,6 +66,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "auth-service.fullname" . }}
                   key: Ms__Customer__BaseUrl
+            - name: OutboxPublisherEnabled
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "auth-service.fullname" . }}
+                  key: OutboxPublisherEnabled
             - name: Ms__Customer__Timeout
               valueFrom:
                 configMapKeyRef:

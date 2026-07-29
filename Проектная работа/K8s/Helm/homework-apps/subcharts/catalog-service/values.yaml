@@ -4,7 +4,7 @@ global:
   peerAuthName: auth
   clusterDomain: cluster.local
   secretType: Opaque
-  catalogDbPrimaryHost: postgres-catalog-postgresql
+  catalogDbPrimaryHost: postgres-catalog-postgresql-primary
   catalogDbReplicaHost: postgres-catalog-postgresql-read
   catalogDbPort: "5432"
   redisHost: redis-master
@@ -59,7 +59,7 @@ migrationJob:
   ttlSecondsAfterFinished: 100
   backoffLimit: 3
   imageRepository: maslovdeveloper/hwapp-catalog-migration
-  imageTag: "10.0"
+  imageTag: "10.1"
 
 config:
   authUrlOverride: ""

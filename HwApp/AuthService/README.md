@@ -17,6 +17,7 @@
 - `Ms:Customer` — HTTP-клиент CustomerService
 - `Kafka` — bootstrap servers и параметры producer (outbox publisher)
 - `Jwt` — issuer, lifetime, ключи RS256
+- `ADMIN_LOGIN` / `ADMIN_PASSWORD` — необязательный идемпотентный seed администратора в DbMigrator
 
 См. также Helm values umbrella chart в [Проектная работа / K8s](../../Проектная%20работа/K8s/Helm/homework-apps).
 
