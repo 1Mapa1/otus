@@ -1,56 +1,70 @@
 # OrderService
 
-Создание заказа с **распределённой транзакцией (сага)**: авторизация платежа в **Billing**, резерв товара в **Warehouse**, резерв слота в **Delivery**, затем **capture** платежа; при сбое на шагах после оплаты — **компенсации** (отмена доставки → склада → авторизации). Доменные события уходят в **Kafka** через паттерн **outbox**. **Идемпотентность** `POST /api/orders`: заголовок **`Idempotency-Key`** (UUID), запись в БД и повтор того же ответа — см. [ДЗ 9 / Архитектура](../../ДЗ%209/Архитектура/Архитектура.md).
+Сервис заказов: создаёт заказ идемпотентно и оркестрирует распределённую сагу оплаты, резервирования товара и доставки.
 
-## Архитектура
+## Ответственность
 
-- `OrderService.Api` — HTTP API, JWT, Swagger
-- `OrderService.Application` — команды/запросы, **оркестрация саги** (`Orders/Saga/`, обработчики шагов в `Orders/Saga/Steps/`)
-- `OrderService.Domain` — заказ, позиции, статусы, шаги саги, причины отказа, доменные события
-- `OrderService.Infrastructure` — EF Core, HTTP-клиенты Billing / Catalog / Warehouse / Delivery, Kafka producer, outbox, **`OrderSagaWorker`** (фоновая обработка заказов в работе)
-- `OrderService.DbMigrator` — миграции БД
+- создание заказа с обязательным `Idempotency-Key`;
+- snapshot товара и цены через CatalogService;
+- фоновая обработка саги;
+- шаги Billing authorize → Warehouse reserve → Delivery reserve → Billing capture;
+- компенсации в обратном порядке при ошибке;
+- публикация результата заказа через outbox.
 
-## Конфигурация
+## Состав
 
-- **`Ms:*`** — базовые URL и таймауты Billing, Catalog, Warehouse, Delivery (Helm: `Ms__Billing__*`, `Ms__Catalog__*`, `Ms__Warehouse__*`, `Ms__Delivery__*`).
-- **`Idempotency`** — TTL блокировки обработки и TTL записи (`Idempotency__ProcessingLockTtl`, `Idempotency__RecordTtl` в Helm).
-- **`OrderSaga`** — размер пачки, длительность блокировки, интервал опроса (`OrderSaga__*` в Helm).
-- **`Kafka`**, **`Auth`** — как в остальных сервисах стенда.
+- `OrderService.Api` — пользовательский API;
+- `OrderService.Application` — команды, запросы и шаги саги;
+- `OrderService.Domain` — заказ, позиции, статусы и состояние саги;
+- `OrderService.Infrastructure` — EF Core, HTTP clients, outbox, Kafka и `OrderSagaWorker`;
+- `OrderService.DbMigrator` — миграции БД.
+
+## Интеграции
+
+| Направление | Система | Назначение |
+|---|---|---|
+| HTTP → | CatalogService | Snapshot товаров |
+| HTTP → | BillingService | authorize, capture, cancel |
+| HTTP → | WarehouseService | reserve, cancel |
+| HTTP → | DeliveryService | reserve, cancel |
+| Kafka → | topic `orders` | `order.confirmed.v1`, `order.rejected.v2` |
+| PostgreSQL | `order_db` | заказы, saga state, idempotency и outbox |
 
 ## API
 
-Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md), [ДЗ 9 / K8s](../../ДЗ%209/K8s/README.md) — идемпотентность и переменные `Idempotency__*`).
+Все endpoints требуют JWT.
 
-Префикс: **`/api/orders`**, JWT обязателен.
+| Метод | Путь | Назначение |
+|---|---|---|
+| POST | `/api/orders` | Создать заказ; требуется UUID в `Idempotency-Key`, ответ `202 Accepted` |
+| GET | `/api/orders/me` | Заказы текущего пользователя |
+| GET | `/api/orders/{id}` | Детали своего заказа |
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| POST | `/api/orders` | Создание заказа (`deliverySlotId`, `deliveryAddress`, позиции); снимок каталога через **Catalog**; заголовок **`Idempotency-Key`** обязателен; ответ **202 Accepted** — дальнейшая обработка сагой |
-| GET | `/api/orders/me` | Список заказов текущего пользователя |
-| GET | `/api/orders/{id}` | Детали заказа по идентификатору (включая `deliveryAddress`) |
+Swagger: `/api/orders/swagger`.
 
-### Документация и health
+## Основная конфигурация
 
-- Swagger UI (Development): **`/api/orders/swagger`**
-- Health: `/health/live`, `/health/ready`, `/health/startup`
+- `ConnectionStrings`;
+- `Auth:Url`;
+- `Ms:Catalog`, `Ms:Billing`, `Ms:Warehouse`, `Ms:Delivery`;
+- `Idempotency`;
+- `OrderSaga`;
+- `Kafka`.
 
-## Связанные сервисы
+## Сборка
 
-- [BillingService](../BillingService/README.md) — authorize / capture / cancel authorization
-- CatalogMs — снимок товаров при оформлении (`POST api/internal/catalog/products/snapshot`)
-- [WarehouseService](../WarehouseService/README.md) — резерв и отмена товара
-- [DeliveryService](../DeliveryService/README.md) — резерв и отмена слота (адрес доставки из заказа)
-- [NotificationService](../NotificationService/README.md) — события в Kafka
+```powershell
+dotnet build OrderService.Api/OrderService.Api.csproj
 
-## Сборка Docker-образов
-
-Из каталога `OrderService/`:
-
-```bash
-docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-order-service:8.0 .
-docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-order-migration:8.0 .
+docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-order-service:<tag> .
+docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-order-migration:<tag> .
 ```
 
-## Развёртывание
+## Эксплуатационные endpoints
 
-Postgres, Kafka, Ingress `/api/orders`: [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md), [ДЗ 9 / K8s](../../ДЗ%209/K8s/README.md). Общий указатель: [HwApp/README.md](../README.md).
+- `/health/live`
+- `/health/ready`
+- `/health/startup`
+- `/metrics`
+
+Система целиком: [HwApp](../README.md). Развёртывание: [K8s](../../Проектная%20работа/K8s/README.md).

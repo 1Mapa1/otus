@@ -1,59 +1,68 @@
 # AuthService
 
-Сервис аутентификации: учётные записи, JWT (RS256), публикация JWKS. При **регистрации** создаётся запись клиента в **CustomerService** (HTTP), после успешной активации пользователя публикуется событие `user.activated.v1` в **Kafka** через outbox.
+Сервис идентификации: регистрирует пользователей, проверяет логин и пароль, выпускает JWT с подписью RS256 и публикует JWKS.
 
-## Структура решения
+## Ответственность
 
-- `AuthService.Api` — HTTP API, health checks
-- `AuthService.Application` — сценарии регистрации и входа
-- `AuthService.Domain` — сущности, доменные события и контракты репозитория
-- `AuthService.Infrastructure` — EF Core, выпуск JWT, HTTP-клиент к CustomerService, Kafka producer, outbox
-- `AuthService.DbMigrator` — миграции БД
+- регистрация пользователя с ролью `USER`;
+- идемпотентный seed администратора через DbMigrator;
+- аутентификация и выпуск access token;
+- синхронное создание профиля в CustomerService;
+- сохранение `user.activated.v1` в outbox и публикация в Kafka.
 
-## Конфигурация интеграций
+## Состав
 
-В `appsettings` задаются:
+- `AuthService.Api` — HTTP API, Swagger, health и metrics;
+- `AuthService.Application` — сценарии регистрации и входа;
+- `AuthService.Domain` — пользователи, роли и доменные события;
+- `AuthService.Infrastructure` — EF Core, JWT/JWKS, Customer HTTP client, Kafka и outbox;
+- `AuthService.DbMigrator` — миграции и seed администратора.
 
-- `Ms:Customer` — HTTP-клиент CustomerService
-- `Kafka` — bootstrap servers и параметры producer (outbox publisher)
-- `Jwt` — issuer, lifetime, ключи RS256
-- `ADMIN_LOGIN` / `ADMIN_PASSWORD` — необязательный идемпотентный seed администратора в DbMigrator
+## Интеграции
 
-См. также Helm values umbrella chart в [Проектная работа / K8s](../../Проектная%20работа/K8s/Helm/homework-apps).
+| Направление | Система | Назначение |
+|---|---|---|
+| HTTP → | CustomerService | `POST /api/internal/customers` при регистрации |
+| Kafka → | topic `auth` | `user.activated.v1` через outbox |
+| PostgreSQL | `auth_db` | пользователи, refresh tokens и outbox |
+
+В demo-режиме `OutboxPublisherEnabled=false`: событие сохраняется в таблицу outbox, но не отправляется, поскольку Kafka не устанавливается.
 
 ## API
 
-Базовый путь: `/api/auth`.
+| Метод | Путь | Доступ | Назначение |
+|---|---|---|---|
+| POST | `/api/auth/register` | публичный | Регистрация пользователя |
+| POST | `/api/auth/login` | публичный | Получение JWT |
+| GET | `/.well-known/jwks.json` | публичный | Публичный ключ для проверки JWT |
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| POST | `/api/auth/register` | Регистрация: пользователь в БД Auth + клиент в CustomerService + событие `user.activated.v1` |
-| POST | `/api/auth/login` | Вход, ответ с `accessToken` (JWT с ролью) |
+Swagger: `/api/auth/swagger`.
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/.well-known/jwks.json` | JWKS для проверки подписи JWT |
+## Основная конфигурация
 
-Swagger UI (в Development): префикс `/api/auth/swagger`.
+- `ConnectionStrings`;
+- `Jwt`;
+- `Ms:Customer`;
+- `Kafka`;
+- `OutboxPublisherEnabled`;
+- `ADMIN_LOGIN`, `ADMIN_PASSWORD` для DbMigrator.
 
-## Kafka events
+Полные Kubernetes values: [`Проектная работа/K8s/Helm/homework-apps`](../../Проектная%20работа/K8s/Helm/homework-apps).
 
-Публикует (topic `auth`):
+## Сборка
 
-- `user.activated.v1` — пользователь активирован после успешной регистрации (`UserId` в payload)
+```powershell
+dotnet build AuthService.Api/AuthService.Api.csproj
 
-## Связанные сервисы
-
-- [CustomerService](../CustomerService/README.md) — профиль клиента при регистрации
-- [BillingService](../BillingService/README.md) — потребляет `user.activated.v1` (асинхронное создание счёта)
-
-## Docker
-
-```bash
-docker build --platform linux/amd64 -f Dockerfile.Api .
-docker build --platform linux/amd64 -f Dockerfile.Migration .
+docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-auth-service:<tag> .
+docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-auth-migration:<tag> .
 ```
 
-## Развёртывание
+## Эксплуатационные endpoints
 
-Helm chart: [Проектная работа / K8s / Helm](../../Проектная%20работа/K8s/Helm/homework-apps).
+- `/health/live`
+- `/health/ready`
+- `/health/startup`
+- `/metrics`
+
+Система целиком: [HwApp](../README.md). Развёртывание: [K8s](../../Проектная%20работа/K8s/README.md).

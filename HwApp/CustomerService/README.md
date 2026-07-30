@@ -1,81 +1,67 @@
 # CustomerService
 
-Сервис профиля клиента и адресной книги. `Customer.Id` совпадает с `User.Id` из AuthService — `customerId` для пользовательских endpoint'ов берётся из JWT claim `sub`.
+Сервис профиля клиента и адресной книги. Идентификатор клиента совпадает с `sub` пользователя из JWT AuthService.
 
-При регистрации **AuthService** вызывает internal API и создаёт профиль. Изменения профиля публикуются в **Kafka** через outbox.
+## Ответственность
 
-## Структура решения
+- идемпотентное создание профиля по internal HTTP-вызову AuthService;
+- чтение и изменение собственного профиля;
+- создание, изменение и soft delete адресов;
+- публикация событий клиента через outbox.
 
-- `CustomerService.Api` — HTTP API (внешние и internal-контроллеры), AutoMapper, JWT, Swagger
-- `CustomerService.Domain` — сущности `Customer`, `CustomerAddress`, доменные события, контракты репозиториев
-- `CustomerService.Infrastructure` — EF Core, репозитории, outbox, Kafka producer
-- `CustomerService.DbMigrator` — миграции БД
+## Состав
 
-## Конфигурация
+- `CustomerService.Api` — внешний и internal API, JWT, Swagger, health и metrics;
+- `CustomerService.Domain` — профиль, адреса и доменные события;
+- `CustomerService.Infrastructure` — EF Core, Kafka и outbox;
+- `CustomerService.DbMigrator` — миграции БД.
 
-В `appsettings` задаются:
+## Интеграции
 
-- `Auth:Url` — базовый URL AuthService для загрузки JWKS
-- `Kafka` — bootstrap servers и параметры producer (outbox publisher)
-- строка подключения к PostgreSQL
+| Направление | Система | Назначение |
+|---|---|---|
+| HTTP ← | AuthService | Создание профиля при регистрации |
+| HTTP → | AuthService | Загрузка JWKS |
+| Kafka → | topic `customers` | `customer.created.v1`, `customer.updated.v1` |
+| PostgreSQL | `customer_db` | профили, адреса и outbox |
 
-См. также Helm values umbrella chart в [Проектная работа / K8s](../../Проектная%20работа/K8s/Helm/homework-apps).
+В demo-режиме `OutboxPublisherEnabled=false`: записи outbox создаются без отправки в Kafka.
 
 ## API
 
-Базовый путь: `/api/customers`.
+| Метод | Путь | Доступ | Назначение |
+|---|---|---|---|
+| GET | `/api/customers/me` | JWT | Получить свой профиль |
+| PUT | `/api/customers/me` | JWT | Изменить свой профиль |
+| GET | `/api/customers/me/addresses` | JWT | Получить активные адреса |
+| POST | `/api/customers/me/addresses` | JWT | Создать адрес |
+| PUT | `/api/customers/me/addresses/{addressId}` | JWT | Изменить адрес |
+| DELETE | `/api/customers/me/addresses/{addressId}` | JWT | Деактивировать адрес |
+| POST | `/api/internal/customers` | internal | Идемпотентно создать профиль |
 
-Пользовательские endpoint'ы требуют `Authorization: Bearer <token>`.
+Swagger: `/api/customers/swagger`.
 
-### Профиль
+## Основная конфигурация
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/customers/me` | Получить свой профиль |
-| PUT | `/api/customers/me` | Обновить свой профиль |
+- `ConnectionStrings`;
+- `Auth:Url`;
+- `Kafka`;
+- `OutboxPublisherEnabled`.
 
-### Адресная книга
+## Сборка
 
-Сохранённые адреса для checkout. Разовый адрес заказа может быть указан без сохранения в CustomerService.
+```powershell
+dotnet build CustomerService.Api/CustomerService.Api.csproj
 
-`customerId` не передаётся в route/body — только из JWT.
-
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/customers/me/addresses` | Список активных адресов (`IsActive = true`) |
-| POST | `/api/customers/me/addresses` | Создать адрес |
-| PUT | `/api/customers/me/addresses/{addressId}` | Изменить свой активный адрес |
-| DELETE | `/api/customers/me/addresses/{addressId}` | Деактивировать адрес (soft delete, `IsActive = false`) |
-
-### Внутренний API
-
-| Метод | Путь | Описание |
-|-------|------|----------|
-| POST | `/api/internal/customers` | Идемпотентное создание профиля при регистрации (AuthService) |
-
-Swagger UI (в Development): `/api/customers/swagger`.
-
-Health: `/health/live`, `/health/ready`, `/health/startup`.
-
-## Kafka events
-
-Публикует (topic `customers`):
-
-- `customer.created.v1` — профиль создан при регистрации
-- `customer.updated.v1` — профиль обновлён
-
-## Связанные сервисы
-
-- [AuthService](../AuthService/README.md) — JWT, регистрация, создание профиля
-- [NotificationService](../NotificationService/README.md) — потребляет события клиента
-
-## Docker
-
-```bash
-docker build --platform linux/amd64 -f Dockerfile.Api .
-docker build --platform linux/amd64 -f Dockerfile.Migration .
+docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-customer-service:<tag> .
+docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-customer-migration:<tag> .
 ```
 
-## Развёртывание
+## Эксплуатационные endpoints
 
-Helm chart: [Проектная работа / K8s / Helm](../../Проектная%20работа/K8s/Helm/homework-apps).
+- `/health/live`
+- `/health/ready`
+- `/health/startup`
+- `/metrics`
+
+Система целиком: [HwApp](../README.md). Развёртывание: [K8s](../../Проектная%20работа/K8s/README.md).

@@ -1,54 +1,91 @@
-# Kubernetes
+# Развертывание в Kubernetes
 
-Helm chart и значения для развёртывания приложений (**Auth**, **Customer**, **Catalog**, **Billing**, **Warehouse**, **Delivery**, **Notification**, **Order**), **PostgreSQL** (общий + отдельный для Catalog с read replica), **Redis**, **Kafka**, **Kafka UI** и **API Gateway** (**Traefik**, HTTP без TLS).
+В каталоге находятся Helm-чарты и Makefile для развертывания проекта в minikube.
+
+Основной стенд включает восемь микросервисов, Traefik, PostgreSQL, отдельный кластер PostgreSQL для Catalog, Redis и Kafka. Дополнительно могут быть установлены Kafka UI, Prometheus, Grafana, Elasticsearch, Kibana и Filebeat.
 
 ## Требования
 
-- Kubernetes (minikube)
-- Helm 3
-- Traefik (через Helm, namespace `m`)
-- В `hosts`: `<IP minikube> electronics.store`
+- WSL, Linux или другая среда с GNU Make и POSIX shell;
+- запущенный Kubernetes-кластер minikube;
+- `kubectl`;
+- Helm 3;
+- Docker Desktop;
+- не менее 12 ГБ памяти и 4 CPU для полного стенда с мониторингом и логированием.
 
-## Makefile (быстрая установка)
+Рекомендуемая конфигурация minikube:
 
-Auth DbMigrator при установке идемпотентно создаёт администратора приложения. Значения задаются в `Helm/homework-apps/values.yaml` как `authService.secret.adminLogin` и `authService.secret.adminPassword`; по умолчанию — `admin` / `Admin123!`. Публичный `/api/auth/register` по-прежнему создаёт только роль `USER`.
+```bash
+minikube start --memory=12288 --cpus=4
+```
 
-Перед установкой версии с admin seed нужно собрать и опубликовать migration image `maslovdeveloper/hwapp-auth-migration:10.1` из `HwApp/AuthService/Dockerfile.Migration`.
+Все команды ниже выполняются из каталога `Проектная работа/K8s`.
 
-Из каталога **`K8s`** (рядом с `Helm/`): `make help`.
+## Варианты установки
 
-**`make install`** — основной стенд для проверки API в Postman:
+| Команда | Состав стенда | Назначение |
+|---|---|---|
+| `make install` | Все 8 сервисов, PostgreSQL, PostgreSQL Catalog, Redis, Kafka и Traefik | Полное функциональное и E2E-тестирование |
+| `make install-demo` | Auth, Customer, PostgreSQL, Traefik, Prometheus, Grafana и ELK | Демонстрация метрик и централизованных логов |
+| `make install-all` | `make install` + Kafka UI, Prometheus, Grafana и ELK | Полный стенд вместе с наблюдаемостью |
 
-1. Helm repos
-2. **Traefik** (namespace `m`, HTTP :80)
-3. namespace приложений **`electronics-store`**
-4. Postgres (7 MS)
-5. Postgres Catalog (primary + read replica)
-6. Redis
-7. Kafka (топики: `auth`, `customers`, `orders`, `products`, `stocks`, `billing.dlq`)
-8. umbrella **`homework-apps`** (все 8 MS)
+Установка выполняется идемпотентно через `helm upgrade --install`, поэтому ту же команду можно использовать для первичного запуска и обновления стенда.
 
-**`make install-all`** дополнительно устанавливает Kafka UI, kube-prometheus-stack
-(Prometheus + Grafana) и EFK (Elasticsearch + Kibana + Filebeat) в namespace
-`monitoring`.
+### Основной стенд
 
-> **RAM:** для стенда с логами (Elasticsearch + Kibana) поднимите minikube минимум до **12 GB**:
-> `minikube start --memory=12288 --cpus=4`
+```bash
+make install
+```
 
-Свой namespace: `make install NS=my-namespace` (тогда поправьте `bootstrapServers` в `Helm/kafka-ui-values.yaml`).
+### Demo-стенд
 
-Снятие: **`make uninstall`** → при необходимости **`make purge-ns`** и **`make purge-monitoring-ns`**.
+```bash
+make install-demo
+```
 
-## API Gateway (Traefik)
+Demo-режим оставляет включенными только Auth и Customer. Kafka и Redis в нем отсутствуют, а фоновые издатели outbox отключены. Сами интеграционные события продолжают сохраняться в таблицах outbox.
 
-Конфиг: `Helm/traefik-values.yaml`. Только **HTTP** (без TLS и redirect на HTTPS). Catalog-плагин `github.com/mdklapwijk/traefik-plugin-request-id:v0.1.1` генерирует `X-Request-ID`.
+При переходе на demo-режим Makefile удаляет релизы Kafka, Redis и PostgreSQL Catalog, если они были установлены ранее.
 
-Host по умолчанию: **`electronics.store`** (`homework-apps/values.yaml` → `ingress.host`).
+### Полный стенд с наблюдаемостью
 
-Маршруты (только public API):
+```bash
+make install-all
+```
 
-| Path | Service |
-|------|---------|
+## Доступ к API
+
+Приложение публикуется через Traefik по адресу:
+
+```text
+http://electronics.store
+```
+
+Добавьте в Windows-файл `C:\Windows\System32\drivers\etc\hosts`:
+
+```text
+127.0.0.1 electronics.store
+```
+
+Затем оставьте в отдельном окне WSL проброс порта Traefik:
+
+```bash
+sudo KUBECONFIG="$HOME/.kube/config" \
+kubectl port-forward --address 0.0.0.0 -n m svc/traefik 80:80
+```
+
+Права `sudo` требуются для локального порта 80.
+
+Проверка доступности:
+
+```bash
+curl http://electronics.store/.well-known/jwks.json
+```
+
+## Маршруты API Gateway
+
+| Путь | Сервис |
+|---|---|
 | `/api/auth`, `/.well-known` | Auth |
 | `/api/customers` | Customer |
 | `/api/catalog` | Catalog |
@@ -58,101 +95,131 @@ Host по умолчанию: **`electronics.store`** (`homework-apps/values.yam
 | `/api/delivery` | Delivery |
 | `/api/orders` | Order |
 
-`/api/internal/*` через Traefik **не** публикуется — вызовы между MS идут in-cluster.
+Внутренние маршруты `/api/internal/*` через Traefik не публикуются. Межсервисные запросы выполняются по внутренним Kubernetes Service.
 
-JWT валидируют **микросервисы**, не Traefik (см. `Архитектура/ApiGateway.md`).
+JWT проверяется микросервисами. Traefik отвечает за маршрутизацию и ограничивает частоту запросов регистрации и входа: по умолчанию 10 запросов в минуту с burst 20.
 
-**Middleware Traefik** (CRD в `homework-apps`):
+`X-Request-ID` создается и передается ASP.NET middleware каждого сервиса. Внешний Traefik-плагин генерации Request ID отключен, чтобы доступность маршрутов не зависела от загрузки плагина.
 
-| Middleware | Назначение |
-|------------|------------|
-| `*-request-id` | `X-Request-ID` (UUID, если заголовка нет) на все public routes |
-| `*-rate-limit-auth` | Rate limit только `POST /api/auth/login` и `POST /api/auth/register` |
+## Администратор
 
-Параметры rate limit: `homework-apps/values.yaml` → `traefik.middlewares.rateLimitAuth` (по умолчанию 10 req/min, burst 20).
+Migration Job сервиса Auth идемпотентно создает администратора:
 
-Swagger: `/api/<service>/swagger` (если включён в образе).
+| Параметр | Значение по умолчанию |
+|---|---|
+| Логин | `admin` |
+| Пароль | `Admin123!` |
 
-## Инфраструктура
+Значения задаются в `Helm/homework-apps/values.yaml` через `authService.secret.adminLogin` и `authService.secret.adminPassword`.
 
-| Релиз Helm | Назначение |
-|------------|------------|
-| `traefik` | API Gateway (ingress controller) |
-| `postgres` | БД для Auth, Customer, Order, Billing, Warehouse, Delivery, Notification |
-| `postgres-catalog` | `catalog_db` на primary + streaming read replica |
-| `redis` | кэш Catalog (brands/categories/products list) |
-| `kafka` | event bus |
-| `kafka-ui` | UI для просмотра топиков |
-| `monitoring` | Prometheus + Grafana (`kube-prometheus-stack`) |
-| `elasticsearch` | хранилище логов (single-node, HTTP без TLS) |
-| `kibana` | UI для просмотра логов |
-| `filebeat` | DaemonSet: сбор stdout-логов `electronics-store` → Elasticsearch |
+## Namespace и Helm-релизы
 
-Bootstrap Kafka (при пустом `global.kafkaBootstrapServers` в umbrella):
+| Namespace | Содержимое |
+|---|---|
+| `electronics-store` | Микросервисы и прикладная инфраструктура |
+| `m` | Traefik |
+| `monitoring` | Prometheus, Grafana и ELK |
 
-`kafka-controller-headless.<namespace>.svc.cluster.local:9092`
+Основные релизы:
 
-## Приложения (`homework-apps`)
+| Релиз | Назначение |
+|---|---|
+| `homework-apps` | Umbrella chart восьми микросервисов |
+| `postgres` | Общий PostgreSQL для семи сервисов |
+| `postgres-catalog` | Primary и read replica Catalog |
+| `redis` | Кэш Catalog |
+| `kafka` | Брокер сообщений |
+| `kafka-ui` | Просмотр Kafka |
+| `traefik` | API Gateway |
+| `monitoring` | Prometheus и Grafana |
+| `electronics-dashboard` | Дашборд проекта в Grafana |
+| `elasticsearch`, `kibana`, `filebeat` | Централизованные логи |
 
-Образы: `maslovdeveloper/hwapp-*`, тег **`10.0`**.
-
-```bash
-cd K8s
-make install
-```
-
-Или только apps (если инфра уже поднята): `make apps`.
-
-**OrderService** — in-cluster URL Billing, Catalog, Warehouse, Delivery (`Ms__*__*`).
-
-**CatalogService** — dual DB (`DB_PRIMARY_*` / `DB_REPLICA_*`), Redis, Kafka consumer `stocks`.
-
-**BillingService** — Kafka consumer `auth`, DLQ `billing.dlq`.
-
-**WarehouseService** — Kafka consumer `products`, producer topic `stocks`.
-
-## Мониторинг (Prometheus + Grafana)
-
-Конфиг: `Helm/prometheus-values.yaml`. Prometheus подхватывает **ServiceMonitor** из namespace `electronics-store` (все 8 MS + Postgres).
-
-Grafana (логин/пароль по умолчанию `admin` / `admin`):
+Namespace можно переопределить:
 
 ```bash
-kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
-# http://localhost:3000
+make install NS=my-namespace
 ```
 
-Метрики MS: `/metrics` (порт `monitor` в Service → targetPort приложения 8000).
+Доступные параметры Makefile:
 
-## Логи (EFK)
+- `NS` — namespace приложений;
+- `MONITORING_NS` — namespace наблюдаемости;
+- `INGRESS_NS` — namespace Traefik;
+- `HELM_TIMEOUT` — тайм-аут операций Helm.
 
-Конфиги: `Helm/elasticsearch-values.yaml`, `Helm/kibana-values.yaml`, `Helm/filebeat-values.yaml`. Всё в namespace `monitoring` (рядом с Prometheus/Grafana).
+## Grafana
 
-Микросервисы пишут JSON в stdout (Serilog `RenderedCompactJsonFormatter`). **Filebeat** (DaemonSet) читает `/var/log/containers/*`, собирает только namespace `electronics-store`, парсит JSON и шлёт в **Elasticsearch** (индекс `filebeat-electronics-*`).
-
-Только `make logging` (если инфра уже поднята): Elasticsearch + Kibana + Filebeat.
-
-Kibana:
+Grafana устанавливается командами `make install-demo`, `make install-all` или `make prometheus`.
 
 ```bash
-kubectl port-forward -n monitoring svc/kibana-kibana 5601:5601
-# http://localhost:5601
+kubectl port-forward --address 0.0.0.0 \
+  -n monitoring svc/monitoring-grafana 3000:80
 ```
 
-В Kibana создайте data view по паттерну `filebeat-electronics-*` (time field `@timestamp`). Поля из логов: `@mt` (шаблон), `@l` (уровень), `RequestId`, `kubernetes.pod.name`, `kubernetes.container.name`.
+Откройте `http://localhost:3000` и войдите с логином `admin` и паролем `admin`.
 
-Проверка сквозного `RequestId`: сделайте запрос `Order → Catalog` и отфильтруйте в Kibana по `RequestId` — события обоих сервисов будут с одинаковым значением.
+Дашборд **Electronics Store - Services and PostgreSQL** создается автоматически. Он содержит метрики доступности сервисов и баз данных, HTTP-нагрузки, кодов ответа, P95, CPU, памяти и PostgreSQL.
 
-## Проверка
+## Kibana
+
+ELK устанавливается командами `make install-demo`, `make install-all` или `make logging`.
+
+```bash
+kubectl port-forward --address 0.0.0.0 \
+  -n monitoring svc/kibana 5601:5601
+```
+
+Откройте `http://localhost:5601`.
+
+Data View **Electronics Store** и сохраненный поиск **Electronics Store - Request trace** импортируются автоматически. Filebeat собирает JSON-логи контейнеров из namespace приложений и записывает их в индексы `filebeat-electronics-*`.
+
+## Проверка состояния
 
 ```bash
 make status
-# или
-kubectl get pods -n electronics-store
-kubectl get ingress -n electronics-store
-kubectl get pods -n m
 ```
 
+Для стенда с наблюдаемостью:
+
 ```bash
-curl -sS http://electronics.store/.well-known/jwks.json
+make status-all
 ```
+
+Список всех доступных целей:
+
+```bash
+make help
+```
+
+## Удаление
+
+Удалить основной стенд:
+
+```bash
+make uninstall
+```
+
+Удалить основной стенд, Kafka UI, Prometheus, Grafana и ELK:
+
+```bash
+make uninstall-all
+```
+
+Эти команды не удаляют namespace. При необходимости:
+
+```bash
+make purge-ns
+make purge-monitoring-ns
+```
+
+## Состав каталога
+
+- `Makefile` — установка, обновление, проверка и удаление стендов.
+- `Helm/homework-apps` — umbrella chart микросервисов.
+- `Helm/grafana-dashboard` — автоматически устанавливаемый дашборд Grafana.
+- `Helm/kibana` — Kibana и импорт сохраненных объектов.
+- `Helm/filebeat` — сбор логов контейнеров.
+- `Helm/*-values.yaml` — настройки внешних Helm-чартов.
+
+Подробное устройство umbrella chart описано в [Helm/homework-apps/README.md](Helm/homework-apps/README.md).
