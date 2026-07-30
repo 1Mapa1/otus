@@ -11,6 +11,7 @@ using WarehouseService.Api.Authentication;
 using WarehouseService.Api.Observability;
 using WarehouseService.Application;
 using WarehouseService.Infrastructure;
+using Microsoft.AspNetCore.HttpLogging;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(new RenderedCompactJsonFormatter())
@@ -23,14 +24,25 @@ try
     builder.Host.UseSerilog((context, _, loggerConfiguration) => loggerConfiguration
         .ReadFrom.Configuration(context.Configuration)
         .Enrich.FromLogContext()
+        .Enrich.With<HttpRequestIdEnricher>()
         .WriteTo.Console(new RenderedCompactJsonFormatter()));
 
     builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
         .ReadFrom.Configuration(builder.Configuration)
         .Enrich.FromLogContext()
+        .Enrich.With<HttpRequestIdEnricher>()
         .WriteTo.Console(new RenderedCompactJsonFormatter()));
 
     builder.Services.AddControllers();
+    builder.Services.AddHttpLogging(options =>
+    {
+        options.LoggingFields =
+            HttpLoggingFields.RequestProperties |
+            HttpLoggingFields.RequestBody |
+            HttpLoggingFields.ResponseStatusCode |
+            HttpLoggingFields.ResponseBody;
+        options.CombineLogs = true;
+    });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
@@ -92,6 +104,7 @@ try
 
     app.UseRouting();
     app.UseMiddleware<RequestIdMiddleware>();
+    app.UseHttpLogging();
     app.UseSerilogRequestLogging(options =>
     {
         options.GetLevel = static (httpContext, _, ex) =>

@@ -5,10 +5,6 @@ administrator = person "Администратор" "Сотрудник мага
 onlineStore = softwareSystem "Интернет-магазин электроники" "Онлайн-магазин электроники и компьютерной техники." {
     tags "OnlineStore"
 
-    reactSpa = container "React SPA" "Пользовательский и административный web-интерфейс." "React (planned)" {
-        tags "Frontend,Planned"
-    }
-
     apiGateway = container "API Gateway" "Единая внешняя точка входа: маршрутизация public API, rate limiting, X-Request-ID и access logs. JWT не валидирует." "Traefik" {
         tags "Gateway"
     }

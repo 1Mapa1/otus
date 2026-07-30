@@ -33,7 +33,7 @@ authService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-auth-service
-    imageTag: "10.5"
+    imageTag: "10.8"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -130,7 +130,7 @@ customerService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-customer-service
-    imageTag: "10.1"
+    imageTag: "10.4"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -191,7 +191,7 @@ catalogService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-catalog-service
-    imageTag: "10.0"
+    imageTag: "10.3"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -258,7 +258,7 @@ notificationService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-notification-service
-    imageTag: "10.0"
+    imageTag: "10.3"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -320,7 +320,7 @@ billingService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-billing-service
-    imageTag: "10.0"
+    imageTag: "10.3"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -384,7 +384,7 @@ orderService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-order-service
-    imageTag: "10.0"
+    imageTag: "10.3"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -457,7 +457,7 @@ warehouseService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-warehouse-service
-    imageTag: "10.0"
+    imageTag: "10.3"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1
@@ -521,7 +521,7 @@ deliveryService:
 
   deployment:
     imageRepository: maslovdeveloper/hwapp-delivery-service
-    imageTag: "10.0"
+    imageTag: "10.3"
     replicaCount: 1
     maxSurge: 1
     maxUnavailable: 1

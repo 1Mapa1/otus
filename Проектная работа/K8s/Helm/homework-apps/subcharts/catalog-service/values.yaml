@@ -17,7 +17,7 @@ dbName: catalog_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-catalog-service
-  imageTag: "10.0"
+  imageTag: "10.3"
   replicaCount: 1
   maxSurge: 1
   maxUnavailable: 1

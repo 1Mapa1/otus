@@ -8,7 +8,7 @@ systemContext onlineStore "SystemContext" {
 
 container onlineStore "PlatformOverview" {
     title "C2. Контейнеры — обзор платформы"
-    description "React SPA, API Gateway, микросервисы, event broker и независимые хранилища данных."
+    description "API Gateway, микросервисы, event broker и независимые хранилища данных."
 
     include *
     autoLayout lr

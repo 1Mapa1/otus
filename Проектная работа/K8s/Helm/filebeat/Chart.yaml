@@ -1,0 +1,6 @@
+apiVersion: v2
+name: filebeat-demo
+description: Local Filebeat chart for the graduation-project demo stand
+type: application
+version: 0.1.0
+appVersion: "8.5.1"

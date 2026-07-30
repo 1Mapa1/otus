@@ -26,6 +26,7 @@ help:
 	@echo "  make kafka            Kafka (OCI chart)"
 	@echo "  make kafka-ui         Kafka UI"
 	@echo "  make apps             umbrella chart $(APPS_RELEASE)"
+	@echo "  make install-demo     Auth + Customer + Grafana + ELK (без Kafka/Redis)"
 	@echo "  make install          основной стенд для API/Postman (без monitoring/logging)"
 	@echo "  make install-all      полный стенд: install + Kafka UI + monitoring + logging"
 	@echo "  make uninstall        снять основной стенд (namespaces не трогаем)"
@@ -76,6 +77,8 @@ prometheus: preflight repos monitoring-ns
 		--namespace $(MONITORING_NS) \
 		-f Helm/prometheus-values.yaml \
 		--wait --timeout $(HELM_TIMEOUT)
+	helm upgrade --install electronics-dashboard Helm/grafana-dashboard \
+		--namespace $(MONITORING_NS)
 
 .PHONY: elasticsearch
 elasticsearch: preflight repos monitoring-ns
@@ -85,13 +88,13 @@ elasticsearch: preflight repos monitoring-ns
 
 .PHONY: kibana
 kibana: preflight repos monitoring-ns
-	helm upgrade --install kibana elastic/kibana \
+	helm upgrade --install kibana Helm/kibana \
 		--namespace $(MONITORING_NS) \
 		-f Helm/kibana-values.yaml
 
 .PHONY: filebeat
 filebeat: preflight repos monitoring-ns
-	helm upgrade --install filebeat elastic/filebeat \
+	helm upgrade --install filebeat Helm/filebeat \
 		--namespace $(MONITORING_NS) \
 		-f Helm/filebeat-values.yaml
 
@@ -142,8 +145,25 @@ apps: preflight apps-ns
 		--create-namespace \
 		--dependency-update
 
+.PHONY: apps-demo
+apps-demo: preflight apps-ns
+	helm upgrade --install $(APPS_RELEASE) $(CHART_APPS) \
+		-n $(NS) \
+		--create-namespace \
+		--dependency-update \
+		-f $(CHART_APPS)/demo-values.yaml
+
+.PHONY: demo-prune
+demo-prune:
+	helm uninstall kafka -n $(NS) --ignore-not-found
+	helm uninstall redis -n $(NS) --ignore-not-found
+	helm uninstall postgres-catalog -n $(NS) --ignore-not-found
+
 .PHONY: install
 install: preflight repos ingress apps-ns postgres postgres-catalog redis kafka apps
+
+.PHONY: install-demo
+install-demo: preflight repos ingress apps-ns demo-prune postgres apps-demo prometheus logging
 
 .PHONY: install-all
 install-all: install kafka-ui prometheus logging
@@ -154,6 +174,7 @@ uninstall-apps:
 
 .PHONY: uninstall-prometheus
 uninstall-prometheus:
+	helm uninstall electronics-dashboard -n $(MONITORING_NS) --ignore-not-found
 	helm uninstall monitoring -n $(MONITORING_NS) --ignore-not-found
 
 .PHONY: uninstall-logging

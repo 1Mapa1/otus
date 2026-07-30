@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: electronics-store-grafana-dashboard
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/name: electronics-store-dashboard
+data:
+  electronics-store.json: |
+{{ .Files.Get "files/electronics-store.json" | indent 4 }}

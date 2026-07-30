@@ -20,7 +20,7 @@ dbName: order_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-order-service
-  imageTag: "9.1"
+  imageTag: "10.3"
   replicaCount: 2
   maxSurge: 1
   maxUnavailable: 1

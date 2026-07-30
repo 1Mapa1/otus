@@ -1,6 +1,7 @@
 using AuthService.Api.Observability;
 using AuthService.Application;
 using AuthService.Infrastructure;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Prometheus;
 using Prometheus.HttpMetrics;
@@ -19,14 +20,25 @@ try
     builder.Host.UseSerilog((context, _, loggerConfiguration) => loggerConfiguration
         .ReadFrom.Configuration(context.Configuration)
         .Enrich.FromLogContext()
+        .Enrich.With<HttpRequestIdEnricher>()
         .WriteTo.Console(new RenderedCompactJsonFormatter()));
 
     builder.Services.AddSerilog((_, loggerConfiguration) => loggerConfiguration
         .ReadFrom.Configuration(builder.Configuration)
         .Enrich.FromLogContext()
+        .Enrich.With<HttpRequestIdEnricher>()
         .WriteTo.Console(new RenderedCompactJsonFormatter()));
 
     builder.Services.AddControllers();
+    builder.Services.AddHttpLogging(options =>
+    {
+        options.LoggingFields =
+            HttpLoggingFields.RequestProperties |
+            HttpLoggingFields.RequestBody |
+            HttpLoggingFields.ResponseStatusCode |
+            HttpLoggingFields.ResponseBody;
+        options.CombineLogs = true;
+    });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
@@ -60,6 +72,7 @@ try
 
     app.UseRouting();
     app.UseMiddleware<RequestIdMiddleware>();
+    app.UseHttpLogging();
     app.UseSerilogRequestLogging(options =>
     {
         options.GetLevel = static (httpContext, _, ex) =>

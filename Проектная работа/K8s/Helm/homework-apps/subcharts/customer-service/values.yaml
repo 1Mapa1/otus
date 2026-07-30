@@ -18,7 +18,7 @@ dbName: customer_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-customer-service
-  imageTag: "10.1"
+  imageTag: "10.4"
   replicaCount: 3
   maxSurge: 1
   maxUnavailable: 1

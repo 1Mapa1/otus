@@ -1,75 +1,141 @@
-# Postman — проектная работа
+# Postman-сценарии проекта
 
-Коллекция содержит сквозной E2E-сценарий для всех восьми микросервисов: Auth, Customer, Catalog, Warehouse, Delivery, Billing, Order и Notification. Также проверяются права доступа, идемпотентность, компенсация Saga и Redis cache-aside в Catalog.
+## Структура
 
-## Файлы
+- `Main` — полный E2E-тест всех микросервисов для `make install`.
+- `Observability` — короткий Auth + Customer сценарий для `make install-demo`.
 
-| Файл | Назначение |
-|---|---|
-| `electronics-store.postman_collection.json` | Запросы и автотесты |
-| `electronics-store.postman_environment.json` | URL, учётные данные администратора и переменные прогона |
+## Demo: запуск теста
 
-## Подготовка
-
-1. Импортировать оба JSON-файла в Postman.
-2. Выбрать environment `electronics-store`.
-3. Проверить `adminLogin` и `adminPassword`. По умолчанию используются `admin` / `Admin123!`, создаваемые Auth DbMigrator.
-4. Проверить `baseUrl`. По умолчанию используется `http://electronics.store`.
-5. Запустить коллекцию целиком и строго по порядку.
-
-Используйте именно **Collection Runner** или Newman: асинхронные проверки повторяют текущий запрос через `pm.execution.setNextRequest`. При одиночном нажатии Send переходы и polling не выполняются. Рекомендуемая задержка между запросами — 200–300 мс.
-
-Регистрация через публичный API создаёт пользователя с ролью `USER`. Администратор создаётся идемпотентным seed в Auth DbMigrator из Kubernetes Secret `ADMIN_LOGIN` / `ADMIN_PASSWORD`.
-
-## Что проверяется
-
-- доступность публичного API Catalog;
-- регистрация и вход пользователя;
-- вход администратора;
-- `401` без JWT и `403` для роли `USER` на admin API;
-- создание бренда, категории и товара;
-- карточка товара;
-- поиск, фильтры, сортировка и пагинация;
-- отрицательный тест параметров списка;
-- повторяемое поведение Catalog Redis cache-aside;
-- refresh справочника брендов после admin update.
-- профиль Customer и адрес доставки;
-- доставка lifecycle-события товара из Catalog в Warehouse через Kafka;
-- поступление товара и движения склада;
-- зона доставки, слот и подбор доступных слотов;
-- создание Billing account через событие регистрации и пополнение баланса;
-- успешная Order Saga до статуса `Confirmed`;
-- итоговые состояния Billing, Warehouse и Delivery;
-- отклонение заказа без остатка и компенсации Saga;
-- обязательность и конфликт `Idempotency-Key`;
-- список заказов и уведомление о завершённом заказе.
-
-Тестовые имена и email содержат уникальный суффикс, поэтому коллекцию можно запускать повторно. Созданные данные намеренно не удаляются: они остаются как материал для проверки результата и демонстрации в Postman, Kafka UI и БД.
-
-## Как демонстрируется Redis
-
-Папка `04 Catalog Redis cache demonstration` выполняется последовательно:
-
-1. Первый запрос списка товаров прогревает ключ, зависящий от всех query-параметров.
-2. Второй запрос с абсолютно теми же параметрами получает идентичный результат. В Postman Console выводится время обоих запросов.
-3. Загружается кешированный справочник брендов.
-4. Бренд изменяется через admin API. Обработчик после сохранения читает список из primary и записывает его в Redis под ключом `catalog:brands:all`.
-5. Немедленный публичный GET проверяет обновлённое имя.
-
-Проверка скорости намеренно не требует, чтобы второй запрос был быстрее: на локальном Minikube сетевой шум делает такое утверждение нестабильным. Этот сценарий проверяет наблюдаемое поведение кеша. Прямое наличие ключей Redis средствами Postman проверить нельзя, потому что Redis использует собственный TCP-протокол, а Postman отправляет HTTP-запросы.
-
-## Newman (не запускался автоматически)
-
-Из WSL:
+Сначала из WSL запустите стенд:
 
 ```bash
-cd '/mnt/c/Users/maslo/source/repos/otus/Проектная работа/Postman'
-
-newman run electronics-store.postman_collection.json \
-  -e electronics-store.postman_environment.json \
-  --delay-request 200 \
-  --reporters cli \
-  --verbose
+cd "/mnt/c/Users/maslo/source/repos/otus/Проектная работа/K8s"
+make install-demo
 ```
 
-Если значения seed были изменены в Helm, перед Newman нужно указать такие же `adminLogin` и `adminPassword` в environment либо передать их через `--env-var`.
+Оставьте в отдельном WSL-терминале проброс Traefik:
+
+```bash
+sudo KUBECONFIG=/home/mapa/.kube/config \
+kubectl port-forward --address 0.0.0.0 -n m svc/traefik 80:80
+```
+
+Проверьте, что в Windows hosts есть строка:
+
+```text
+127.0.0.1 electronics.store
+```
+
+Запустите из PowerShell пять итераций, чтобы на графиках было достаточно данных:
+
+```powershell
+cd "C:\Users\maslo\source\repos\otus\Проектная работа\Postman\Observability"
+
+newman run .\electronics-store-observability.postman_collection.json `
+  -e .\electronics-store-observability.postman_environment.json `
+  --iteration-count 5 `
+  --delay-request 100 `
+  --reporters cli
+```
+
+Коллекция выполняет регистрацию и вход, работу с профилем и адресом, а также
+ожидаемые ответы `401`, `404` и один контролируемый `500` от входа с неверным
+паролем. Этот `500` специально оставлен в demo-сценарии, чтобы в Kibana
+гарантированно появился Error. Каждый HTTP-запрос получает отдельный
+`X-Request-ID`. Newman печатает название запроса и его идентификатор строкой
+`Kibana RequestId [название запроса]: ...`.
+
+## Grafana
+
+В отдельном WSL-терминале:
+
+```bash
+kubectl port-forward --address 0.0.0.0 \
+  -n monitoring svc/monitoring-grafana 3000:80
+```
+
+Откройте `http://localhost:3000`:
+
+- логин: `admin`
+- пароль: `admin`
+
+Откройте **Explore**, выберите источник **Prometheus** и диапазон
+**Last 15 minutes**.
+
+Количество запросов по сервисам:
+
+```promql
+sum(rate(http_request_duration_seconds_count[1m])) by (job)
+```
+
+Ответы по HTTP-кодам:
+
+```promql
+sum(increase(http_request_duration_seconds_count[15m])) by (code)
+```
+
+P95 времени ответа:
+
+```promql
+histogram_quantile(
+  0.95,
+  sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job)
+)
+```
+
+CPU контейнеров demo-стенда:
+
+```promql
+sum(rate(container_cpu_usage_seconds_total{namespace="electronics-store",container!=""}[5m])) by (pod)
+```
+
+Для скриншота удобнее выполнить Newman, выбрать **Last 15 minutes** и включить
+режим отображения **Time series**.
+
+## Kibana и ELK
+
+В отдельном WSL-терминале:
+
+```bash
+kubectl port-forward --address 0.0.0.0 \
+  -n monitoring svc/kibana 5601:5601
+```
+
+Откройте `http://localhost:5601`.
+
+При первом запуске:
+
+1. Откройте **Stack Management → Data Views**.
+2. Создайте Data View с шаблоном `filebeat-electronics-*`.
+3. В качестве поля времени выберите `@timestamp`.
+4. Откройте **Discover** и выберите созданный Data View.
+5. Установите диапазон **Last 15 minutes**.
+
+Все логи demo-сервисов:
+
+```text
+kubernetes.namespace : "electronics-store"
+```
+
+Только Auth и Customer:
+
+```text
+kubernetes.container.name : ("auth" or "customer")
+```
+
+Логи одного HTTP-запроса:
+
+```text
+RequestId : "observability-..."
+```
+
+Вместо `observability-...` вставьте Request ID нужного запроса из вывода
+Newman. Для регистрации будут видны входящий запрос Auth и внутренний вызов
+Customer, потому что Auth передаёт тот же `X-Request-ID` дальше.
+
+Только ошибки и предупреждения:
+
+```text
+kubernetes.namespace : "electronics-store" and @l : ("Error" or "Warning")
+```

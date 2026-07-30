@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-filebeat-daemonset-config
+  labels:
+    app: filebeat-filebeat
+    release: {{ .Release.Name }}
+data:
+  filebeat.yml: |
+{{ index .Values.daemonset.filebeatConfig "filebeat.yml" | indent 4 }}

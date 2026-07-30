@@ -1,17 +1,20 @@
 clusterName: elasticsearch
 replicas: 1
 minimumMasterNodes: 1
+protocol: http
+clusterHealthCheckParams: "wait_for_status=yellow&timeout=1s"
 
 esConfig:
   elasticsearch.yml: |
-    discovery.type: single-node
     xpack.security.enabled: false
     xpack.security.http.ssl.enabled: false
     xpack.security.transport.ssl.enabled: false
 
 createCert: false
 secret:
-  enabled: false
+  enabled: true
+  # Required by the chart readiness script even when xpack security is disabled.
+  password: "demo-elastic-password"
 
 esJavaOpts: "-Xms1g -Xmx1g"
 

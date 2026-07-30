@@ -18,7 +18,7 @@ dbName: auth_db
 
 deployment:
   imageRepository: maslovdeveloper/hwapp-auth-service
-  imageTag: "10.5"
+  imageTag: "10.8"
   replicaCount: 2
   maxSurge: 1
   maxUnavailable: 1
