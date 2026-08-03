@@ -1,0 +1,1028 @@
+{
+  "configuration" : { },
+  "description" : "Декомпозиция интернет-заказов сети сэндвич-кафе",
+  "documentation" : { },
+  "id" : 1,
+  "lastModifiedDate" : "2026-08-03T12:58:57Z",
+  "model" : {
+    "people" : [ {
+      "description" : "Формирует корзину, оформляет, оплачивает и оценивает заказ.",
+      "id" : "1",
+      "name" : "Покупатель",
+      "properties" : {
+        "structurizr.dsl.identifier" : "customer"
+      },
+      "relationships" : [ {
+        "description" : "Оформляет и отслеживает заказ",
+        "destinationId" : "11",
+        "id" : "26",
+        "sourceId" : "1",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Оформляет и отслеживает заказ",
+        "destinationId" : "10",
+        "id" : "27",
+        "linkedRelationshipId" : "26",
+        "sourceId" : "1",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Получает доставку, следует по маршруту и изменяет её статус.",
+      "id" : "2",
+      "name" : "Курьер",
+      "properties" : {
+        "structurizr.dsl.identifier" : "courier"
+      },
+      "relationships" : [ {
+        "description" : "Работает с доставками",
+        "destinationId" : "11",
+        "id" : "28",
+        "sourceId" : "2",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Работает с доставками",
+        "destinationId" : "10",
+        "id" : "29",
+        "linkedRelationshipId" : "28",
+        "sourceId" : "2",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Подтверждает заказ и отмечает его готовность.",
+      "id" : "3",
+      "name" : "Сотрудник точки",
+      "properties" : {
+        "structurizr.dsl.identifier" : "storeEmployee"
+      },
+      "relationships" : [ {
+        "description" : "Обрабатывает очередь заказов",
+        "destinationId" : "11",
+        "id" : "30",
+        "sourceId" : "3",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Обрабатывает очередь заказов",
+        "destinationId" : "10",
+        "id" : "31",
+        "linkedRelationshipId" : "30",
+        "sourceId" : "3",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Управляет заведением, меню, локальными акциями и статистикой.",
+      "id" : "4",
+      "name" : "Владелец точки",
+      "properties" : {
+        "structurizr.dsl.identifier" : "storeOwner"
+      },
+      "relationships" : [ {
+        "description" : "Управляет точкой продаж",
+        "destinationId" : "11",
+        "id" : "32",
+        "sourceId" : "4",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Управляет точкой продаж",
+        "destinationId" : "10",
+        "id" : "33",
+        "linkedRelationshipId" : "32",
+        "sourceId" : "4",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Согласует точки и управляет национальными акциями.",
+      "id" : "5",
+      "name" : "Менеджер сети",
+      "properties" : {
+        "structurizr.dsl.identifier" : "networkManager"
+      },
+      "relationships" : [ {
+        "description" : "Управляет сетью",
+        "destinationId" : "11",
+        "id" : "34",
+        "sourceId" : "5",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Управляет сетью",
+        "destinationId" : "10",
+        "id" : "35",
+        "linkedRelationshipId" : "34",
+        "sourceId" : "5",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Person"
+    } ],
+    "softwareSystems" : [ {
+      "description" : "Google Maps, Яндекс Карты, 2ГИС и другие поставщики маршрутов.",
+      "documentation" : { },
+      "id" : "6",
+      "name" : "Картографические сервисы",
+      "properties" : {
+        "structurizr.dsl.identifier" : "maps"
+      },
+      "tags" : "Element,Software System,External"
+    }, {
+      "description" : "Проводит онлайн-платежи и возвраты.",
+      "documentation" : { },
+      "id" : "7",
+      "name" : "Платёжный провайдер",
+      "properties" : {
+        "structurizr.dsl.identifier" : "paymentProvider"
+      },
+      "tags" : "Element,Software System,External"
+    }, {
+      "description" : "SMTP, SMS и push-провайдеры.",
+      "documentation" : { },
+      "id" : "8",
+      "name" : "Каналы уведомлений",
+      "properties" : {
+        "structurizr.dsl.identifier" : "messageChannels"
+      },
+      "tags" : "Element,Software System,External"
+    }, {
+      "description" : "Хранит изображения точек, товаров, аватаров и отзывов.",
+      "documentation" : { },
+      "id" : "9",
+      "name" : "Object Storage",
+      "properties" : {
+        "structurizr.dsl.identifier" : "objectStorage"
+      },
+      "tags" : "Element,Software System,External"
+    }, {
+      "containers" : [ {
+        "description" : "Web- и mobile-интерфейсы покупателей, курьеров и сотрудников.",
+        "documentation" : { },
+        "id" : "11",
+        "name" : "Клиентские приложения",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.clientApps"
+        },
+        "relationships" : [ {
+          "description" : "Регистрация и вход",
+          "destinationId" : "12",
+          "id" : "36",
+          "sourceId" : "11",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Профиль и адреса",
+          "destinationId" : "13",
+          "id" : "37",
+          "sourceId" : "11",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Точки продаж и персонал",
+          "destinationId" : "14",
+          "id" : "38",
+          "sourceId" : "11",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Каталог и меню",
+          "destinationId" : "15",
+          "id" : "39",
+          "sourceId" : "11",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Корзина",
+          "destinationId" : "16",
+          "id" : "40",
+          "sourceId" : "11",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Заказы",
+          "destinationId" : "18",
+          "id" : "41",
+          "sourceId" : "11",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Доставка курьера",
+          "destinationId" : "20",
+          "id" : "42",
+          "sourceId" : "11",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Отзывы",
+          "destinationId" : "22",
+          "id" : "43",
+          "sourceId" : "11",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Статистика",
+          "destinationId" : "24",
+          "id" : "44",
+          "sourceId" : "11",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        } ],
+        "tags" : "Element,Container,Frontend",
+        "technology" : "Web / Mobile"
+      }, {
+        "description" : "Аккаунты, аутентификация, сессии и роли.",
+        "documentation" : { },
+        "id" : "12",
+        "name" : "AuthService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.auth"
+        },
+        "relationships" : [ {
+          "description" : "AccountRegistered, AccountBlocked",
+          "destinationId" : "25",
+          "id" : "72",
+          "sourceId" : "12",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        } ],
+        "tags" : "Element,Container,Core",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Профили, контакты, адреса и предпочтения.",
+        "documentation" : { },
+        "id" : "13",
+        "name" : "CustomerService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.customer"
+        },
+        "relationships" : [ {
+          "description" : "Хранит аватары",
+          "destinationId" : "9",
+          "id" : "67",
+          "sourceId" : "13",
+          "tags" : "Relationship",
+          "technology" : "S3 API"
+        }, {
+          "description" : "Customer contacts and preferences changed",
+          "destinationId" : "25",
+          "id" : "73",
+          "sourceId" : "13",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        } ],
+        "tags" : "Element,Container,Core",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Точки продаж, расписание, персонал и согласование.",
+        "documentation" : { },
+        "id" : "14",
+        "name" : "StoreService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.store"
+        },
+        "relationships" : [ {
+          "description" : "Проверяет владельца и сотрудников",
+          "destinationId" : "13",
+          "id" : "45",
+          "sourceId" : "14",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Хранит изображения точек",
+          "destinationId" : "9",
+          "id" : "69",
+          "sourceId" : "14",
+          "tags" : "Relationship",
+          "technology" : "S3 API"
+        } ],
+        "tags" : "Element,Container,Commerce",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Каталог продуктов и меню конкретных точек.",
+        "documentation" : { },
+        "id" : "15",
+        "name" : "ProductsService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.products"
+        },
+        "relationships" : [ {
+          "description" : "Проверяет точку продаж",
+          "destinationId" : "14",
+          "id" : "46",
+          "sourceId" : "15",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Хранит изображения продуктов",
+          "destinationId" : "9",
+          "id" : "70",
+          "sourceId" : "15",
+          "tags" : "Relationship",
+          "technology" : "S3 API"
+        } ],
+        "tags" : "Element,Container,Commerce",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Корзины покупателей и их позиции.",
+        "documentation" : { },
+        "id" : "16",
+        "name" : "CartService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.cart"
+        },
+        "relationships" : [ {
+          "description" : "Проверяет покупателя",
+          "destinationId" : "13",
+          "id" : "47",
+          "sourceId" : "16",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Проверяет активность точки",
+          "destinationId" : "14",
+          "id" : "48",
+          "sourceId" : "16",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Получает цену и доступность",
+          "destinationId" : "15",
+          "id" : "49",
+          "sourceId" : "16",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "CartCheckedOut",
+          "destinationId" : "25",
+          "id" : "74",
+          "sourceId" : "16",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        } ],
+        "tags" : "Element,Container,Commerce",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Цены, национальные и локальные акции, промокоды.",
+        "documentation" : { },
+        "id" : "17",
+        "name" : "PricingService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.pricing"
+        },
+        "relationships" : [ {
+          "description" : "Получает снимки позиций",
+          "destinationId" : "15",
+          "id" : "50",
+          "sourceId" : "17",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Проверяет локальные акции",
+          "destinationId" : "14",
+          "id" : "51",
+          "sourceId" : "17",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        } ],
+        "tags" : "Element,Container,Commerce",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Создание заказа и управление его жизненным циклом.",
+        "documentation" : { },
+        "id" : "18",
+        "name" : "OrderService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.order"
+        },
+        "relationships" : [ {
+          "description" : "Получает и закрывает корзину",
+          "destinationId" : "16",
+          "id" : "52",
+          "sourceId" : "18",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Рассчитывает стоимость",
+          "destinationId" : "17",
+          "id" : "53",
+          "sourceId" : "18",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Создаёт платёж",
+          "destinationId" : "19",
+          "id" : "54",
+          "sourceId" : "18",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Создаёт доставку",
+          "destinationId" : "20",
+          "id" : "55",
+          "sourceId" : "18",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Получает маршрут самовывоза",
+          "destinationId" : "21",
+          "id" : "56",
+          "sourceId" : "18",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Order lifecycle events",
+          "destinationId" : "25",
+          "id" : "75",
+          "sourceId" : "18",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        } ],
+        "tags" : "Element,Container,OrderFlow",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Онлайн- и офлайн-платежи и возвраты.",
+        "documentation" : { },
+        "id" : "19",
+        "name" : "PaymentService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.payment"
+        },
+        "relationships" : [ {
+          "description" : "Проводит оплату и возврат",
+          "destinationId" : "7",
+          "id" : "63",
+          "sourceId" : "19",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Payment lifecycle events",
+          "destinationId" : "25",
+          "id" : "76",
+          "sourceId" : "19",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        } ],
+        "tags" : "Element,Container,OrderFlow",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Поиск курьера и жизненный цикл доставки.",
+        "documentation" : { },
+        "id" : "20",
+        "name" : "DeliveryService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.delivery"
+        },
+        "relationships" : [ {
+          "description" : "Рассчитывает маршрут курьера",
+          "destinationId" : "21",
+          "id" : "57",
+          "sourceId" : "20",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Подтверждает оплату при доставке",
+          "destinationId" : "19",
+          "id" : "58",
+          "sourceId" : "20",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Delivery lifecycle events",
+          "destinationId" : "25",
+          "id" : "77",
+          "sourceId" : "20",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        } ],
+        "tags" : "Element,Container,OrderFlow",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Маршруты, расстояния и ожидаемое время прибытия.",
+        "documentation" : { },
+        "id" : "21",
+        "name" : "ETAService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.eta"
+        },
+        "relationships" : [ {
+          "description" : "Запрашивает маршрут и дорожную обстановку",
+          "destinationId" : "6",
+          "id" : "61",
+          "sourceId" : "21",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        } ],
+        "tags" : "Element,Container,Supporting",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Отзывы о заказах, точках и доставке.",
+        "documentation" : { },
+        "id" : "22",
+        "name" : "FeedbackService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.feedback"
+        },
+        "relationships" : [ {
+          "description" : "Проверяет завершение заказа",
+          "destinationId" : "18",
+          "id" : "59",
+          "sourceId" : "22",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Проверяет точку продаж",
+          "destinationId" : "14",
+          "id" : "60",
+          "sourceId" : "22",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Хранит изображения отзывов",
+          "destinationId" : "9",
+          "id" : "71",
+          "sourceId" : "22",
+          "tags" : "Relationship",
+          "technology" : "S3 API"
+        }, {
+          "description" : "Feedback created events",
+          "destinationId" : "25",
+          "id" : "78",
+          "sourceId" : "22",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        } ],
+        "tags" : "Element,Container,Supporting",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Уведомления через выбранные каналы.",
+        "documentation" : { },
+        "id" : "23",
+        "name" : "NotifyService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.notify"
+        },
+        "relationships" : [ {
+          "description" : "Отправляет уведомления",
+          "destinationId" : "8",
+          "id" : "65",
+          "sourceId" : "23",
+          "tags" : "Relationship",
+          "technology" : "SMTP/SMS/Push"
+        } ],
+        "tags" : "Element,Container,Supporting",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Статистика сети и отдельных точек.",
+        "documentation" : { },
+        "id" : "24",
+        "name" : "AnalyticsService",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.analytics"
+        },
+        "tags" : "Element,Container,Supporting",
+        "technology" : "Microservice"
+      }, {
+        "description" : "Доставка доменных событий между сервисами.",
+        "documentation" : { },
+        "id" : "25",
+        "name" : "Event Broker",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.broker"
+        },
+        "relationships" : [ {
+          "description" : "Account events",
+          "destinationId" : "13",
+          "id" : "79",
+          "sourceId" : "25",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        }, {
+          "description" : "Payment and delivery events",
+          "destinationId" : "18",
+          "id" : "80",
+          "sourceId" : "25",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        }, {
+          "description" : "Order events",
+          "destinationId" : "20",
+          "id" : "81",
+          "sourceId" : "25",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        }, {
+          "description" : "OrderCompleted",
+          "destinationId" : "22",
+          "id" : "82",
+          "sourceId" : "25",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        }, {
+          "description" : "Customer, order, payment and delivery events",
+          "destinationId" : "23",
+          "id" : "83",
+          "sourceId" : "25",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        }, {
+          "description" : "Operational business events",
+          "destinationId" : "24",
+          "id" : "84",
+          "sourceId" : "25",
+          "tags" : "Relationship,Async",
+          "technology" : "Events"
+        } ],
+        "tags" : "Element,Container,Broker",
+        "technology" : "Message Broker"
+      } ],
+      "description" : "Онлайн-заказы сети сэндвич-кафе.",
+      "documentation" : { },
+      "id" : "10",
+      "name" : "Система интернет-заказов",
+      "properties" : {
+        "structurizr.dsl.identifier" : "onlineStore"
+      },
+      "relationships" : [ {
+        "description" : "Запрашивает маршрут и дорожную обстановку",
+        "destinationId" : "6",
+        "id" : "62",
+        "linkedRelationshipId" : "61",
+        "sourceId" : "10",
+        "technology" : "HTTPS/JSON"
+      }, {
+        "description" : "Проводит оплату и возврат",
+        "destinationId" : "7",
+        "id" : "64",
+        "linkedRelationshipId" : "63",
+        "sourceId" : "10",
+        "technology" : "HTTPS/JSON"
+      }, {
+        "description" : "Отправляет уведомления",
+        "destinationId" : "8",
+        "id" : "66",
+        "linkedRelationshipId" : "65",
+        "sourceId" : "10",
+        "technology" : "SMTP/SMS/Push"
+      }, {
+        "description" : "Хранит аватары",
+        "destinationId" : "9",
+        "id" : "68",
+        "linkedRelationshipId" : "67",
+        "sourceId" : "10",
+        "technology" : "S3 API"
+      } ],
+      "tags" : "Element,Software System,OnlineStore"
+    } ]
+  },
+  "name" : "I'll Have the BLT",
+  "properties" : {
+    "structurizr.inspection.error" : "3",
+    "structurizr.inspection.info" : "0",
+    "structurizr.inspection.ignore" : "0",
+    "structurizr.inspection.warning" : "0"
+  },
+  "views" : {
+    "configuration" : {
+      "styles" : {
+        "elements" : [ {
+          "background" : "#875a9e",
+          "color" : "#ffffff",
+          "shape" : "Pipe",
+          "tag" : "Broker"
+        }, {
+          "background" : "#2e75b6",
+          "color" : "#ffffff",
+          "tag" : "Commerce"
+        }, {
+          "background" : "#438dd5",
+          "color" : "#ffffff",
+          "tag" : "Core"
+        }, {
+          "background" : "#999999",
+          "color" : "#ffffff",
+          "tag" : "External"
+        }, {
+          "background" : "#5b9bd5",
+          "color" : "#ffffff",
+          "shape" : "WebBrowser",
+          "tag" : "Frontend"
+        }, {
+          "background" : "#08427b",
+          "color" : "#ffffff",
+          "tag" : "OnlineStore"
+        }, {
+          "background" : "#70ad47",
+          "color" : "#ffffff",
+          "tag" : "OrderFlow"
+        }, {
+          "background" : "#0b4884",
+          "color" : "#ffffff",
+          "shape" : "Person",
+          "tag" : "Person"
+        }, {
+          "background" : "#ed7d31",
+          "color" : "#ffffff",
+          "tag" : "Supporting"
+        } ],
+        "relationships" : [ {
+          "color" : "#875a9e",
+          "style" : "Dashed",
+          "tag" : "Async"
+        } ]
+      },
+      "terminology" : { }
+    },
+    "containerViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "description" : "Синхронные HTTP-контракты, доменные события и внешние интеграции.",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "18",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "19",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "20",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "21",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "22",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "23",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "24",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "ContainerDiagram",
+      "name" : "Container View: Система интернет-заказов",
+      "order" : 2,
+      "relationships" : [ {
+        "id" : "26"
+      }, {
+        "id" : "28"
+      }, {
+        "id" : "30"
+      }, {
+        "id" : "32"
+      }, {
+        "id" : "34"
+      }, {
+        "id" : "36"
+      }, {
+        "id" : "37"
+      }, {
+        "id" : "38"
+      }, {
+        "id" : "39"
+      }, {
+        "id" : "40"
+      }, {
+        "id" : "41"
+      }, {
+        "id" : "42"
+      }, {
+        "id" : "43"
+      }, {
+        "id" : "44"
+      }, {
+        "id" : "45"
+      }, {
+        "id" : "46"
+      }, {
+        "id" : "47"
+      }, {
+        "id" : "48"
+      }, {
+        "id" : "49"
+      }, {
+        "id" : "50"
+      }, {
+        "id" : "51"
+      }, {
+        "id" : "52"
+      }, {
+        "id" : "53"
+      }, {
+        "id" : "54"
+      }, {
+        "id" : "55"
+      }, {
+        "id" : "56"
+      }, {
+        "id" : "57"
+      }, {
+        "id" : "58"
+      }, {
+        "id" : "59"
+      }, {
+        "id" : "60"
+      }, {
+        "id" : "61"
+      }, {
+        "id" : "63"
+      }, {
+        "id" : "65"
+      }, {
+        "id" : "67"
+      }, {
+        "id" : "69"
+      }, {
+        "id" : "70"
+      }, {
+        "id" : "71"
+      }, {
+        "id" : "72"
+      }, {
+        "id" : "73"
+      }, {
+        "id" : "74"
+      }, {
+        "id" : "75"
+      }, {
+        "id" : "76"
+      }, {
+        "id" : "77"
+      }, {
+        "id" : "78"
+      }, {
+        "id" : "79"
+      }, {
+        "id" : "80"
+      }, {
+        "id" : "81"
+      }, {
+        "id" : "82"
+      }, {
+        "id" : "83"
+      }, {
+        "id" : "84"
+      } ],
+      "softwareSystemId" : "10",
+      "title" : "C2. Взаимодействие микросервисов"
+    } ],
+    "systemContextViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "enterpriseBoundaryVisible" : true,
+      "key" : "SystemContext",
+      "name" : "System Context View: Система интернет-заказов",
+      "order" : 1,
+      "relationships" : [ {
+        "id" : "27"
+      }, {
+        "id" : "29"
+      }, {
+        "id" : "31"
+      }, {
+        "id" : "33"
+      }, {
+        "id" : "35"
+      }, {
+        "id" : "62"
+      }, {
+        "id" : "64"
+      }, {
+        "id" : "66"
+      }, {
+        "id" : "68"
+      } ],
+      "softwareSystemId" : "10",
+      "title" : "C1. Контекст системы интернет-заказов"
+    } ]
+  }
+}
