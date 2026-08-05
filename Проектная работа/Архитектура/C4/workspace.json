@@ -1,0 +1,1757 @@
+{
+  "configuration" : { },
+  "description" : "C4-архитектура проекта",
+  "documentation" : { },
+  "id" : 1,
+  "lastModifiedDate" : "2026-07-02T12:56:59Z",
+  "model" : {
+    "people" : [ {
+      "description" : "Пользователь интернет-магазина: просматривает каталог, управляет профилем, оформляет и отслеживает заказы.",
+      "id" : "1",
+      "name" : "Покупатель",
+      "properties" : {
+        "structurizr.dsl.identifier" : "customer"
+      },
+      "relationships" : [ {
+        "description" : "Вызывает public API магазина",
+        "destinationId" : "5",
+        "id" : "48",
+        "sourceId" : "1",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Вызывает public API магазина",
+        "destinationId" : "3",
+        "id" : "49",
+        "linkedRelationshipId" : "48",
+        "sourceId" : "1",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Person"
+    }, {
+      "description" : "Сотрудник магазина: управляет товарами, остатками на складе и параметрами доставки.",
+      "id" : "2",
+      "name" : "Администратор",
+      "properties" : {
+        "structurizr.dsl.identifier" : "administrator"
+      },
+      "relationships" : [ {
+        "description" : "Вызывает административный public API",
+        "destinationId" : "5",
+        "id" : "50",
+        "sourceId" : "2",
+        "tags" : "Relationship",
+        "technology" : "HTTPS"
+      }, {
+        "description" : "Вызывает административный public API",
+        "destinationId" : "3",
+        "id" : "51",
+        "linkedRelationshipId" : "50",
+        "sourceId" : "2",
+        "technology" : "HTTPS"
+      } ],
+      "tags" : "Element,Person"
+    } ],
+    "softwareSystems" : [ {
+      "containers" : [ {
+        "description" : "Единая внешняя точка входа: маршрутизация public API, rate limiting, X-Request-ID и access logs. JWT не валидирует.",
+        "documentation" : { },
+        "id" : "5",
+        "name" : "API Gateway",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.apiGateway"
+        },
+        "relationships" : [ {
+          "description" : "Маршрутизирует /api/auth/* и /.well-known/jwks.json",
+          "destinationId" : "6",
+          "id" : "53",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/customers/*",
+          "destinationId" : "16",
+          "id" : "54",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/catalog/*",
+          "destinationId" : "7",
+          "id" : "55",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/warehouse/*",
+          "destinationId" : "17",
+          "id" : "56",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/orders/*",
+          "destinationId" : "25",
+          "id" : "57",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/billing/*",
+          "destinationId" : "34",
+          "id" : "58",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/delivery/*",
+          "destinationId" : "35",
+          "id" : "59",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/notifications/*",
+          "destinationId" : "36",
+          "id" : "60",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/orders/*",
+          "destinationId" : "26",
+          "id" : "86",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/catalog/*",
+          "destinationId" : "8",
+          "id" : "106",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        }, {
+          "description" : "Маршрутизирует /api/warehouse/*",
+          "destinationId" : "18",
+          "id" : "125",
+          "sourceId" : "5",
+          "tags" : "Relationship",
+          "technology" : "HTTPS/JSON"
+        } ],
+        "tags" : "Element,Container,Gateway",
+        "technology" : "Traefik"
+      }, {
+        "description" : "Регистрация, аутентификация, выпуск JWT RS256 и публикация JWKS.",
+        "documentation" : { },
+        "id" : "6",
+        "name" : "AuthMs",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.authMs"
+        },
+        "relationships" : [ {
+          "description" : "Создаёт профиль при регистрации",
+          "destinationId" : "16",
+          "id" : "61",
+          "sourceId" : "6",
+          "tags" : "Relationship,InternalHttp",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Публикует user.activated.v1 (topic auth)",
+          "destinationId" : "37",
+          "id" : "66",
+          "sourceId" : "6",
+          "tags" : "Relationship,Async",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Читает и записывает данные",
+          "destinationId" : "38",
+          "id" : "75",
+          "sourceId" : "6",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL"
+        } ],
+        "tags" : "Element,Container,Microservice",
+        "technology" : "ASP.NET Core (.NET 8.0)"
+      }, {
+        "components" : [ {
+          "description" : "Public API каталога: список товаров, карточки, бренды и категории. Проверяет JWT на защищённых endpoint'ах.",
+          "documentation" : { },
+          "id" : "8",
+          "name" : "Catalog API",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.catalogApi"
+          },
+          "relationships" : [ {
+            "description" : "Передаёт product commands",
+            "destinationId" : "10",
+            "id" : "108",
+            "sourceId" : "8",
+            "tags" : "Relationship",
+            "technology" : "MediatR"
+          }, {
+            "description" : "Передаёт brand/category commands",
+            "destinationId" : "11",
+            "id" : "109",
+            "sourceId" : "8",
+            "tags" : "Relationship",
+            "technology" : "MediatR"
+          }, {
+            "description" : "Передаёт catalog queries",
+            "destinationId" : "12",
+            "id" : "110",
+            "sourceId" : "8",
+            "tags" : "Relationship",
+            "technology" : "MediatR"
+          }, {
+            "description" : "Получает signing keys из JWKS",
+            "destinationId" : "6",
+            "id" : "111",
+            "sourceId" : "8",
+            "tags" : "Relationship",
+            "technology" : "HTTPS/JWKS"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "ASP.NET Core MVC"
+        }, {
+          "description" : "Internal HTTP snapshot товаров для OrderMs: читает актуальные цены с primary, проверяет expectedUnitPrice.",
+          "documentation" : { },
+          "id" : "9",
+          "name" : "Internal Catalog API",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.internalCatalogApi"
+          },
+          "relationships" : [ {
+            "description" : "Читает актуальные цены и проверяет expectedUnitPrice",
+            "destinationId" : "40",
+            "id" : "113",
+            "sourceId" : "9",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "ASP.NET Core MVC"
+        }, {
+          "description" : "Создают, изменяют и архивируют товары. В одной транзакции сохраняют Product, синхронно обновляют ProductReadModel и OutboxMessage.",
+          "documentation" : { },
+          "id" : "10",
+          "name" : "Product Command Handlers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.productCommandHandlers"
+          },
+          "relationships" : [ {
+            "description" : "Сохраняет Product, ProductReadModel и OutboxMessage",
+            "destinationId" : "40",
+            "id" : "114",
+            "sourceId" : "10",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "MediatR"
+        }, {
+          "description" : "Создают и изменяют бренды и категории. После commit обновляют cache справочников из primary.",
+          "documentation" : { },
+          "id" : "11",
+          "name" : "Reference Data Command Handlers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.referenceDataCommandHandlers"
+          },
+          "relationships" : [ {
+            "description" : "Сохраняет Brand и Category",
+            "destinationId" : "40",
+            "id" : "115",
+            "sourceId" : "11",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          }, {
+            "description" : "Обновляет cache брендов и категорий из primary",
+            "destinationId" : "13",
+            "id" : "116",
+            "sourceId" : "11",
+            "tags" : "Relationship",
+            "technology" : "In-process"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "MediatR"
+        }, {
+          "description" : "Поиск, фильтрация и просмотр карточек товара. Читают через cache-aside с read replica.",
+          "documentation" : { },
+          "id" : "12",
+          "name" : "Catalog Query Handlers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.catalogQueryHandlers"
+          },
+          "relationships" : [ {
+            "description" : "Запрашивает кешированные read-данные",
+            "destinationId" : "13",
+            "id" : "117",
+            "sourceId" : "12",
+            "tags" : "Relationship",
+            "technology" : "In-process"
+          }, {
+            "description" : "При cache miss читает ProductReadModel и справочники",
+            "destinationId" : "41",
+            "id" : "118",
+            "sourceId" : "12",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "MediatR"
+        }, {
+          "description" : "Cache-aside: список товаров (короткий TTL), бренды и категории (длинный TTL). Miss — replica; справочники после admin write — refresh из primary.",
+          "documentation" : { },
+          "id" : "13",
+          "name" : "Catalog Cache Service",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.catalogCacheService"
+          },
+          "relationships" : [ {
+            "description" : "Читает и записывает cache entries",
+            "destinationId" : "42",
+            "id" : "119",
+            "sourceId" : "13",
+            "tags" : "Relationship",
+            "technology" : "Redis protocol"
+          }, {
+            "description" : "При cache miss читает с read replica",
+            "destinationId" : "41",
+            "id" : "120",
+            "sourceId" : "13",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "Application Service"
+        }, {
+          "description" : "Получает stock.changed.v1 (topic stocks) и обновляет AvailabilityStatus в ProductReadModel на primary.",
+          "documentation" : { },
+          "id" : "14",
+          "name" : "Stock Changed Consumer",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.stockChangedConsumer"
+          },
+          "relationships" : [ {
+            "description" : "Обновляет AvailabilityStatus в ProductReadModel",
+            "destinationId" : "40",
+            "id" : "122",
+            "sourceId" : "14",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "BackgroundService / Kafka Consumer"
+        }, {
+          "description" : "Публикует product.created.v1, product.archived.v1 и product.restored.v1 (topic products) из outbox в Kafka.",
+          "documentation" : { },
+          "id" : "15",
+          "name" : "Outbox Publisher",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.catalogMs.outboxPublisher"
+          },
+          "relationships" : [ {
+            "description" : "Читает outbox и отмечает сообщения опубликованными",
+            "destinationId" : "40",
+            "id" : "123",
+            "sourceId" : "15",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          }, {
+            "description" : "Публикует product.created.v1 / product.archived.v1 / product.restored.v1 (topic products)",
+            "destinationId" : "37",
+            "id" : "124",
+            "sourceId" : "15",
+            "tags" : "Relationship",
+            "technology" : "Kafka"
+          } ],
+          "tags" : "Element,Component,CatalogComponent",
+          "technology" : "BackgroundService"
+        } ],
+        "description" : "Каталог товаров, поиск, фильтрация, цены и read model.",
+        "documentation" : { },
+        "id" : "7",
+        "name" : "CatalogMs",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.catalogMs"
+        },
+        "relationships" : [ {
+          "description" : "Публикует product.created.v1, product.archived.v1, product.restored.v1 (topic products)",
+          "destinationId" : "37",
+          "id" : "67",
+          "sourceId" : "7",
+          "tags" : "Relationship,Async",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Записывает каталог, read model и outbox",
+          "destinationId" : "40",
+          "id" : "77",
+          "sourceId" : "7",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL"
+        }, {
+          "description" : "Читает данные каталога",
+          "destinationId" : "41",
+          "id" : "78",
+          "sourceId" : "7",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL"
+        }, {
+          "description" : "Использует Cache-Aside",
+          "destinationId" : "42",
+          "id" : "80",
+          "sourceId" : "7",
+          "tags" : "Relationship",
+          "technology" : "Redis protocol"
+        }, {
+          "description" : "Получает signing keys из JWKS",
+          "destinationId" : "6",
+          "id" : "112",
+          "linkedRelationshipId" : "111",
+          "sourceId" : "7",
+          "technology" : "HTTPS/JWKS"
+        } ],
+        "tags" : "Element,Container,Microservice",
+        "technology" : "ASP.NET Core (.NET 8.0)"
+      }, {
+        "description" : "Профиль клиента и адресная книга доставки.",
+        "documentation" : { },
+        "id" : "16",
+        "name" : "CustomerMs",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.customerMs"
+        },
+        "relationships" : [ {
+          "description" : "Публикует customer.created.v1, customer.updated.v1 (topic customers)",
+          "destinationId" : "37",
+          "id" : "69",
+          "sourceId" : "16",
+          "tags" : "Relationship,Async",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Читает и записывает данные",
+          "destinationId" : "39",
+          "id" : "76",
+          "sourceId" : "16",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL"
+        } ],
+        "tags" : "Element,Container,Microservice",
+        "technology" : "ASP.NET Core (.NET 8.0)"
+      }, {
+        "components" : [ {
+          "description" : "Административный API для просмотра остатков, поступления товара и истории складских движений. Проверяет JWT на защищённых endpoint'ах.",
+          "documentation" : { },
+          "id" : "18",
+          "name" : "Warehouse Admin API",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.warehouseMs.warehouseAdminApi"
+          },
+          "relationships" : [ {
+            "description" : "Передаёт stock commands",
+            "destinationId" : "20",
+            "id" : "127",
+            "sourceId" : "18",
+            "tags" : "Relationship",
+            "technology" : "MediatR"
+          }, {
+            "description" : "Передаёт stock queries",
+            "destinationId" : "21",
+            "id" : "128",
+            "sourceId" : "18",
+            "tags" : "Relationship",
+            "technology" : "MediatR"
+          }, {
+            "description" : "Получает signing keys из JWKS",
+            "destinationId" : "6",
+            "id" : "129",
+            "sourceId" : "18",
+            "tags" : "Relationship",
+            "technology" : "HTTPS/JWKS"
+          } ],
+          "tags" : "Element,Component,WarehouseComponent",
+          "technology" : "ASP.NET Core MVC"
+        }, {
+          "description" : "Internal API для создания и отмены резервов товаров в рамках Saga OrderMs.",
+          "documentation" : { },
+          "id" : "19",
+          "name" : "Internal Reservation API",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.warehouseMs.internalReservationApi"
+          },
+          "relationships" : [ {
+            "description" : "Передаёт reserve/cancel commands",
+            "destinationId" : "22",
+            "id" : "131",
+            "sourceId" : "19",
+            "tags" : "Relationship",
+            "technology" : "MediatR"
+          } ],
+          "tags" : "Element,Component,WarehouseComponent",
+          "technology" : "ASP.NET Core MVC"
+        }, {
+          "description" : "Обрабатывают поступления товара, обновляют StockItem и создают StockMovement. Используют pessimistic locking (SELECT FOR UPDATE).",
+          "documentation" : { },
+          "id" : "20",
+          "name" : "Stock Command Handlers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.warehouseMs.stockCommandHandlers"
+          },
+          "relationships" : [ {
+            "description" : "Обновляет StockItem, StockMovement и outbox",
+            "destinationId" : "43",
+            "id" : "132",
+            "sourceId" : "20",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,WarehouseComponent",
+          "technology" : "MediatR"
+        }, {
+          "description" : "Возвращают текущие складские остатки и историю движений товара.",
+          "documentation" : { },
+          "id" : "21",
+          "name" : "Stock Query Handlers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.warehouseMs.stockQueryHandlers"
+          },
+          "relationships" : [ {
+            "description" : "Читает остатки и историю движений",
+            "destinationId" : "43",
+            "id" : "133",
+            "sourceId" : "21",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,WarehouseComponent",
+          "technology" : "MediatR"
+        }, {
+          "description" : "Создают и отменяют резервы. Проверяют доступный остаток и обеспечивают идемпотентность по orderId.",
+          "documentation" : { },
+          "id" : "22",
+          "name" : "Reservation Handlers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.warehouseMs.reservationHandlers"
+          },
+          "relationships" : [ {
+            "description" : "Атомарно обновляет StockItem, StockReservation, StockMovement и outbox",
+            "destinationId" : "43",
+            "id" : "134",
+            "sourceId" : "22",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,WarehouseComponent",
+          "technology" : "MediatR"
+        }, {
+          "description" : "Получает product.created.v1, product.archived.v1 и product.restored.v1 (topic products) из Kafka. Создаёт, архивирует или восстанавливает локальный StockItem.",
+          "documentation" : { },
+          "id" : "23",
+          "name" : "Product Lifecycle Consumer",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.warehouseMs.productLifecycleConsumer"
+          },
+          "relationships" : [ {
+            "description" : "Создаёт, архивирует или восстанавливает StockItem",
+            "destinationId" : "43",
+            "id" : "136",
+            "sourceId" : "23",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,WarehouseComponent",
+          "technology" : "BackgroundService / Kafka Consumer"
+        }, {
+          "description" : "Публикует stock.changed.v1 (topic stocks) из outbox в Kafka.",
+          "documentation" : { },
+          "id" : "24",
+          "name" : "Outbox Publisher",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.warehouseMs.outboxPublisher"
+          },
+          "relationships" : [ {
+            "description" : "Читает outbox и отмечает сообщения опубликованными",
+            "destinationId" : "43",
+            "id" : "137",
+            "sourceId" : "24",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          }, {
+            "description" : "Публикует stock.changed.v1 (topic stocks)",
+            "destinationId" : "37",
+            "id" : "138",
+            "sourceId" : "24",
+            "tags" : "Relationship",
+            "technology" : "Kafka"
+          } ],
+          "tags" : "Element,Component,WarehouseComponent",
+          "technology" : "BackgroundService"
+        } ],
+        "description" : "Складские остатки, поступления, резервы товаров и движения склада.",
+        "documentation" : { },
+        "id" : "17",
+        "name" : "WarehouseMs",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.warehouseMs"
+        },
+        "relationships" : [ {
+          "description" : "Публикует stock.changed.v1 (topic stocks)",
+          "destinationId" : "37",
+          "id" : "68",
+          "sourceId" : "17",
+          "tags" : "Relationship,Async",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Читает и записывает данные",
+          "destinationId" : "43",
+          "id" : "81",
+          "sourceId" : "17",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL"
+        }, {
+          "description" : "Получает signing keys из JWKS",
+          "destinationId" : "6",
+          "id" : "130",
+          "linkedRelationshipId" : "129",
+          "sourceId" : "17",
+          "technology" : "HTTPS/JWKS"
+        } ],
+        "tags" : "Element,Container,Microservice",
+        "technology" : "ASP.NET Core (.NET 8.0)"
+      }, {
+        "components" : [ {
+          "description" : "Public API для создания заказа и получения собственных заказов. Проверяет JWT через ASP.NET Core middleware.",
+          "documentation" : { },
+          "id" : "26",
+          "name" : "Orders API",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.orderMs.ordersApi"
+          },
+          "relationships" : [ {
+            "description" : "Передаёт create-order command",
+            "destinationId" : "27",
+            "id" : "87",
+            "sourceId" : "26",
+            "tags" : "Relationship",
+            "technology" : "MediatR"
+          }, {
+            "description" : "Передаёт order queries",
+            "destinationId" : "28",
+            "id" : "88",
+            "sourceId" : "26",
+            "tags" : "Relationship",
+            "technology" : "MediatR"
+          }, {
+            "description" : "Получает signing keys из JWKS",
+            "destinationId" : "6",
+            "id" : "89",
+            "sourceId" : "26",
+            "tags" : "Relationship",
+            "technology" : "HTTPS/JWKS"
+          } ],
+          "tags" : "Element,Component,OrderComponent",
+          "technology" : "ASP.NET Core MVC"
+        }, {
+          "description" : "Snapshot из Catalog, проверка цен, создание Order (Processing) или PriceChanged.",
+          "documentation" : { },
+          "id" : "27",
+          "name" : "Checkout Command Handler",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.orderMs.checkoutHandler"
+          },
+          "relationships" : [ {
+            "description" : "Проверяет и завершает идемпотентный запрос",
+            "destinationId" : "29",
+            "id" : "91",
+            "sourceId" : "27",
+            "tags" : "Relationship",
+            "technology" : "In-process"
+          }, {
+            "description" : "Получает и проверяет product snapshots",
+            "destinationId" : "32",
+            "id" : "92",
+            "sourceId" : "27",
+            "tags" : "Relationship",
+            "technology" : "In-process"
+          }, {
+            "description" : "Создаёт Order, snapshots и idempotency record",
+            "destinationId" : "44",
+            "id" : "93",
+            "sourceId" : "27",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,OrderComponent",
+          "technology" : "MediatR"
+        }, {
+          "description" : "Возвращает список собственных заказов и детали конкретного заказа.",
+          "documentation" : { },
+          "id" : "28",
+          "name" : "Order Query Handlers",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.orderMs.orderQueryHandlers"
+          },
+          "relationships" : [ {
+            "description" : "Читает собственные заказы",
+            "destinationId" : "44",
+            "id" : "94",
+            "sourceId" : "28",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,OrderComponent",
+          "technology" : "MediatR"
+        }, {
+          "description" : "Защищает создание заказа от повторного выполнения по Idempotency-Key.",
+          "documentation" : { },
+          "id" : "29",
+          "name" : "Idempotency Service",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.orderMs.idempotencyService"
+          },
+          "relationships" : [ {
+            "description" : "Читает и записывает IdempotencyRecord",
+            "destinationId" : "44",
+            "id" : "95",
+            "sourceId" : "29",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,OrderComponent",
+          "technology" : "Application Service"
+        }, {
+          "description" : "Находит Processing-заказы, выполняет retry технически неуспешных шагов и запускает обработку Saga.",
+          "documentation" : { },
+          "id" : "30",
+          "name" : "Saga Background Worker",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.orderMs.sagaWorker"
+          },
+          "relationships" : [ {
+            "description" : "Находит Processing-заказы и планирует retry",
+            "destinationId" : "44",
+            "id" : "96",
+            "sourceId" : "30",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          }, {
+            "description" : "Передаёт заказ в обработку",
+            "destinationId" : "31",
+            "id" : "97",
+            "sourceId" : "30",
+            "tags" : "Relationship",
+            "technology" : "In-process"
+          } ],
+          "tags" : "Element,Component,OrderComponent",
+          "technology" : "BackgroundService"
+        }, {
+          "description" : "Управляет State Machine и обработчиками шагов AuthorizePayment, ReserveStock, ReserveDelivery, CapturePayment и Compensating.",
+          "documentation" : { },
+          "id" : "31",
+          "name" : "Saga Orchestrator",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.orderMs.sagaOrchestrator"
+          },
+          "relationships" : [ {
+            "description" : "Выполняет команды Saga и компенсации",
+            "destinationId" : "32",
+            "id" : "98",
+            "sourceId" : "31",
+            "tags" : "Relationship",
+            "technology" : "In-process"
+          }, {
+            "description" : "Обновляет status, SagaStep и outbox",
+            "destinationId" : "44",
+            "id" : "99",
+            "sourceId" : "31",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          } ],
+          "tags" : "Element,Component,OrderComponent",
+          "technology" : "Application Service"
+        }, {
+          "description" : "HTTP-клиенты CatalogMs, BillingMs, WarehouseMs и DeliveryMs.",
+          "documentation" : { },
+          "id" : "32",
+          "name" : "Integration Clients",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.orderMs.integrationClients"
+          },
+          "relationships" : [ {
+            "description" : "POST internal product snapshot",
+            "destinationId" : "7",
+            "id" : "100",
+            "sourceId" : "32",
+            "tags" : "Relationship",
+            "technology" : "HTTP/JSON"
+          }, {
+            "description" : "Authorize, capture и cancel authorization",
+            "destinationId" : "34",
+            "id" : "101",
+            "sourceId" : "32",
+            "tags" : "Relationship",
+            "technology" : "HTTP/JSON"
+          }, {
+            "description" : "Создаёт и отменяет резерв товаров",
+            "destinationId" : "17",
+            "id" : "102",
+            "sourceId" : "32",
+            "tags" : "Relationship",
+            "technology" : "HTTP/JSON"
+          }, {
+            "description" : "Создаёт и отменяет резерв слота",
+            "destinationId" : "35",
+            "id" : "103",
+            "sourceId" : "32",
+            "tags" : "Relationship",
+            "technology" : "HTTP/JSON"
+          } ],
+          "tags" : "Element,Component,OrderComponent",
+          "technology" : "HttpClient"
+        }, {
+          "description" : "Публикует непереданные order.confirmed.v1 и order.rejected.v2 (topic orders) из outbox в Kafka.",
+          "documentation" : { },
+          "id" : "33",
+          "name" : "Outbox Publisher",
+          "properties" : {
+            "structurizr.dsl.identifier" : "onlineStore.orderMs.outboxPublisher"
+          },
+          "relationships" : [ {
+            "description" : "Читает outbox и отмечает сообщения опубликованными",
+            "destinationId" : "44",
+            "id" : "104",
+            "sourceId" : "33",
+            "tags" : "Relationship",
+            "technology" : "EF Core/PostgreSQL"
+          }, {
+            "description" : "Публикует order.confirmed.v1 / order.rejected.v2 (topic orders)",
+            "destinationId" : "37",
+            "id" : "105",
+            "sourceId" : "33",
+            "tags" : "Relationship",
+            "technology" : "Kafka"
+          } ],
+          "tags" : "Element,Component,OrderComponent",
+          "technology" : "BackgroundService"
+        } ],
+        "description" : "Заказы, snapshots и Saga Orchestration оформления заказа.",
+        "documentation" : { },
+        "id" : "25",
+        "name" : "OrderMs",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.orderMs"
+        },
+        "relationships" : [ {
+          "description" : "Получает product snapshots и цены",
+          "destinationId" : "7",
+          "id" : "62",
+          "sourceId" : "25",
+          "tags" : "Relationship,InternalHttp",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Authorize, capture и cancel authorization",
+          "destinationId" : "34",
+          "id" : "63",
+          "sourceId" : "25",
+          "tags" : "Relationship,InternalHttp",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Создаёт и отменяет резерв товаров",
+          "destinationId" : "17",
+          "id" : "64",
+          "sourceId" : "25",
+          "tags" : "Relationship,InternalHttp",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Создаёт и отменяет резерв слота",
+          "destinationId" : "35",
+          "id" : "65",
+          "sourceId" : "25",
+          "tags" : "Relationship,InternalHttp",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Публикует order.confirmed.v1, order.rejected.v2 (topic orders)",
+          "destinationId" : "37",
+          "id" : "70",
+          "sourceId" : "25",
+          "tags" : "Relationship,Async",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Читает и записывает данные",
+          "destinationId" : "44",
+          "id" : "82",
+          "sourceId" : "25",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL"
+        }, {
+          "description" : "Получает signing keys из JWKS",
+          "destinationId" : "6",
+          "id" : "90",
+          "linkedRelationshipId" : "89",
+          "sourceId" : "25",
+          "technology" : "HTTPS/JWKS"
+        }, {
+          "description" : "Запрашивает product snapshot для checkout",
+          "destinationId" : "9",
+          "id" : "107",
+          "sourceId" : "25",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        }, {
+          "description" : "Создаёт и отменяет резерв товаров",
+          "destinationId" : "19",
+          "id" : "126",
+          "sourceId" : "25",
+          "tags" : "Relationship",
+          "technology" : "HTTP/JSON"
+        } ],
+        "tags" : "Element,Container,Microservice",
+        "technology" : "ASP.NET Core (.NET 8.0)"
+      }, {
+        "description" : "Внутренний prepaid wallet и обработка оплаты заказа.",
+        "documentation" : { },
+        "id" : "34",
+        "name" : "BillingMs",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.billingMs"
+        },
+        "relationships" : [ {
+          "description" : "Читает и записывает данные",
+          "destinationId" : "45",
+          "id" : "83",
+          "sourceId" : "34",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL"
+        } ],
+        "tags" : "Element,Container,Microservice",
+        "technology" : "ASP.NET Core (.NET 8.0)"
+      }, {
+        "description" : "Зоны, слоты доставки, capacity и резервирование доставки.",
+        "documentation" : { },
+        "id" : "35",
+        "name" : "DeliveryMs",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.deliveryMs"
+        },
+        "relationships" : [ {
+          "description" : "Читает и записывает данные",
+          "destinationId" : "46",
+          "id" : "84",
+          "sourceId" : "35",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL"
+        } ],
+        "tags" : "Element,Container,Microservice",
+        "technology" : "ASP.NET Core (.NET 8.0)"
+      }, {
+        "description" : "Получает события и сохраняет пользовательские уведомления.",
+        "documentation" : { },
+        "id" : "36",
+        "name" : "NotificationMs",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.notificationMs"
+        },
+        "relationships" : [ {
+          "description" : "Читает и записывает данные",
+          "destinationId" : "47",
+          "id" : "85",
+          "sourceId" : "36",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL"
+        } ],
+        "tags" : "Element,Container,Microservice",
+        "technology" : "ASP.NET Core (.NET 8.0)"
+      }, {
+        "description" : "Передача доменных событий между микросервисами.",
+        "documentation" : { },
+        "id" : "37",
+        "name" : "Event Broker",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.kafka"
+        },
+        "relationships" : [ {
+          "description" : "Доставляет user.activated.v1 (topic auth)",
+          "destinationId" : "34",
+          "id" : "71",
+          "sourceId" : "37",
+          "tags" : "Relationship,Async",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Доставляет product.created.v1, product.archived.v1, product.restored.v1 (topic products)",
+          "destinationId" : "17",
+          "id" : "72",
+          "sourceId" : "37",
+          "tags" : "Relationship,Async",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Доставляет stock.changed.v1 (topic stocks)",
+          "destinationId" : "7",
+          "id" : "73",
+          "sourceId" : "37",
+          "tags" : "Relationship,Async",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Доставляет customer.created.v1, customer.updated.v1, order.confirmed.v1, order.rejected.v2",
+          "destinationId" : "36",
+          "id" : "74",
+          "sourceId" : "37",
+          "tags" : "Relationship,Async",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Доставляет stock.changed.v1 (topic stocks)",
+          "destinationId" : "14",
+          "id" : "121",
+          "sourceId" : "37",
+          "tags" : "Relationship",
+          "technology" : "Kafka"
+        }, {
+          "description" : "Доставляет product.created.v1 / product.archived.v1 / product.restored.v1 (topic products)",
+          "destinationId" : "23",
+          "id" : "135",
+          "sourceId" : "37",
+          "tags" : "Relationship",
+          "technology" : "Kafka"
+        } ],
+        "tags" : "Element,Container,MessageBroker",
+        "technology" : "Apache Kafka"
+      }, {
+        "description" : "Учётные записи, роли, refresh tokens и outbox.",
+        "documentation" : { },
+        "id" : "38",
+        "name" : "AuthMs Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.authDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Профили клиентов, адреса и outbox.",
+        "documentation" : { },
+        "id" : "39",
+        "name" : "CustomerMs Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.customerDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Товары, категории, бренды, read model и outbox.",
+        "documentation" : { },
+        "id" : "40",
+        "name" : "CatalogMs Primary Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.catalogDb"
+        },
+        "relationships" : [ {
+          "description" : "Реплицирует данные",
+          "destinationId" : "41",
+          "id" : "79",
+          "sourceId" : "40",
+          "tags" : "Relationship",
+          "technology" : "PostgreSQL replication"
+        } ],
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Реплика для read-heavy запросов каталога.",
+        "documentation" : { },
+        "id" : "41",
+        "name" : "CatalogMs Read Replica",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.catalogReadReplica"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Cache-aside: список товаров, бренды и категории.",
+        "documentation" : { },
+        "id" : "42",
+        "name" : "CatalogMs Cache",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.catalogRedis"
+        },
+        "tags" : "Element,Container,Cache",
+        "technology" : "Redis"
+      }, {
+        "description" : "Остатки, резервы, движения склада и outbox.",
+        "documentation" : { },
+        "id" : "43",
+        "name" : "WarehouseMs Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.warehouseDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Заказы, snapshots, состояние Saga, idempotency records и outbox.",
+        "documentation" : { },
+        "id" : "44",
+        "name" : "OrderMs Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.orderDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Счета, платежи, ledger и inbox.",
+        "documentation" : { },
+        "id" : "45",
+        "name" : "BillingMs Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.billingDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Зоны, слоты и резервы доставки.",
+        "documentation" : { },
+        "id" : "46",
+        "name" : "DeliveryMs Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.deliveryDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      }, {
+        "description" : "Уведомления, проекция клиента и inbox.",
+        "documentation" : { },
+        "id" : "47",
+        "name" : "NotificationMs Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "onlineStore.notificationDb"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL"
+      } ],
+      "description" : "Онлайн-магазин электроники и компьютерной техники.",
+      "documentation" : { },
+      "id" : "3",
+      "name" : "Интернет-магазин электроники",
+      "properties" : {
+        "structurizr.dsl.identifier" : "onlineStore"
+      },
+      "tags" : "Element,Software System,OnlineStore"
+    } ]
+  },
+  "name" : "Интернет-магазин электроники",
+  "properties" : {
+    "structurizr.inspection.error" : "3",
+    "structurizr.inspection.info" : "0",
+    "structurizr.inspection.ignore" : "0",
+    "structurizr.inspection.warning" : "0"
+  },
+  "views" : {
+    "componentViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "25",
+      "description" : "Внутренняя архитектура OrderMs: checkout с проверкой цен, идемпотентность, Saga Orchestration, retry worker и outbox.",
+      "elements" : [ {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "26",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "27",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "28",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "29",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "30",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "31",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "32",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "33",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "34",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "35",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "37",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "44",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "OrderMsComponents",
+      "name" : "Component View: Интернет-магазин электроники - OrderMs",
+      "order" : 3,
+      "relationships" : [ {
+        "id" : "100"
+      }, {
+        "id" : "101"
+      }, {
+        "id" : "102"
+      }, {
+        "id" : "103"
+      }, {
+        "id" : "104"
+      }, {
+        "id" : "105"
+      }, {
+        "id" : "86"
+      }, {
+        "id" : "87"
+      }, {
+        "id" : "88"
+      }, {
+        "id" : "89"
+      }, {
+        "id" : "91"
+      }, {
+        "id" : "92"
+      }, {
+        "id" : "93"
+      }, {
+        "id" : "94"
+      }, {
+        "id" : "95"
+      }, {
+        "id" : "96"
+      }, {
+        "id" : "97"
+      }, {
+        "id" : "98"
+      }, {
+        "id" : "99"
+      } ],
+      "title" : "C3. Компоненты — OrderMs"
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "7",
+      "description" : "Внутренняя архитектура CatalogMs: CQRS-lite, cache-aside (products, brands, categories), read replica, internal snapshot на primary, Kafka consumer и outbox.",
+      "elements" : [ {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "13",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "14",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "15",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "37",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "40",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "41",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "42",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "CatalogMsComponents",
+      "name" : "Component View: Интернет-магазин электроники - CatalogMs",
+      "order" : 4,
+      "relationships" : [ {
+        "id" : "106"
+      }, {
+        "id" : "107"
+      }, {
+        "id" : "108"
+      }, {
+        "id" : "109"
+      }, {
+        "id" : "110"
+      }, {
+        "id" : "111"
+      }, {
+        "id" : "113"
+      }, {
+        "id" : "114"
+      }, {
+        "id" : "115"
+      }, {
+        "id" : "116"
+      }, {
+        "id" : "117"
+      }, {
+        "id" : "118"
+      }, {
+        "id" : "119"
+      }, {
+        "id" : "120"
+      }, {
+        "id" : "121"
+      }, {
+        "id" : "122"
+      }, {
+        "id" : "123"
+      }, {
+        "id" : "124"
+      } ],
+      "title" : "C3. Компоненты — CatalogMs"
+    }, {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "17",
+      "description" : "Внутренняя архитектура WarehouseMs: остатки, резервы, pessimistic locking, product lifecycle events и outbox.",
+      "elements" : [ {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "18",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "19",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "20",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "21",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "22",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "23",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "24",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "37",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "43",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "WarehouseMsComponents",
+      "name" : "Component View: Интернет-магазин электроники - WarehouseMs",
+      "order" : 5,
+      "relationships" : [ {
+        "id" : "125"
+      }, {
+        "id" : "126"
+      }, {
+        "id" : "127"
+      }, {
+        "id" : "128"
+      }, {
+        "id" : "129"
+      }, {
+        "id" : "131"
+      }, {
+        "id" : "132"
+      }, {
+        "id" : "133"
+      }, {
+        "id" : "134"
+      }, {
+        "id" : "135"
+      }, {
+        "id" : "136"
+      }, {
+        "id" : "137"
+      }, {
+        "id" : "138"
+      } ],
+      "title" : "C3. Компоненты — WarehouseMs"
+    } ],
+    "configuration" : {
+      "styles" : {
+        "elements" : [ {
+          "background" : "#d97b29",
+          "color" : "#ffffff",
+          "shape" : "Cylinder",
+          "tag" : "Cache"
+        }, {
+          "background" : "#85bbf0",
+          "color" : "#000000",
+          "tag" : "CatalogComponent"
+        }, {
+          "background" : "#999999",
+          "color" : "#ffffff",
+          "shape" : "Cylinder",
+          "tag" : "Database"
+        }, {
+          "background" : "#438dd5",
+          "color" : "#ffffff",
+          "shape" : "WebBrowser",
+          "tag" : "Frontend"
+        }, {
+          "background" : "#5b9bd5",
+          "color" : "#ffffff",
+          "shape" : "Hexagon",
+          "tag" : "Gateway"
+        }, {
+          "background" : "#875a9e",
+          "color" : "#ffffff",
+          "shape" : "Pipe",
+          "tag" : "MessageBroker"
+        }, {
+          "background" : "#438dd5",
+          "color" : "#ffffff",
+          "tag" : "Microservice"
+        }, {
+          "background" : "#08427b",
+          "color" : "#ffffff",
+          "tag" : "OnlineStore"
+        }, {
+          "background" : "#85bbf0",
+          "color" : "#000000",
+          "tag" : "OrderComponent"
+        }, {
+          "background" : "#0b4884",
+          "color" : "#ffffff",
+          "shape" : "Person",
+          "tag" : "Person"
+        }, {
+          "background" : "#7f8c8d",
+          "color" : "#ffffff",
+          "tag" : "Planned"
+        }, {
+          "background" : "#1168bd",
+          "color" : "#ffffff",
+          "tag" : "Software System"
+        }, {
+          "background" : "#85bbf0",
+          "color" : "#000000",
+          "tag" : "WarehouseComponent"
+        } ],
+        "relationships" : [ {
+          "color" : "#875a9e",
+          "style" : "Dashed",
+          "tag" : "Async"
+        }, {
+          "color" : "#2e75b6",
+          "tag" : "InternalHttp"
+        } ]
+      },
+      "terminology" : { }
+    },
+    "containerViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "description" : "API Gateway, микросервисы, event broker и независимые хранилища данных.",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "16",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "17",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "25",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "34",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "35",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "36",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "37",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "38",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "39",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "40",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "41",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "42",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "43",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "44",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "45",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "46",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "47",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "PlatformOverview",
+      "name" : "Container View: Интернет-магазин электроники",
+      "order" : 2,
+      "relationships" : [ {
+        "id" : "112"
+      }, {
+        "id" : "130"
+      }, {
+        "id" : "48"
+      }, {
+        "id" : "50"
+      }, {
+        "id" : "53"
+      }, {
+        "id" : "54"
+      }, {
+        "id" : "55"
+      }, {
+        "id" : "56"
+      }, {
+        "id" : "57"
+      }, {
+        "id" : "58"
+      }, {
+        "id" : "59"
+      }, {
+        "id" : "60"
+      }, {
+        "id" : "61"
+      }, {
+        "id" : "62"
+      }, {
+        "id" : "63"
+      }, {
+        "id" : "64"
+      }, {
+        "id" : "65"
+      }, {
+        "id" : "66"
+      }, {
+        "id" : "67"
+      }, {
+        "id" : "68"
+      }, {
+        "id" : "69"
+      }, {
+        "id" : "70"
+      }, {
+        "id" : "71"
+      }, {
+        "id" : "72"
+      }, {
+        "id" : "73"
+      }, {
+        "id" : "74"
+      }, {
+        "id" : "75"
+      }, {
+        "id" : "76"
+      }, {
+        "id" : "77"
+      }, {
+        "id" : "78"
+      }, {
+        "id" : "79"
+      }, {
+        "id" : "80"
+      }, {
+        "id" : "81"
+      }, {
+        "id" : "82"
+      }, {
+        "id" : "83"
+      }, {
+        "id" : "84"
+      }, {
+        "id" : "85"
+      }, {
+        "id" : "90"
+      } ],
+      "softwareSystemId" : "3",
+      "title" : "C2. Контейнеры — обзор платформы"
+    } ],
+    "systemContextViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "description" : "Пользователи и граница системы без отображения внутренней реализации.",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "enterpriseBoundaryVisible" : true,
+      "key" : "SystemContext",
+      "name" : "System Context View: Интернет-магазин электроники",
+      "order" : 1,
+      "relationships" : [ {
+        "id" : "49"
+      }, {
+        "id" : "51"
+      } ],
+      "softwareSystemId" : "3",
+      "title" : "C1. Контекст системы — Интернет-магазин электроники"
+    } ]
+  }
+}

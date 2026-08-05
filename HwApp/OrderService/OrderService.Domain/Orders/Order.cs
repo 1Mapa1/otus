@@ -17,6 +17,8 @@ namespace OrderService.Domain.Orders
 
         public Guid DeliverySlotId { get; private set; }
 
+        public DeliveryAddressSnapshot DeliveryAddress { get; private set; } = null!;
+
         public decimal TotalAmount { get; private set; }
 
         public OrderStatus Status { get; private set; }
@@ -55,7 +57,11 @@ namespace OrderService.Domain.Orders
 
         private Order() { }
 
-        public static Order Create(Guid userId, Guid deliverySlotId, decimal totalAmount)
+        public static Order Create(
+            Guid userId,
+            Guid deliverySlotId,
+            DeliveryAddressSnapshot deliveryAddress,
+            decimal totalAmount)
         {
             var now = Now;
 
@@ -64,6 +70,7 @@ namespace OrderService.Domain.Orders
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 DeliverySlotId = deliverySlotId,
+                DeliveryAddress = deliveryAddress,
                 TotalAmount = totalAmount,
                 Status = OrderStatus.Processing,
                 SagaStep = OrderSagaStep.Created,

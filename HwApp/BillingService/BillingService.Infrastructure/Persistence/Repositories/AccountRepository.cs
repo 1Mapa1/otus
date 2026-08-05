@@ -14,9 +14,30 @@ namespace BillingService.Infrastructure.Persistence.Repositories
             _databaseContext = databaseContext;
         }
 
-        public async Task AddAsync(Account account, CancellationToken cancellationToken)
+        public async Task EnsureAccountAsync(
+            Guid userId,
+            CancellationToken cancellationToken)
         {
-            await _databaseContext.Accounts.AddAsync(account, cancellationToken);
+            var now = DateTime.UtcNow;
+
+            await _databaseContext.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO accounts (
+                    user_id,
+                    balance,
+                    held_amount,
+                    created_at,
+                    updated_at
+                )
+                VALUES (
+                    {userId},
+                    {0m},
+                    {0m},
+                    {now},
+                    {now}
+                )
+                ON CONFLICT (user_id) DO NOTHING;
+                """,
+                cancellationToken);
         }
 
         public async Task<DepositOperationResult> DepositAsync(
@@ -26,6 +47,8 @@ namespace BillingService.Infrastructure.Persistence.Repositories
         {
             await using var transaction = await _databaseContext.Database
                 .BeginTransactionAsync(cancellationToken);
+
+            await EnsureAccountAsync(userId, cancellationToken);
 
             var updatedAt = DateTime.UtcNow;
 

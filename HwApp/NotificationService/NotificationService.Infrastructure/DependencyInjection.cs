@@ -78,11 +78,17 @@ namespace NotificationService.Infrastructure
                 .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "BootstrapServers must be provided.")
                 .Validate(options => !string.IsNullOrEmpty(options.GroupId), "GroupId must be provided.")
                 .Validate(options => options.Topics.Length > 0)
+                .Validate(options => !string.IsNullOrEmpty(options.DlqTopic), "DlqTopic must be provided.")
+                .Validate(options => options.MaxRetryAttempts > 0, "MaxRetryAttempts must be greater than zero.")
                 .ValidateOnStart();
 
             services.AddSingleton<KafkaConsumerState>();
 
+            services.AddSingleton<IKafkaProducer, KafkaProducer>();
+            services.AddSingleton<KafkaDlqPublisher>();
+
             services.AddScoped<KafkaMessageDispatcher>();
+            services.AddScoped<InboxProcessor>();
 
             services.AddScoped<IKafkaIntegrationEventHandler, CustomerCreatedEventHandler>();
             services.AddScoped<IKafkaIntegrationEventHandler, CustomerUpdatedEventHandler>();

@@ -95,6 +95,45 @@ namespace NotificationService.Infrastructure.Persistence.Migrations
 
                     b.ToTable("notifications", (string)null);
                 });
+
+            modelBuilder.Entity("NotificationService.Infrastructure.Persistence.Entities.InboxMessage", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_id");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("event_type");
+
+                    b.Property<int>("KafkaPartition")
+                        .HasColumnType("integer")
+                        .HasColumnName("kafka_partition");
+
+                    b.Property<long>("KafkaOffset")
+                        .HasColumnType("bigint")
+                        .HasColumnName("kafka_offset");
+
+                    b.Property<string>("KafkaTopic")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("kafka_topic");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<DateTime>("ProcessedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at_utc");
+
+                    b.HasKey("EventId");
+
+                    b.ToTable("inbox_messages", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }

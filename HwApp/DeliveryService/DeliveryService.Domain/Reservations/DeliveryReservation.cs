@@ -6,30 +6,42 @@ namespace DeliveryService.Domain.Reservations
 
         public Guid OrderId { get; private set; }
 
-        public Guid UserId { get; private set; }
+        public Guid CustomerId { get; private set; }
 
         public Guid DeliverySlotId { get; private set; }
 
+        public Guid ZoneId { get; private set; }
+
         public DeliveryReservationStatus Status { get; private set; }
+
+        public DeliveryAddressSnapshot DeliveryAddress { get; private set; } = null!;
 
         public DateTime CreatedAt { get; private set; }
 
-        public DateTime? CanceledAt { get; private set; } = null;
+        public DateTime? CanceledAt { get; private set; }
 
         private DeliveryReservation()
         {
         }
 
-        public static DeliveryReservation Create(Guid orderId, Guid userId, Guid deliverySlotId)
+        public static DeliveryReservation Create(
+            Guid orderId,
+            Guid customerId,
+            Guid deliverySlotId,
+            Guid zoneId,
+            DeliveryAddressSnapshot address)
         {
             var now = DateTime.UtcNow;
+
             return new DeliveryReservation
             {
                 Id = Guid.NewGuid(),
                 OrderId = orderId,
-                UserId = userId,
+                CustomerId = customerId,
                 DeliverySlotId = deliverySlotId,
+                ZoneId = zoneId,
                 Status = DeliveryReservationStatus.Reserved,
+                DeliveryAddress = address,
                 CreatedAt = now
             };
         }

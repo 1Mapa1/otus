@@ -7,6 +7,7 @@ namespace OrderService.Application.Orders.GetOrderById
         decimal TotalAmount,
         IReadOnlyCollection<OrderItemDetailsDto> OrderDetails,
         Guid DeliverySlotId,
+        DeliveryAddressDetailsDto DeliveryAddress,
         string? FailureReason,
         DateTime CreatedAt);
 }

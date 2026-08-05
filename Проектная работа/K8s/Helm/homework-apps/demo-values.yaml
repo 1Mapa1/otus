@@ -1,0 +1,31 @@
+# Lightweight observability stand for graduation-project demonstrations.
+# Auth and Customer keep writing integration events to their outbox tables,
+# but do not publish them because Kafka is intentionally absent.
+
+authService:
+  enabled: true
+  config:
+    outboxPublisherEnabled: false
+
+customerService:
+  enabled: true
+  config:
+    outboxPublisherEnabled: false
+
+catalogService:
+  enabled: false
+
+notificationService:
+  enabled: false
+
+billingService:
+  enabled: false
+
+orderService:
+  enabled: false
+
+warehouseService:
+  enabled: false
+
+deliveryService:
+  enabled: false

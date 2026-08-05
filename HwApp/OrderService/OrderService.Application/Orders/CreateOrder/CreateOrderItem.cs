@@ -2,5 +2,6 @@
 {
     public sealed record CreateOrderItem(
         Guid ProductId,
-        int Quantity);
+        int Quantity,
+        decimal ExpectedUnitPrice);
 }

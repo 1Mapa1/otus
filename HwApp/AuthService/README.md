@@ -1,47 +1,68 @@
 # AuthService
 
-Сервис аутентификации: учётные записи, JWT (RS256), публикация ключей (JWKS, OpenID discovery). При **регистрации** создаются запись клиента в **CustomerService** и счёт в **BillingService** (HTTP-клиенты по внутренним URL кластера).
+Сервис идентификации: регистрирует пользователей, проверяет логин и пароль, выпускает JWT с подписью RS256 и публикует JWKS.
 
-## Структура решения
+## Ответственность
 
-- `AuthService.Api` — HTTP API, health checks
-- `AuthService.Application` — сценарии регистрации и входа
-- `AuthService.Domain` — сущности и контракты репозитория
-- `AuthService.Infrastructure` — EF Core, выпуск JWT, HTTP-клиенты к CustomerService и BillingService
-- `AuthService.DbMigrator` — миграции БД
+- регистрация пользователя с ролью `USER`;
+- идемпотентный seed администратора через DbMigrator;
+- аутентификация и выпуск access token;
+- синхронное создание профиля в CustomerService;
+- сохранение `user.activated.v1` в outbox и публикация в Kafka.
 
-## Конфигурация интеграций
+## Состав
 
-В `appsettings` задаются базовые URL внешних сервисов (типовые секции `Ms:Customer`, `Ms:Billing`) — см. также Helm values umbrella chart.
+- `AuthService.Api` — HTTP API, Swagger, health и metrics;
+- `AuthService.Application` — сценарии регистрации и входа;
+- `AuthService.Domain` — пользователи, роли и доменные события;
+- `AuthService.Infrastructure` — EF Core, JWT/JWKS, Customer HTTP client, Kafka и outbox;
+- `AuthService.DbMigrator` — миграции и seed администратора.
+
+## Интеграции
+
+| Направление | Система | Назначение |
+|---|---|---|
+| HTTP → | CustomerService | `POST /api/internal/customers` при регистрации |
+| Kafka → | topic `auth` | `user.activated.v1` через outbox |
+| PostgreSQL | `auth_db` | пользователи, refresh tokens и outbox |
+
+В demo-режиме `OutboxPublisherEnabled=false`: событие сохраняется в таблицу outbox, но не отправляется, поскольку Kafka не устанавливается.
 
 ## API
 
-Базовый путь: `/api/auth`.
+| Метод | Путь | Доступ | Назначение |
+|---|---|---|---|
+| POST | `/api/auth/register` | публичный | Регистрация пользователя |
+| POST | `/api/auth/login` | публичный | Получение JWT |
+| GET | `/.well-known/jwks.json` | публичный | Публичный ключ для проверки JWT |
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| POST | `/api/auth/register` | Регистрация: пользователь в БД Auth + клиент в CustomerService + счёт в BillingService |
-| POST | `/api/auth/login` | Вход, ответ с `accessToken` |
+Swagger: `/api/auth/swagger`.
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/.well-known/jwks.json` | JWKS |
-| GET | `/.well-known/openid-configuration` | Метаданные (issuer, jwks_uri и др.) |
+## Основная конфигурация
 
-Swagger UI (в Development): префикс `/api/auth/swagger`.
+- `ConnectionStrings`;
+- `Jwt`;
+- `Ms:Customer`;
+- `Kafka`;
+- `OutboxPublisherEnabled`;
+- `ADMIN_LOGIN`, `ADMIN_PASSWORD` для DbMigrator.
 
-## Связанные сервисы
+Полные Kubernetes values: [`Проектная работа/K8s/Helm/homework-apps`](../../Проектная%20работа/K8s/Helm/homework-apps).
 
-- [CustomerService](../CustomerService/README.md) — профиль клиента
-- [BillingService](../BillingService/README.md) — счета
+## Сборка
 
-## Docker
+```powershell
+dotnet build AuthService.Api/AuthService.Api.csproj
 
-```bash
-docker build --platform linux/amd64 -f Dockerfile.Api .
-docker build --platform linux/amd64 -f Dockerfile.Migration .
+docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-auth-service:<tag> .
+docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-auth-migration:<tag> .
 ```
 
-## Развёртывание
+## Эксплуатационные endpoints
 
-Теги образов и Ingress: [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md) (umbrella `homework-apps`). Ранние варианты стенда: [ДЗ 7 / K8s](../../ДЗ%207/K8s/README.md), [ДЗ 6 / K8s](../../ДЗ%206/K8s/README.md).
+- `/health/live`
+- `/health/ready`
+- `/health/startup`
+- `/metrics`
+
+Система целиком: [HwApp](../README.md). Развёртывание: [K8s](../../Проектная%20работа/K8s/README.md).

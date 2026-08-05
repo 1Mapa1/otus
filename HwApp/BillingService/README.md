@@ -1,67 +1,65 @@
 # BillingService
 
-Сервис **счетов и платежей**: у пользователя есть счёт (баланс, холдированные средства), пополнение, а для сценария заказа — **внутреннее API платежей** (authorize → capture или отмена авторизации). Счёт создаётся при регистрации через **AuthService** (`POST /api/internal/billing/accounts`). **OrderService** вызывает платежи по внутренним ручкам без JWT пользователя.
+Сервис счетов и платежей: хранит баланс пользователя, выполняет пополнение и управляет авторизацией платежа заказа.
 
-## Архитектура
+## Ответственность
 
-- `BillingService.Api` — HTTP API (внешние и internal-контроллеры), JWT на внешних ручках, Swagger
-- `BillingService.Application` — MediatR: счета, депозит, authorize/capture/cancel authorization
-- `BillingService.Domain` — счёт, транзакции, состояния платежа
-- `BillingService.Infrastructure` — EF Core, репозитории, персистентность
-- `BillingService.DbMigrator` — миграции БД
+- идемпотентное создание счёта по `user.activated.v1`;
+- чтение баланса и пополнение счёта;
+- authorize суммы заказа с переводом средств в hold;
+- capture после успешной саги;
+- cancel authorization как компенсация.
+
+## Состав
+
+- `BillingService.Api` — пользовательский и internal API;
+- `BillingService.Application` — счета и платежные операции;
+- `BillingService.Domain` — Account, Payment и транзакции;
+- `BillingService.Infrastructure` — EF Core, Kafka consumer, inbox/DLQ;
+- `BillingService.DbMigrator` — миграции БД.
+
+## Интеграции
+
+| Направление | Система | Назначение |
+|---|---|---|
+| Kafka ← | topic `auth` | `user.activated.v1` создаёт счёт |
+| HTTP ← | OrderService | authorize, capture и cancel |
+| HTTP → | AuthService | Загрузка JWKS |
+| Kafka → | DLQ | сообщения, которые невозможно обработать |
+| PostgreSQL | `billing_db` | счета, платежи, транзакции и inbox |
 
 ## API
 
-Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md)).
+| Метод | Путь | Доступ | Назначение |
+|---|---|---|---|
+| GET | `/api/billing/accounts/me` | JWT | Получить свой счёт |
+| POST | `/api/billing/accounts/deposit` | JWT | Пополнить счёт |
+| POST | `/api/internal/billing/payments/authorize` | internal | Авторизовать сумму |
+| POST | `/api/internal/billing/payments/capture` | internal | Списать авторизованную сумму |
+| POST | `/api/internal/billing/payments/cancel-authorization` | internal | Отменить авторизацию |
 
-### Внешний API (JWT пользователя)
+Swagger: `/api/billing/swagger`.
 
-Префикс: **`/api/billing/accounts`**. Заголовок `Authorization: Bearer <token>`.
+## Основная конфигурация
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/billing/accounts/me` | Текущий счёт: баланс, холд, доступно |
-| POST | `/api/billing/accounts/deposit` | Пополнение счёта |
+- `ConnectionStrings`;
+- `Auth:Url`;
+- `Kafka`.
 
-### Внутренний API — счета
+## Сборка
 
-Префикс: **`/api/internal/billing/accounts`**.
+```powershell
+dotnet build BillingService.Api/BillingService.Api.csproj
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| POST | `/api/internal/billing/accounts` | Создание счёта для `userId` (вызывает Auth при регистрации) |
-
-### Внутренний API — платежи по заказу
-
-Префикс: **`/api/internal/billing/payments`**. Вызывается **OrderService** (сага заказа).
-
-| Метод | Путь | Описание |
-|-------|------|----------|
-| POST | `/api/internal/billing/payments/authorize` | Авторизация суммы по `orderId` (холд) |
-| POST | `/api/internal/billing/payments/capture` | Списание после успешных шагов саги |
-| POST | `/api/internal/billing/payments/cancel-authorization` | Отмена холда (компенсация) |
-
-### Документация и health
-
-- Swagger UI (Development): **`/api/billing/swagger`**
-- Health: `/health/live`, `/health/ready`, `/health/startup`
-
-## Связанные сервисы
-
-- [AuthService](../AuthService/README.md) — создание счёта при регистрации
-- [OrderService](../OrderService/README.md) — сага заказа (authorize / capture / cancel)
-
-## Сборка Docker-образов
-
-Из каталога `BillingService/`:
-
-```bash
-docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-billing-service:8.0 .
-docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-billing-migration:8.0 .
+docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-billing-service:<tag> .
+docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-billing-migration:<tag> .
 ```
 
-(Тег подставьте свой; общий скрипт см. [HwApp/build-images-8.0.sh](../build-images-8.0.sh).)
+## Эксплуатационные endpoints
 
-## Развёртывание
+- `/health/live`
+- `/health/ready`
+- `/health/startup`
+- `/metrics`
 
-Helm, Ingress (`/api/billing`, `/api/internal/billing`): [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md). Общий указатель: [HwApp/README.md](../README.md).
+Система целиком: [HwApp](../README.md). Развёртывание: [K8s](../../Проектная%20работа/K8s/README.md).

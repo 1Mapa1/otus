@@ -51,14 +51,6 @@ namespace CustomerService.Domain.Entities
             AddEvent(new CustomerUpdatedEvent(Id, name, email));
         }
 
-        public void SetName(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException("Name is required.", nameof(value));
-
-            Name = value;
-        }
-
         public void AddEvent(IDomainEvent domainEvent)
             => _events.Add(domainEvent);
 

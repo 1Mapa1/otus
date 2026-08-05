@@ -1,0 +1,80 @@
+# Defaults for standalone install; overridden by umbrella parent values.
+global:
+  umbrellaChartName: homework-apps
+  kubernetesAppName: homework-apps
+  peerAuthName: auth
+  peerCustomerName: customer
+  clusterDomain: cluster.local
+  secretType: Opaque
+  dbHost: postgres-postgresql
+  dbPort: "5432"
+  environment: Development
+  kafkaBootstrapServers: ""
+  kafkaClusterReleaseName: kafka
+
+enabled: true
+name: auth
+dbName: auth_db
+
+deployment:
+  imageRepository: maslovdeveloper/hwapp-auth-service
+  imageTag: "10.8"
+  replicaCount: 2
+  maxSurge: 1
+  maxUnavailable: 1
+  port: 8000
+  protocol: TCP
+  startupProbe:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 12
+  readinessProbe:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 3
+    successThreshold: 1
+  livenessProbe:
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+service:
+  type: ClusterIP
+  port: 80
+  protocol: TCP
+  name: http
+  monitor:
+    enabled: true
+    port: 8080
+    protocol: TCP
+    name: monitor
+
+serviceMonitor:
+  enabled: true
+  scrapeTimeout: 30s
+  honorLabels: true
+  path: /metrics
+
+migrationJob:
+  enabled: true
+  ttlSecondsAfterFinished: 100
+  backoffLimit: 3
+  imageRepository: maslovdeveloper/hwapp-auth-migration
+  imageTag: "10.3"
+
+config:
+  outboxPublisherEnabled: true
+  msCustomerBaseUrlOverride: ""
+  msCustomerTimeout: "00:00:10"
+  kafkaAcks: "All"
+  kafkaEnableIdempotence: true
+  jwtIssuerOverride: ""
+  jwtLifetimeMinutes: "60"
+
+secret:
+  dbUser: auth_user
+  dbPassword: auth_pass
+  adminLogin: ""
+  adminPassword: ""
+  jwtPrivateKeyPem: ""
+  jwtKeyId: default-key

@@ -7,5 +7,8 @@
         public string BootstrapServers { get; init; } = null!;
         public string GroupId { get; init; } = "notification-service";
         public string[] Topics { get; init; } = [];
+        public string DlqTopic { get; init; } = "notification.dlq";
+        public int MaxRetryAttempts { get; init; } = 5;
+        public int RetryDelaySeconds { get; init; } = 5;
     }
 }

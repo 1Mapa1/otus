@@ -21,7 +21,7 @@ namespace AuthService.Api.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
         {
             await _authService.RegisterAsync(request, ct);
-            return Ok();
+            return StatusCode(StatusCodes.Status201Created);
         }
 
         [HttpPost("login")]

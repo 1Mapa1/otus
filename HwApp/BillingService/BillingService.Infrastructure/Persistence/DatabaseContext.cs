@@ -1,6 +1,7 @@
 ﻿using BillingService.Domain.Accounts;
 using BillingService.Domain.AccountTransactions;
 using BillingService.Domain.Payments;
+using BillingService.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BillingService.Infrastructure.Persistence
@@ -10,6 +11,7 @@ namespace BillingService.Infrastructure.Persistence
         public DbSet<Account> Accounts => Set<Account>();
         public DbSet<AccountTransaction> AccountTransactions => Set<AccountTransaction>();
         public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) 
             : base(options)

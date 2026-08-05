@@ -14,7 +14,8 @@ namespace CustomerService.Infrastructure.Persistence.Configurations
 
             builder.Property(x => x.Id)
                 .HasColumnName("id")
-                .ValueGeneratedNever();
+                .ValueGeneratedNever()
+                .IsRequired();
 
             builder.Property(x => x.Name)
                 .IsRequired()

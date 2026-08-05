@@ -1,8 +1,12 @@
 ﻿using BillingService.Application.Abstractions;
 using BillingService.Application.Accounts;
 using BillingService.Application.Payments;
+using BillingService.Infrastructure.Messaging;
+using BillingService.Infrastructure.Messaging.Handlers;
+using BillingService.Infrastructure.Messaging.Kafka;
 using BillingService.Infrastructure.Persistence;
 using BillingService.Infrastructure.Persistence.Repositories;
+using BillingService.Infrastructure.Workers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +24,8 @@ namespace BillingService.Infrastructure
             services.AddInfrastructureRepositories();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            services.AddInfrastructureKafka(configuration);
 
             return services;
         }
@@ -54,6 +60,32 @@ namespace BillingService.Infrastructure
         {
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+            return services;
+        }
+
+        private static IServiceCollection AddInfrastructureKafka(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            services.AddOptions<KafkaOptions>()
+                .Bind(configuration.GetSection(KafkaOptions.SectionName))
+                .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "BootstrapServers must be provided.")
+                .Validate(options => !string.IsNullOrEmpty(options.GroupId), "GroupId must be provided.")
+                .Validate(options => options.Topics.Length > 0, "At least one Kafka topic must be configured.")
+                .Validate(options => !string.IsNullOrEmpty(options.DlqTopic), "DlqTopic must be provided.")
+                .Validate(options => options.MaxRetryAttempts > 0, "MaxRetryAttempts must be greater than zero.")
+                .ValidateOnStart();
+
+            services.AddSingleton<IKafkaProducer, KafkaProducer>();
+            services.AddSingleton<KafkaDlqPublisher>();
+
+            services.AddScoped<IntegrationEventDispatcher>();
+            services.AddScoped<InboxProcessor>();
+
+            services.AddScoped<IIntegrationEventHandler, UserActivatedIntegrationEventHandler>();
+
+            services.AddHostedService<KafkaConsumer>();
 
             return services;
         }

@@ -1,55 +1,66 @@
 # WarehouseService
 
-Сервис **склада и каталога товаров**: продукты, остатки, **резервирование** товара под заказ и отмена резерва. Внешнее API с JWT для администрирования каталога; внутренние ручки без пользовательского JWT вызывает **OrderService** при саге (resolve SKU → create/cancel reservation).
+Сервис складских остатков: хранит доступное и зарезервированное количество, движения склада и резервы товаров.
 
-## Архитектура
+## Ответственность
 
-- `WarehouseService.Api` — HTTP API (external + internal), JWT на внешних ручках, Swagger
-- `WarehouseService.Application` — MediatR: продукты, остатки, resolve, резервы
-- `WarehouseService.Domain` — продукт, резерв, статусы
-- `WarehouseService.Infrastructure` — EF Core, репозитории, персистентность
-- `WarehouseService.DbMigrator` — миграции БД
+- создание складской записи по lifecycle-событию товара;
+- поступление товара и история движений;
+- идемпотентный резерв и отмена резерва для саги заказа;
+- атомарное изменение остатков с блокировкой строки;
+- публикация изменения доступного количества.
+
+## Состав
+
+- `WarehouseService.Api` — admin и internal API;
+- `WarehouseService.Application` — команды остатков, движений и резервов;
+- `WarehouseService.Domain` — StockItem, StockReservation и StockMovement;
+- `WarehouseService.Infrastructure` — EF Core, row lock, Kafka и outbox;
+- `WarehouseService.DbMigrator` — миграции БД.
+
+## Интеграции
+
+| Направление | Система | Назначение |
+|---|---|---|
+| HTTP ← | OrderService | Резерв и компенсационная отмена |
+| Kafka ← | topic `products` | lifecycle товара |
+| Kafka → | topic `stocks` | `stock.changed.v1` |
+| HTTP → | AuthService | Загрузка JWKS |
+| PostgreSQL | `warehouse_db` | остатки, движения, резервы и outbox |
 
 ## API
 
-Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md)).
+| Метод | Путь | Доступ | Назначение |
+|---|---|---|---|
+| GET | `/api/warehouse/stocks` | `ADMIN` | Все складские записи |
+| GET | `/api/warehouse/stocks/{productId}` | `ADMIN` | Остаток товара |
+| POST | `/api/warehouse/stocks/{productId}/income` | `ADMIN` | Поступление |
+| GET | `/api/warehouse/stocks/{productId}/movements` | `ADMIN` | Движения товара |
+| POST | `/api/internal/warehouse/reservations` | internal | Идемпотентный резерв |
+| POST | `/api/internal/warehouse/reservations/cancel` | internal | Идемпотентная отмена |
 
-### Внешний API (JWT)
+Swagger: `/api/warehouse/swagger`.
 
-Префикс: **`/api/warehouse/products`**.
+## Основная конфигурация
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/warehouse/products` | Список товаров |
-| POST | `/api/warehouse/products` | Создание товара |
-| POST | `/api/warehouse/products/{id}/stock` | Увеличение остатка (поступление на склад) |
+- `ConnectionStrings`;
+- `Auth:Url`;
+- `Kafka`.
 
-### Внутренний API
+## Сборка
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| POST | `/api/internal/warehouse/products/resolve` | Проверка/разрешение позиций (SKU, количество) для заказа |
-| POST | `/api/internal/warehouse/reservations` | Резерв под `orderId` + позиции |
-| POST | `/api/internal/warehouse/reservations/cancel` | Отмена резерва по `orderId` (компенсация саги) |
+```powershell
+dotnet build WarehouseService.Api/WarehouseService.Api.csproj
 
-### Документация и health
-
-- Swagger UI (Development): **`/api/warehouse/swagger`**
-- Health: `/health/live`, `/health/ready`, `/health/startup`
-
-## Связанные сервисы
-
-- [OrderService](../OrderService/README.md) — сага заказа (резерв / отмена)
-
-## Сборка Docker-образов
-
-Из каталога `WarehouseService/`:
-
-```bash
-docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-warehouse-service:8.0 .
-docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-warehouse-migration:8.0 .
+docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-warehouse-service:<tag> .
+docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-warehouse-migration:<tag> .
 ```
 
-## Развёртывание
+## Эксплуатационные endpoints
 
-Helm, Ingress (`/api/warehouse`, `/api/internal/warehouse`): [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md). Общий указатель: [HwApp/README.md](../README.md).
+- `/health/live`
+- `/health/ready`
+- `/health/startup`
+- `/metrics`
+
+Система целиком: [HwApp](../README.md). Развёртывание: [K8s](../../Проектная%20работа/K8s/README.md).

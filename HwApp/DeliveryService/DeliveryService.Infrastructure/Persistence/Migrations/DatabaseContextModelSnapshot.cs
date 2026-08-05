@@ -38,6 +38,10 @@ namespace DeliveryService.Infrastructure.Persistence.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
                     b.Property<Guid>("DeliverySlotId")
                         .HasColumnType("uuid")
                         .HasColumnName("delivery_slot_id");
@@ -51,18 +55,20 @@ namespace DeliveryService.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("status");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("ZoneId")
                         .HasColumnType("uuid")
-                        .HasColumnName("user_id");
+                        .HasColumnName("zone_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
 
                     b.HasIndex("DeliverySlotId");
 
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ZoneId");
 
                     b.ToTable("delivery_reservation", (string)null);
                 });
@@ -73,11 +79,19 @@ namespace DeliveryService.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int>("Capacity")
+                        .HasColumnType("integer")
+                        .HasColumnName("capacity");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("ReservedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("reserved_count");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -98,9 +112,54 @@ namespace DeliveryService.Infrastructure.Persistence.Migrations
                         .HasColumnName("updated_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<Guid>("ZoneId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("zone_id");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("ZoneId");
+
                     b.ToTable("delivery_slot", (string)null);
+                });
+
+            modelBuilder.Entity("DeliveryService.Domain.Zones.DeliveryZone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("city");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("delivery_zone", (string)null);
                 });
 
             modelBuilder.Entity("DeliveryService.Domain.Reservations.DeliveryReservation", b =>
@@ -110,6 +169,56 @@ namespace DeliveryService.Infrastructure.Persistence.Migrations
                         .HasForeignKey("DeliverySlotId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.OwnsOne("DeliveryService.Domain.Reservations.DeliveryAddressSnapshot", "DeliveryAddress", b1 =>
+                        {
+                            b1.Property<Guid>("DeliveryReservationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Apartment")
+                                .HasMaxLength(32)
+                                .HasColumnType("character varying(32)")
+                                .HasColumnName("address_apartment");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(128)
+                                .HasColumnType("character varying(128)")
+                                .HasColumnName("address_city");
+
+                            b1.Property<string>("House")
+                                .IsRequired()
+                                .HasMaxLength(32)
+                                .HasColumnType("character varying(32)")
+                                .HasColumnName("address_house");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("character varying(256)")
+                                .HasColumnName("address_street");
+
+                            b1.HasKey("DeliveryReservationId");
+
+                            b1.ToTable("delivery_reservation");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DeliveryReservationId");
+                        });
+
+                    b.Navigation("DeliveryAddress")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DeliveryService.Domain.Slots.DeliverySlot", b =>
+                {
+                    b.HasOne("DeliveryService.Domain.Zones.DeliveryZone", "Zone")
+                        .WithMany()
+                        .HasForeignKey("ZoneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Zone");
                 });
 #pragma warning restore 612, 618
         }

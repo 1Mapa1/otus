@@ -1,10 +1,17 @@
 ﻿using AuthService.Application.Interfaces;
+using AuthService.Domain.Entities;
+using AuthService.Domain.Enums;
 using AuthService.Domain.Interfaces;
-using AuthService.Infrastructure.Clients.BillingService;
 using AuthService.Infrastructure.Clients.CustomerService;
+using AuthService.Infrastructure.Messaging.Kafka;
+using AuthService.Infrastructure.Options;
 using AuthService.Infrastructure.Rersistence;
+using AuthService.Infrastructure.Persistence;
+using AuthService.Infrastructure.Persistence.Outbox;
 using AuthService.Infrastructure.Rersistence.Repositories;
 using AuthService.Infrastructure.Security;
+using AuthService.Infrastructure.Workers;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,15 +23,31 @@ namespace AuthService.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(
             this IServiceCollection services,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            Action<IHttpClientBuilder>? configureHttpClient = null)
         {
             services.AddInfrastructureDatabaseContext(configuration);
 
             services.AddScoped<IUserRepository, UserRepository>();
 
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+
             services.AddInfrastructureOptions(configuration);
 
-            services.AddInfrastructureHttpClients();
+            services.AddInfrastructureHttpClients(configureHttpClient);
+
+            if (configuration.GetValue("OutboxPublisherEnabled", true))
+            {
+                services.AddOptions<KafkaOptions>()
+                    .Bind(configuration.GetSection(KafkaOptions.SectionName))
+                    .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "BootstrapServers must be provided.")
+                    .Validate(options => !string.IsNullOrEmpty(options.Acks), "Acks must be provided.")
+                    .Validate(options => options.Acks == "All" || options.Acks == "Leader" || options.Acks == "None", "Acks must be 'All', 'Leader', or 'None'.")
+                    .ValidateOnStart();
+
+                services.AddSingleton<IKafkaProducer, KafkaProducer>();
+                services.AddHostedService<OutboxPublisher>();
+            }
 
             services.AddSingleton<RsaJwtSigningKeyProvider>();
             services.AddSingleton<IJwksProvider, JwksProvider>();
@@ -50,6 +73,8 @@ namespace AuthService.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            services.AddSingleton<IIntegrationEventMapping, IntegrationEventMapping>();
+
             var connectionString = configuration.GetConnectionStringLocal();
 
             services.AddDbContext<AuthDbContext>(options =>
@@ -76,27 +101,21 @@ namespace AuthService.Infrastructure
         }
 
         private static IServiceCollection AddInfrastructureHttpClients(
-            this IServiceCollection services)
+            this IServiceCollection services,
+            Action<IHttpClientBuilder>? configureHttpClient)
         {
-            services.AddHttpClient<ICustomerServiceClient, CustomerServiceClient>((sp, httpClient) =>
-            {
-                var options = sp
-                    .GetRequiredService<IOptions<CustomerServiceOptions>>()
-                    .Value;
+            var clientBuilder = services
+                .AddHttpClient<ICustomerServiceClient, CustomerServiceClient>((sp, httpClient) =>
+                {
+                    var options = sp
+                        .GetRequiredService<IOptions<CustomerServiceOptions>>()
+                        .Value;
 
-                httpClient.BaseAddress = new Uri(options.BaseUrl);
-                httpClient.Timeout = options.Timeout;
-            });
+                    httpClient.BaseAddress = new Uri(options.BaseUrl);
+                    httpClient.Timeout = options.Timeout;
+                });
 
-            services.AddHttpClient<IBillingServiceClient, BillingServiceClient>((sp, httpClient) =>
-            {
-                var options = sp
-                    .GetRequiredService<IOptions<BillingServiceOptions>>()
-                    .Value;
-
-                httpClient.BaseAddress = new Uri(options.BaseUrl);
-                httpClient.Timeout = options.Timeout;
-            });
+            configureHttpClient?.Invoke(clientBuilder);
 
             return services;
         }
@@ -111,14 +130,6 @@ namespace AuthService.Infrastructure
                 .Validate(
                     o => Uri.TryCreate(o.BaseUrl, UriKind.Absolute, out _),
                     $"{CustomerServiceOptions.SectionName}:BaseUrl must be a valid absolute URI")
-                .ValidateOnStart();
-
-            services
-                .AddOptions<BillingServiceOptions>()
-                .Bind(configuration.GetSection(BillingServiceOptions.SectionName))
-                .Validate(
-                    o => Uri.TryCreate(o.BaseUrl, UriKind.Absolute, out _),
-                    $"{BillingServiceOptions.SectionName}:BaseUrl must be a valid absolute URI")
                 .ValidateOnStart();
 
             services
@@ -137,6 +148,59 @@ namespace AuthService.Infrastructure
             var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
 
             await db.Database.MigrateAsync();
+
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            await SeedAdminAsync(db, configuration);
+        }
+
+        private static async Task SeedAdminAsync(
+            AuthDbContext db,
+            IConfiguration configuration)
+        {
+            var login = configuration["ADMIN_LOGIN"];
+            var password = configuration["ADMIN_PASSWORD"];
+
+            if (string.IsNullOrWhiteSpace(login) && string.IsNullOrWhiteSpace(password))
+                return;
+
+            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+            {
+                throw new InvalidOperationException(
+                    "Both ADMIN_LOGIN and ADMIN_PASSWORD must be configured for the admin seed.");
+            }
+
+            var existingUser = await db.Users
+                .SingleOrDefaultAsync(user => user.Login == login);
+
+            if (existingUser is not null)
+            {
+                if (existingUser.Role != UserRole.Admin)
+                {
+                    throw new InvalidOperationException(
+                        $"User '{login}' already exists but does not have the Admin role.");
+                }
+
+                var existingPasswordHasher = new PasswordHasher<User>();
+                existingUser.UpdatePasswordHash(
+                    existingPasswordHasher.HashPassword(existingUser, password));
+
+                if (existingUser.Status != UserStatus.Active)
+                    existingUser.Activate();
+
+                await db.SaveChangesAsync();
+                return;
+            }
+
+            var passwordHasher = new PasswordHasher<User>();
+            var admin = new User(
+                login,
+                passwordHasher.HashPassword(null!, password),
+                UserRole.Admin);
+
+            admin.Activate();
+
+            db.Users.Add(admin);
+            await db.SaveChangesAsync();
         }
     }
 }

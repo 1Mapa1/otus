@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using WarehouseService.Infrastructure.Persistence.Outbox;
 
 namespace WarehouseService.Infrastructure.Persistence
 {
@@ -20,7 +21,9 @@ namespace WarehouseService.Infrastructure.Persistence
 
             optionsBuilder.UseNpgsql(connectionString);
 
-            return new DatabaseContext(optionsBuilder.Options);
+            return new DatabaseContext(
+                optionsBuilder.Options,
+                new IntegrationEventMapping());
         }
     }
 }

@@ -1,55 +1,68 @@
 # DeliveryService
 
-Сервис **доставки**: **слоты** (интервалы времени) и **резерв слота** под заказ с возможностью отмены. Внешнее API с JWT для управления слотами; внутренние ручки резерва вызывает **OrderService** в саге заказа.
+Сервис доставки: управляет зонами и слотами с ограниченной capacity, резервирует слот для заказа и выполняет компенсационную отмену.
 
-## Архитектура
+## Ответственность
 
-- `DeliveryService.Api` — HTTP API (external + internal), JWT на внешних ручках, Swagger
-- `DeliveryService.Application` — MediatR: слоты, резерв, отмена
-- `DeliveryService.Domain` — слот, резерв доставки, статусы
-- `DeliveryService.Infrastructure` — EF Core, репозитории
-- `DeliveryService.DbMigrator` — миграции БД
+- административное управление зонами и слотами;
+- поиск доступных слотов по адресу;
+- атомарное увеличение `ReservedCount`;
+- идемпотентный резерв и отмена по `orderId`;
+- хранение snapshot адреса доставки.
+
+## Состав
+
+- `DeliveryService.Api` — user, admin и internal API;
+- `DeliveryService.Application` — команды и запросы;
+- `DeliveryService.Domain` — зоны, слоты и резервы;
+- `DeliveryService.Infrastructure` — EF Core и атомарные операции capacity;
+- `DeliveryService.DbMigrator` — миграции БД.
+
+## Интеграции
+
+| Направление | Система | Назначение |
+|---|---|---|
+| HTTP ← | OrderService | Резерв слота и компенсационная отмена |
+| HTTP → | AuthService | Загрузка JWKS |
+| PostgreSQL | `delivery_db` | зоны, слоты и резервы |
+
+Kafka, outbox и inbox в этом сервисе не используются.
 
 ## API
 
-Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md)).
+| Метод | Путь | Доступ | Назначение |
+|---|---|---|---|
+| POST | `/api/delivery/slots/available` | JWT | Найти доступные слоты по адресу |
+| GET | `/api/delivery/zones` | `ADMIN` | Получить зоны |
+| POST | `/api/delivery/zones` | `ADMIN` | Создать зону |
+| PUT | `/api/delivery/zones/{zoneId}` | `ADMIN` | Изменить зону |
+| GET | `/api/delivery/slots` | `ADMIN` | Получить слоты |
+| POST | `/api/delivery/slots` | `ADMIN` | Создать слот |
+| PUT | `/api/delivery/slots/{slotId}` | `ADMIN` | Изменить слот |
+| POST | `/api/internal/delivery/reservations` | internal | Идемпотентный резерв |
+| POST | `/api/internal/delivery/reservations/cancel` | internal | Идемпотентная отмена |
 
-### Внешний API (JWT)
+Swagger: `/api/delivery/swagger`.
 
-Префикс: **`/api/delivery/slots`**.
+## Основная конфигурация
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/delivery/slots` | Список доступных слотов |
-| POST | `/api/delivery/slots` | Создание слота (интервал доставки) |
+- `ConnectionStrings`;
+- `Auth:Url`.
 
-### Внутренний API
+## Сборка
 
-Префикс: **`/api/internal/delivery/reservations`**.
+```powershell
+dotnet build DeliveryService.Api/DeliveryService.Api.csproj
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| POST | `/api/internal/delivery/reservations` | Резерв слота под `orderId`, `userId`, `deliverySlotId` |
-| POST | `/api/internal/delivery/reservations/cancel` | Отмена резерва по `orderId` (компенсация саги) |
-
-### Документация и health
-
-- Swagger UI (Development): **`/api/delivery/swagger`**
-- Health: `/health/live`, `/health/ready`, `/health/startup`
-
-## Связанные сервисы
-
-- [OrderService](../OrderService/README.md) — сага заказа (резерв доставки / отмена)
-
-## Сборка Docker-образов
-
-Из каталога `DeliveryService/`:
-
-```bash
-docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-delivery-service:8.0 .
-docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-delivery-migration:8.0 .
+docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-delivery-service:<tag> .
+docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-delivery-migration:<tag> .
 ```
 
-## Развёртывание
+## Эксплуатационные endpoints
 
-Helm, Ingress (`/api/delivery`, `/api/internal/delivery`): [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md). Общий указатель: [HwApp/README.md](../README.md).
+- `/health/live`
+- `/health/ready`
+- `/health/startup`
+- `/metrics`
+
+Система целиком: [HwApp](../README.md). Развёртывание: [K8s](../../Проектная%20работа/K8s/README.md).

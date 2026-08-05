@@ -1,43 +1,64 @@
 # NotificationService
 
-Сервис **уведомлений**: потребление событий из **Kafka**, сохранение уведомлений в БД и **HTTP API** для чтения списка. Топики и группа consumer настраиваются (см. Helm `values.yaml` у notification-service). События публикуют другие сервисы (например, **OrderService** через outbox).
+Сервис уведомлений: получает интеграционные события из Kafka, дедуплицирует их и сохраняет пользовательские уведомления.
 
-## Архитектура
+## Ответственность
 
-- `NotificationService.Api` — HTTP API, health
-- `NotificationService.Application` — MediatR: обработка входящих событий, запросы списка уведомлений
-- `NotificationService.Domain` — сущность уведомления
-- `NotificationService.Infrastructure` — EF Core, **Kafka consumer**, персистентность
-- `NotificationService.DbMigrator` — миграции БД
+- обработка событий клиента и заказа;
+- inbox-дедупликация по идентификатору события;
+- retry и отправка необрабатываемого сообщения в DLQ;
+- сохранение customer projection для отображения уведомлений;
+- выдача списка и деталей уведомлений текущего пользователя.
 
-## Конфигурация Kafka
+## Состав
 
-В `appsettings` / Helm: bootstrap-серверы, **group id**, список **topics** для подписки — должны совпадать с настройками продюсеров в кластере (см. umbrella `notificationService.config`).
+- `NotificationService.Api` — пользовательский API;
+- `NotificationService.Application` — обработчики событий и запросы уведомлений;
+- `NotificationService.Domain` — уведомление и customer projection;
+- `NotificationService.Infrastructure` — EF Core, Kafka consumer, inbox и DLQ;
+- `NotificationService.DbMigrator` — миграции БД.
+
+## Интеграции
+
+| Направление | Система | Назначение |
+|---|---|---|
+| Kafka ← | topic `customers` | `customer.created.v1`, `customer.updated.v1` |
+| Kafka ← | topic `orders` | `order.confirmed.v1`, `order.rejected.v1/v2`, совместимость с `order.paid.v1` |
+| HTTP → | AuthService | Загрузка JWKS |
+| Kafka → | DLQ | сообщения после исчерпания retry |
+| PostgreSQL | `notification_db` | уведомления, customer projection и inbox |
 
 ## API
 
-Пример хоста за Ingress: `http://arch.homework` (см. [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md)).
+Все endpoints требуют JWT.
 
-Префикс приложения: **`/api/notifications`** (детальные маршруты и тело ответов — в **Swagger** в образе).
+| Метод | Путь | Назначение |
+|---|---|---|
+| GET | `/api/notifications/me` | Уведомления текущего пользователя |
+| GET | `/api/notifications/{notificationId}` | Детали своего уведомления |
 
-### Документация и служебные пути
+Swagger: `/api/notifications/swagger`.
 
-- Swagger UI (Development): **`/api/notifications/swagger`**
-- Health: `/health/live`, `/health/ready`, `/health/startup`
+## Основная конфигурация
 
-## Связанные сервисы
+- `ConnectionStrings`;
+- `Auth:Url`;
+- `Kafka` — bootstrap servers, group id, topics, retry и DLQ.
 
-- [OrderService](../OrderService/README.md) — доменные события в Kafka (outbox)
+## Сборка
 
-## Сборка Docker-образов
+```powershell
+dotnet build NotificationService.Api/NotificationService.Api.csproj
 
-Из каталога `NotificationService/`:
-
-```bash
-docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-notification-service:8.0 .
-docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-notification-migration:8.0 .
+docker build --platform linux/amd64 -f Dockerfile.Api -t maslovdeveloper/hwapp-notification-service:<tag> .
+docker build --platform linux/amd64 -f Dockerfile.Migration -t maslovdeveloper/hwapp-notification-migration:<tag> .
 ```
 
-## Развёртывание
+## Эксплуатационные endpoints
 
-Kafka в том же namespace, что и приложения; Helm и Ingress `/api/notifications`: [ДЗ 8 / K8s](../../ДЗ%208/K8s/README.md). Общий указатель: [HwApp/README.md](../README.md).
+- `/health/live`
+- `/health/ready`
+- `/health/startup`
+- `/metrics`
+
+Система целиком: [HwApp](../README.md). Развёртывание: [K8s](../../Проектная%20работа/K8s/README.md).

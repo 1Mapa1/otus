@@ -3,9 +3,7 @@
     public enum WarehouseClientErrorCode
     {
         StockNotAvailable = 1,
-        ProductNotFound = 2,
-        InvalidItems = 3,
-        InvalidReservationState = 4,
+        InvalidReservationState = 2,
         Unknown = 100
     }
 }

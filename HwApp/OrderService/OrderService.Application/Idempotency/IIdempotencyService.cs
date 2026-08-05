@@ -6,6 +6,6 @@ namespace OrderService.Application.Idempotency
     {
         Task<IdempotencyStartResult<TResponse>> StartAsync<TRequest, TResponse>(Guid userId, Guid idempotencyKey, TRequest request, CancellationToken cancellationToken);
 
-        public void Complete<TResponse>(IdempotencyRecord record, Guid orderId, TResponse response);
+        public void Complete<TResponse>(IdempotencyRecord record, Guid? orderId, TResponse response);
     }
 }

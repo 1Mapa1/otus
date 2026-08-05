@@ -1,0 +1,32 @@
+{{- if and .Values.ingress.enabled .Values.traefik.middlewares.requestId.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "homework-apps.traefikRequestIdMiddlewareName" . }}
+  labels:
+    {{- include "homework-apps.labels" . | nindent 4 }}
+spec:
+  plugin:
+    requestid:
+      enabled: true
+      headerName: {{ .Values.traefik.middlewares.requestId.headerName | quote }}
+{{- end }}
+{{- if and .Values.ingress.enabled .Values.traefik.middlewares.rateLimitAuth.enabled }}
+{{- if .Values.traefik.middlewares.requestId.enabled }}
+---
+{{- end }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "homework-apps.traefikRateLimitAuthMiddlewareName" . }}
+  labels:
+    {{- include "homework-apps.labels" . | nindent 4 }}
+spec:
+  rateLimit:
+    average: {{ .Values.traefik.middlewares.rateLimitAuth.average }}
+    burst: {{ .Values.traefik.middlewares.rateLimitAuth.burst }}
+    period: {{ .Values.traefik.middlewares.rateLimitAuth.period | quote }}
+    sourceCriterion:
+      ipStrategy:
+        depth: 1
+{{- end }}

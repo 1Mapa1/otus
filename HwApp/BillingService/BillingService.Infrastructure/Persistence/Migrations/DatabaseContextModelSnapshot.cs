@@ -184,6 +184,45 @@ namespace BillingService.Infrastructure.Persistence.Migrations
                     b.ToTable("payments", (string)null);
                 });
 
+            modelBuilder.Entity("BillingService.Infrastructure.Persistence.Entities.InboxMessage", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_id");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("event_type");
+
+                    b.Property<long>("KafkaOffset")
+                        .HasColumnType("bigint")
+                        .HasColumnName("kafka_offset");
+
+                    b.Property<int>("KafkaPartition")
+                        .HasColumnType("integer")
+                        .HasColumnName("kafka_partition");
+
+                    b.Property<string>("KafkaTopic")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("kafka_topic");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<DateTime>("ProcessedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at_utc");
+
+                    b.HasKey("EventId");
+
+                    b.ToTable("inbox_messages", (string)null);
+                });
+
             modelBuilder.Entity("BillingService.Domain.AccountTransactions.AccountTransaction", b =>
                 {
                     b.HasOne("BillingService.Domain.Payments.Payment", null)

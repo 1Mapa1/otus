@@ -1,0 +1,78 @@
+global:
+  umbrellaChartName: homework-apps
+  kubernetesAppName: homework-apps
+  peerAuthName: auth
+  clusterDomain: cluster.local
+  secretType: Opaque
+  catalogDbPrimaryHost: postgres-catalog-postgresql-primary
+  catalogDbReplicaHost: postgres-catalog-postgresql-read
+  catalogDbPort: "5432"
+  redisHost: redis-master
+  redisPort: "6379"
+  environment: Development
+
+enabled: true
+name: catalog
+dbName: catalog_db
+
+deployment:
+  imageRepository: maslovdeveloper/hwapp-catalog-service
+  imageTag: "10.3"
+  replicaCount: 1
+  maxSurge: 1
+  maxUnavailable: 1
+  port: 8000
+  protocol: TCP
+  startupProbe:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 12
+  readinessProbe:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 3
+    successThreshold: 1
+  livenessProbe:
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+service:
+  type: ClusterIP
+  port: 80
+  protocol: TCP
+  name: http
+  monitor:
+    enabled: true
+    port: 8080
+    protocol: TCP
+    name: monitor
+
+serviceMonitor:
+  enabled: true
+  scrapeTimeout: 30s
+  honorLabels: true
+  path: /metrics
+
+migrationJob:
+  enabled: true
+  ttlSecondsAfterFinished: 100
+  backoffLimit: 3
+  imageRepository: maslovdeveloper/hwapp-catalog-migration
+  imageTag: "10.1"
+
+config:
+  authUrlOverride: ""
+  kafkaGroupId: catalog-service
+  kafkaTopics:
+    - stocks
+  kafkaAcks: "All"
+  kafkaEnableIdempotence: true
+  redisInstanceName: "catalog:"
+  lowStockThreshold: 5
+  brandsCacheTtl: "00:30:00"
+  categoriesCacheTtl: "00:30:00"
+
+secret:
+  dbUser: catalog_user
+  dbPassword: catalog_pass

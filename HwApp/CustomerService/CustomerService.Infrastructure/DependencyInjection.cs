@@ -19,18 +19,21 @@ namespace CustomerService.Infrastructure
         {
             services.AddInfrastructureDatabaseContext(configuration);
 
-            services.AddOptions<KafkaOptions>()
-                .Bind(configuration.GetSection(KafkaOptions.SectionName))
-                .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "BootstrapServers must be provided.")
-                .Validate(options => !string.IsNullOrEmpty(options.Acks), "Acks must be provided.")
-                .Validate(options => options.Acks == "All" || options.Acks == "Leader" || options.Acks == "None", "Acks must be 'All', 'Leader', or 'None'.")
-                .ValidateOnStart();
-
             services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
 
-            services.AddSingleton<IKafkaProducer, KafkaProducer>();
+            if (configuration.GetValue("OutboxPublisherEnabled", true))
+            {
+                services.AddOptions<KafkaOptions>()
+                    .Bind(configuration.GetSection(KafkaOptions.SectionName))
+                    .Validate(options => !string.IsNullOrEmpty(options.BootstrapServers), "BootstrapServers must be provided.")
+                    .Validate(options => !string.IsNullOrEmpty(options.Acks), "Acks must be provided.")
+                    .Validate(options => options.Acks == "All" || options.Acks == "Leader" || options.Acks == "None", "Acks must be 'All', 'Leader', or 'None'.")
+                    .ValidateOnStart();
 
-            services.AddHostedService<OutboxPublisher>();
+                services.AddSingleton<IKafkaProducer, KafkaProducer>();
+                services.AddHostedService<OutboxPublisher>();
+            }
 
             return services;
         }

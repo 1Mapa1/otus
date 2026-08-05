@@ -1,4 +1,5 @@
-﻿using BillingService.Application.Payments;
+﻿using BillingService.Application.Accounts;
+using BillingService.Application.Payments;
 using BillingService.Application.Payments.Operations;
 using BillingService.Domain.AccountTransactions;
 using BillingService.Domain.Payments;
@@ -10,10 +11,12 @@ namespace BillingService.Infrastructure.Persistence.Repositories
     internal sealed class PaymentRepository : IPaymentRepository
     {
         private readonly DatabaseContext _databaseContext;
+        private readonly IAccountRepository _accountRepository;
 
-        public PaymentRepository(DatabaseContext databaseContext)
+        public PaymentRepository(DatabaseContext databaseContext, IAccountRepository accountRepository)
         {
             _databaseContext = databaseContext;
+            _accountRepository = accountRepository;
         }
 
         public async Task<AuthorizeOperationResult> AuthorizeAsync(Guid userId, Guid orderId, decimal amount, CancellationToken cancellationToken)
@@ -35,6 +38,8 @@ namespace BillingService.Infrastructure.Persistence.Repositories
 
             try
             {
+                await _accountRepository.EnsureAccountAsync(userId, cancellationToken);
+
                 var updatedAt = DateTime.UtcNow;
 
                 var rows = await _databaseContext.Database

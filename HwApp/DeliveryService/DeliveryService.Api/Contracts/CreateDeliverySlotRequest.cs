@@ -1,6 +1,8 @@
 namespace DeliveryService.Api.Contracts
 {
     public sealed record CreateDeliverySlotRequest(
+        Guid ZoneId,
         DateTime TimeFrom,
-        DateTime TimeTo);
+        DateTime TimeTo,
+        int Capacity);
 }

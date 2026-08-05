@@ -20,7 +20,7 @@ namespace AuthService.Infrastructure.Security
         {
             var result = _hasher.VerifyHashedPassword(null!, passwordHash, password);
 
-            return result == PasswordVerificationResult.Success;
+            return result != PasswordVerificationResult.Failed;
         }
     }
 }

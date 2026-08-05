@@ -13,6 +13,9 @@ namespace CustomerService.Infrastructure.Persistence
         private readonly IIntegrationEventMapping _mapping;
 
         public DbSet<Customer> Customers => Set<Customer>();
+
+        public DbSet<CustomerAddress> CustomerAddresses => Set<CustomerAddress>();
+
         public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options, IIntegrationEventMapping mapping) 

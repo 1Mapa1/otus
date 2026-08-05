@@ -1,6 +1,7 @@
 using DeliveryService.Application.Abstractions;
 using DeliveryService.Application.Reservations;
 using DeliveryService.Application.Slots;
+using DeliveryService.Application.Zones;
 using DeliveryService.Infrastructure.Persistence;
 using DeliveryService.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,7 @@ namespace DeliveryService.Infrastructure
 
         private static IServiceCollection AddInfrastructureRepositories(this IServiceCollection services)
         {
+            services.AddScoped<IDeliveryZoneRepository, DeliveryZoneRepository>();
             services.AddScoped<IDeliverySlotRepository, DeliverySlotRepository>();
             services.AddScoped<IDeliveryReservationRepository, DeliveryReservationRepository>();
 

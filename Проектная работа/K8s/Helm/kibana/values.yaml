@@ -1,0 +1,12 @@
+image:
+  repository: docker.elastic.co/kibana/kibana
+  tag: "8.5.1"
+  pullPolicy: IfNotPresent
+
+elasticsearchHosts: "http://elasticsearch-master:9200"
+
+service:
+  type: ClusterIP
+  port: 5601
+
+resources: {}

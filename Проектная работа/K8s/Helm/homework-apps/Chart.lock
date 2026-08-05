@@ -1,0 +1,27 @@
+dependencies:
+- name: auth-service
+  repository: file://subcharts/auth-service
+  version: 0.1.0
+- name: customer-service
+  repository: file://subcharts/customer-service
+  version: 0.1.0
+- name: catalog-service
+  repository: file://subcharts/catalog-service
+  version: 0.1.0
+- name: notification-service
+  repository: file://subcharts/notification-service
+  version: 0.1.0
+- name: billing-service
+  repository: file://subcharts/billing-service
+  version: 0.1.0
+- name: order-service
+  repository: file://subcharts/order-service
+  version: 0.1.0
+- name: warehouse-service
+  repository: file://subcharts/warehouse-service
+  version: 0.1.0
+- name: delivery-service
+  repository: file://subcharts/delivery-service
+  version: 0.1.0
+digest: sha256:9c4020abf86611da7697f38cf6dbe0da6fda02d443840d5c331fafb367a6d170
+generated: "2026-07-21T14:55:44.477143604+03:00"

@@ -1,0 +1,9 @@
+image:
+  repository: docker.elastic.co/beats/filebeat
+  tag: "8.5.1"
+  pullPolicy: IfNotPresent
+
+daemonset:
+  filebeatConfig:
+    filebeat.yml: ""
+  resources: {}

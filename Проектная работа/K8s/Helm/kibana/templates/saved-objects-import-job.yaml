@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-saved-objects-import
+  labels:
+    app.kubernetes.io/name: kibana
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kibana-saved-objects-import
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: import
+          image: curlimages/curl:8.12.1
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              until curl --fail --silent http://{{ .Release.Name }}:{{ .Values.service.port }}/api/status >/dev/null; do
+                sleep 5
+              done
+              curl --fail --silent --show-error \
+                -X POST \
+                -H 'kbn-xsrf: true' \
+                -F file=@/saved-objects/electronics-store.ndjson \
+                'http://{{ .Release.Name }}:{{ .Values.service.port }}/api/saved_objects/_import?overwrite=true'
+          volumeMounts:
+            - name: saved-objects
+              mountPath: /saved-objects
+              readOnly: true
+      volumes:
+        - name: saved-objects
+          configMap:
+            name: {{ .Release.Name }}-saved-objects

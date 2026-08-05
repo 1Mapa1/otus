@@ -6,7 +6,10 @@ namespace DeliveryService.Application.Reservations.CancelReservation
 {
     internal sealed class CancelReservationHandler : IRequestHandler<CancelReservationCommand, Result>
     {
-        private static readonly Error UnknownError = new("UnknownError", "An unknown error occurred while canceling the reservation.", ErrorType.Failure);
+        private static readonly Error SlotStateConflict = new(
+            "SlotStateConflict",
+            "Delivery slot state conflict occurred while canceling the reservation.",
+            ErrorType.Conflict);
 
         private readonly IDeliveryReservationRepository _deliveryReservationRepository;
 
@@ -17,17 +20,21 @@ namespace DeliveryService.Application.Reservations.CancelReservation
 
         public async Task<Result> Handle(CancelReservationCommand request, CancellationToken cancellationToken)
         {
-            CancelReservationOperationResult result = await _deliveryReservationRepository.CancelAsync(request.OrderId, cancellationToken);
+            CancelReservationOperationResult result = await _deliveryReservationRepository.CancelAsync(
+                request.OrderId,
+                cancellationToken);
 
-            switch (result)
+            return result switch
             {
-                case CancelReservationOperationResult.Success:
-                case CancelReservationOperationResult.ReservationNotFound:
-                    return Result.Success();
+                CancelReservationOperationResult.Success or CancelReservationOperationResult.ReservationNotFound =>
+                    Result.Success(),
 
-                default:
-                    return Result.Failure(UnknownError);
-            }
+                CancelReservationOperationResult.SlotStateConflict =>
+                    Result.Failure(SlotStateConflict),
+
+                _ => throw new InvalidOperationException(
+                    $"Unknown cancel reservation operation status: {result}")
+            };
         }
     }
 }

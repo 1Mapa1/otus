@@ -56,7 +56,7 @@ namespace OrderService.Application.Idempotency
             return IdempotencyStartResult<TResponse>.Success(lockedRecord);
         }
 
-        public void Complete<TResponse>(IdempotencyRecord record, Guid orderId, TResponse response)
+        public void Complete<TResponse>(IdempotencyRecord record, Guid? orderId, TResponse response)
         {
             var responseBody = JsonSerializer.Serialize(response, JsonOptions);
 

@@ -3,6 +3,8 @@ using Npgsql;
 using WarehouseService.Application.Reservations;
 using WarehouseService.Application.Reservations.Operations;
 using WarehouseService.Domain.StockReservations;
+using WarehouseService.Domain.Stocks;
+using WarehouseService.Infrastructure.Persistence;
 
 namespace WarehouseService.Infrastructure.Persistence.Repositories
 {
@@ -23,9 +25,13 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
                 .BeginTransactionAsync(cancellationToken);
 
             var reservation = await _databaseContext.StockReservations
-                .FirstOrDefaultAsync(
-                    stockReservation => stockReservation.OrderId == orderId,
-                    cancellationToken);
+                .FromSqlInterpolated($"""
+                    SELECT *
+                    FROM stock_reservations
+                    WHERE order_id = {orderId}
+                    FOR UPDATE
+                    """)
+                .SingleOrDefaultAsync(cancellationToken);
 
             if (reservation is null)
             {
@@ -41,32 +47,44 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
 
             var reservationItems = await _databaseContext.StockReservationItems
                 .Where(item => item.ReservationId == reservation.Id)
+                .OrderBy(item => item.ProductId)
                 .ToListAsync(cancellationToken);
 
             var productIds = reservationItems
-               .Select(item => item.ProductId)
-               .Distinct()
-               .OrderBy(productId => productId)
-               .ToArray();
+                .Select(item => item.ProductId)
+                .Distinct()
+                .OrderBy(productId => productId)
+                .ToArray();
 
-            var products = await _databaseContext.Products
-                .FromSqlInterpolated($"""
-                    SELECT *
-                    FROM products
-                    WHERE id = ANY({productIds})
-                    ORDER BY id
-                    FOR UPDATE
-                    """)
-                .ToListAsync(cancellationToken);
+            var stockItems = productIds.Length == 0
+                ? []
+                : await _databaseContext.StockItems
+                    .FromSqlInterpolated($"""
+                        SELECT *
+                        FROM stock_items
+                        WHERE product_id = ANY({productIds})
+                        ORDER BY product_id
+                        FOR UPDATE
+                        """)
+                    .ToListAsync(cancellationToken);
 
-            var productsById = products.ToDictionary(product => product.Id);
+            var stockItemsByProductId = stockItems.ToDictionary(item => item.ProductId);
+            var utcNow = DateTime.UtcNow;
 
             foreach (var reservationItem in reservationItems)
             {
-                if (!productsById.TryGetValue(reservationItem.ProductId, out var product))
+                if (!stockItemsByProductId.TryGetValue(reservationItem.ProductId, out var stockItem))
                     continue;
 
-                product.DecreaseReservedQuantity((uint)reservationItem.Quantity);
+                stockItem.CancelReservation(reservationItem.Quantity);
+
+                await _databaseContext.StockMovements.AddAsync(
+                    StockMovement.CreateReservationCanceled(
+                        reservationItem.ProductId,
+                        reservationItem.Quantity,
+                        orderId,
+                        utcNow),
+                    cancellationToken);
             }
 
             reservation.Cancel();
@@ -83,7 +101,6 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
             List<ReserveProductItem> reserveProductItems,
             CancellationToken cancellationToken)
         {
-
             if (reserveProductItems is null || reserveProductItems.Count == 0)
                 return ReserveProductsOperationResult.InvalidItems();
 
@@ -104,6 +121,7 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
             try
             {
                 var existingReservation = await _databaseContext.StockReservations
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(
                         reservation => reservation.OrderId == orderId,
                         cancellationToken);
@@ -122,23 +140,38 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
                     .Select(item => item.ProductId)
                     .ToArray();
 
-                var products = await _databaseContext.Products
+                var stockItems = await _databaseContext.StockItems
                     .FromSqlInterpolated($"""
-                    SELECT *
-                    FROM products
-                    WHERE id = ANY({productIds})
-                    ORDER BY id
-                    FOR UPDATE
-                """)
+                        SELECT *
+                        FROM stock_items
+                        WHERE product_id = ANY({productIds})
+                        ORDER BY product_id
+                        FOR UPDATE
+                        """)
                     .ToListAsync(cancellationToken);
 
-                var productsById = products.ToDictionary(product => product.Id);
+                existingReservation = await _databaseContext.StockReservations
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        reservation => reservation.OrderId == orderId,
+                        cancellationToken);
 
+                if (existingReservation is not null)
+                {
+                    await transaction.CommitAsync(cancellationToken);
+
+                    if (existingReservation.Status == StockReservationStatus.Reserved)
+                        return ReserveProductsOperationResult.Success(existingReservation.Id);
+
+                    return ReserveProductsOperationResult.InvalidReservationState();
+                }
+
+                var stockItemsByProductId = stockItems.ToDictionary(item => item.ProductId);
                 var unavailableItems = new List<UnavailableStockItem>();
 
                 foreach (var requestedItem in requestedItems)
                 {
-                    if (!productsById.TryGetValue(requestedItem.ProductId, out var product))
+                    if (!stockItemsByProductId.TryGetValue(requestedItem.ProductId, out var stockItem))
                     {
                         unavailableItems.Add(new UnavailableStockItem(
                             requestedItem.ProductId,
@@ -148,14 +181,22 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
                         continue;
                     }
 
-                    var currentAvailableQuantity = product.AvailableQuantity - product.ReservedQuantity;
-
-                    if (currentAvailableQuantity < requestedItem.Quantity)
+                    if (!stockItem.IsActive)
                     {
                         unavailableItems.Add(new UnavailableStockItem(
-                            product.Id,
+                            stockItem.ProductId,
                             requestedItem.Quantity,
-                            currentAvailableQuantity));
+                            0));
+
+                        continue;
+                    }
+
+                    if (stockItem.AvailableQuantity < requestedItem.Quantity)
+                    {
+                        unavailableItems.Add(new UnavailableStockItem(
+                            stockItem.ProductId,
+                            requestedItem.Quantity,
+                            stockItem.AvailableQuantity));
                     }
                 }
 
@@ -165,9 +206,8 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
                     return ReserveProductsOperationResult.StockNotAvailable(unavailableItems);
                 }
 
-                var reservation = StockReservation.Create(
-                    orderId,
-                    userId);
+                var reservation = StockReservation.Create(orderId, userId);
+                var utcNow = DateTime.UtcNow;
 
                 var reservationItems = requestedItems
                     .Select(item => StockReservationItem.Create(
@@ -178,8 +218,16 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
 
                 foreach (var requestedItem in requestedItems)
                 {
-                    var product = productsById[requestedItem.ProductId];
-                    product.IncreaseReservedQuantity((uint)requestedItem.Quantity);
+                    var stockItem = stockItemsByProductId[requestedItem.ProductId];
+                    stockItem.Reserve(requestedItem.Quantity);
+
+                    await _databaseContext.StockMovements.AddAsync(
+                        StockMovement.CreateReservationCreated(
+                            requestedItem.ProductId,
+                            requestedItem.Quantity,
+                            orderId,
+                            utcNow),
+                        cancellationToken);
                 }
 
                 await _databaseContext.StockReservations.AddAsync(reservation, cancellationToken);
@@ -191,9 +239,11 @@ namespace WarehouseService.Infrastructure.Persistence.Repositories
                 return ReserveProductsOperationResult.Success(reservation.Id);
             }
             catch (DbUpdateException ex) when (ex.InnerException is PostgresException postgresException
-               && postgresException.SqlState == PostgresErrorCodes.UniqueViolation)
+                                               && postgresException.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 await transaction.RollbackAsync(cancellationToken);
+
+                _databaseContext.ChangeTracker.Clear();
 
                 var reservation = await _databaseContext.StockReservations
                     .AsNoTracking()
